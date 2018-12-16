@@ -1,0 +1,91 @@
+const request = require('request');
+// const debug = require('debug')('slash-command-template:ticket');
+const qs = require('querystring');
+const users = require('./users');
+const util = require('util');
+const apiUrl = 'https://slack.com/api';
+/*
+ *  Send ticket creation confirmation via
+ *  chat.postMessage to the user who created it
+ */
+const sendConfirmation = (ticket) => {
+    const PostOptions = {
+        url: `${apiUrl}/chat.postMessage`, 
+        body: qs.stringify({
+            token: process.env.BOT_USER_OAUTH_ACCESS_TOKEN,
+            channel: ticket.channelId,
+            as_user: true,
+            text: 'Invitations to the meeting sent out!',
+            attachments: JSON.stringify([
+                {
+                    title: `Request to meet sent out for ${ticket.userEmail}`,
+                    // Get this from the 3rd party helpdesk system
+                    title_link: 'http://example.com', //TODO: make a dashboard for this or ???
+                    text: ticket.text,
+                    fields: [
+                        {
+                            title: 'Purpose',
+                            value: ticket.purpose,
+                        },
+                        {
+                            title: 'Description',
+                            value: ticket.description || 'None provided',
+                        },
+                        {
+                            title: 'Status',
+                            value: 'Open',
+                            short: true,
+                        },
+                        {
+                            title: 'Topic',
+                            value: ticket.topic,
+                        },
+                        {
+                            title: 'Urgency',
+                            value: ticket.urgency,
+                            short: true,
+                        },
+                    ],
+                },
+            ]),
+        }),
+        headers: {
+            'Content-type': 'application/x-www-form-urlencoded'
+        }
+    };
+    request.post(PostOptions, (err, res, body) => {
+        // debug('sendConfirmation error: %o', err);
+        if (err) console.error(err);
+        console.log(`success in inviting people in!`);
+    });
+};
+
+// Create helpdesk ticket. Call users.find to get the user's email address
+// from their user ID
+const create = (userId, channelId, submission) => {
+    const ticket = {};
+
+    const fetchUserEmail = new Promise((resolve, reject) => {
+        users.find(userId).then((result) => {
+            //   debug(`Find user: ${userId}`);
+            console.log('this is fetching user');
+            console.log(util.inspect(result.data, { depth: null }));
+            resolve(result.data.user.profile.email);
+        }).catch((err) => { reject(err); });
+    });
+
+    fetchUserEmail.then((result) => {
+        ticket.userId = userId;
+        ticket.channelId = channelId;
+        ticket.userEmail = result;
+        ticket.purpose = submission.purpose;
+        ticket.description = submission.description;
+        ticket.topic = submission.topic;
+        ticket.urgency = submission.urgency;
+        sendConfirmation(ticket);
+
+        return ticket;
+    }).catch((err) => { console.error(err); });
+};
+
+module.exports = { create, sendConfirmation };
