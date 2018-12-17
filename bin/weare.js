@@ -26,11 +26,14 @@ const SlackWebClient = require('@slack/client').WebClient;
 // const RTM_EVENTS = require('@slack/client').RTM_EVENTS;
 // const RTM_EVENTS = require('@slack/client').CLIENT_EVENTS.RTM;
 
+
 const fs = require('fs');
 const async = require('async');
 const MongoClient = require('mongodb').MongoClient;
 
 const DB = null;
+
+const web = new SlackWebClient(process.env.BOT_USER_OAUTH_ACCESS_TOKEN);
 
 app.get('/api/oauth', function (req, res, next) {
 	var code = req.body.params.code;
@@ -110,151 +113,146 @@ app.post('/slack/commands/study', urlencodedParser, (req, res) => {
 
 app.post('/slack/commands/WhoIsOnline', urlencodedParser, (req, res) => {
 	res.status(200).end();
+	(async ()=> {
+		const active = await ActiveWho(req.body.channel_id);
+		console.log(`who is online with ActiveWho func: ${util.inspect(active, { depth: 2 })}`);
+	})()
 	console.log(`the req body in WhoIsOnline Command includes + ${util.inspect(req.body, { depth: null })}`);
+	
 	// const body = JSON.parse(req.body);
-	const PostOptions = {
-		uri: `${apiUrl}/conversations.members`,
-		body: qs.stringify({
-			token: process.env.BOT_USER_OAUTH_ACCESS_TOKEN,
-			channel: req.body.channel_id,
-			limit: 20
-		}),
-		method: 'POST',
-		headers: {
-			'Content-type': 'application/x-www-form-urlencoded'
-		}
-	};
-	request(PostOptions, (err, res, body) => {
-		if (err) console.error(err);
-		body = JSON.parse(body);
-		console.log(typeof (body));
-		console.log(body);
-		console.log(`success in getting conversation.members:${body.members}`);
+	// const PostOptions = {
+	// 	uri: `${apiUrl}/conversations.members`,
+	// 	body: qs.stringify({
+	// 		token: process.env.BOT_USER_OAUTH_ACCESS_TOKEN,
+	// 		channel: req.body.channel_id,
+	// 		limit: 20
+	// 	}),
+	// 	method: 'POST',
+	// 	headers: {
+	// 		'Content-type': 'application/x-www-form-urlencoded'
+	// 	}
+	// };
+	// request(PostOptions, (err, res, body) => {
+	// 	if (err) console.error(err);
+	// 	body = JSON.parse(body);
+	// 	console.log(typeof (body));
+	// 	console.log(body);
+	// 	console.log(`success in getting conversation.members:${body.members}`);
 
-		//------------------
-		// const rtm = new SlackRTMClient(process.env.BOT_USER_OAUTH_ACCESS_TOKEN, {
-		// 	dataStore: false,
-		// 	useRtmConnect: true,
-		// });
-		// // rtm.start({ batch_presence_aware: true });
-		// rtm.start({
-		// 	"type": "presence_query",
-		// 	"ids": [
-		// 		"U061F7AUR",
-		// 		"W123456"
-		// 	]
-		// });
+	//------------------
+	// const rtm = new SlackRTMClient(process.env.BOT_USER_OAUTH_ACCESS_TOKEN, {
+	// 	dataStore: false,
+	// 	useRtmConnect: true,
+	// });
+	// // rtm.start({ batch_presence_aware: true });
+	// rtm.start({
+	// 	"type": "presence_query",
+	// 	"ids": [
+	// 		"U061F7AUR",
+	// 		"W123456"
+	// 	]
+	// });
 
-		// rtm.on('ready', () => {
-		// 	console.log('Connected!');
+	// rtm.on('ready', () => {
+	// 	console.log('Connected!');
 
-		// 	//presence_query event emitting does not return anything (void/undefined)
-		// 	const message = {
-		// 		type: 'message',
-		// 		channel: req.body.channel_id,
-		// 		user: req.body.user_id,
-		// 		text: "hello world",
-		// 	};
-		// 	rtm.addOutgoingEvent(false, message.type, message)
-		// 		.then((resp) => console.log('Successfully sent message back:', resp))
-		// 		.catch(console.error);
-		// 	rtm.addOutgoingEvent(false, 'presence_query', {
-		// 		// rtm.send({
-		// 		// rtm.presence_query({
-		// 		type: "presence_query",
-		// 		ids: `[${body.members}]`
-		// 		// "channel": req.body.channel_id
-		// 	}
-		// 		// ,(err, res) => {
-		// 		// 	if(err) console.error(err);
-		// 		// 	console.log('fuck!')
-		// 		// 	if(res == undefined) console.log('res undefined')
-		// 		// 	res.forEach(a=>console.log(a.presence));
-		// 		// 	console.log(`-------------callback query:${util.inspect(res, { depth: null })}`);
-		// 		// }
-		// 	).then((res) => {
-		// 			console.log(`-------------presence_query:${util.inspect(res, { depth: null })}`);
-		// 			console.log(typeof (res));
-		// 		}, (reason) => {
-		// 			// rejection
-		// 			console.log('rejected for' +reason);
-		// 		  })
-		// 		.catch((err) => console.error(err));
+	//presence_query event emitting does not return anything (void/undefined)
+	// 	const message = {
+	// 		type: 'message',
+	// 		channel: req.body.channel_id,
+	// 		user: req.body.user_id,
+	// 		text: "hello world",
+	// 	};
+	// 	rtm.addOutgoingEvent(false, message.type, message)
+	// 		.then((resp) => console.log('Successfully sent message back:', resp))
+	// 		.catch(console.error);
+	// 	rtm.addOutgoingEvent(false, 'presence_query', {
+	// 		// rtm.send({
+	// 		// rtm.presence_query({
+	// 		type: "presence_query",
+	// 		ids: `[${body.members}]`
+	// 		// "channel": req.body.channel_id
+	// 	}).then((res) => {
+	// 			console.log(`-------------presence_query:${util.inspect(res, { depth: null })}`);
+	// 			console.log(typeof (res));
+	// 		}, (reason) => {
+	// 			// rejection
+	// 			console.log('rejected for' +reason);
+	// 		  })
+	// 		.catch((err) => console.error(err));
 
-		// });
+	// });
 
-		// rtm.on('presence_query', (events) => {
-		// 	console.log('heard query')
-		// 	console.log(`-------------presence_query evemts:${util.inspect(events, { depth: null })}`);
-		// 	events.users.forEach(userId => console.log(userId));
-		// });
-		//--------------------------------
-		//posting the POST request from app directly ti rtn.connect
-		// const PostOptions = {
-		// 	//uri: `${apiUrl}/events/presence_query`,
-		// 	uri: `${apiUrl}/rtm.connect`,
-		// 	method: 'POST',
-		// 	body: qs.stringify({
-		// 		'type': 'presence_query',
-		// 		'ids': [`${body.members}`]
-		// 	}),
-		// 	token: process.env.BOT_USER_OAUTH_ACCESS_TOKEN,
-		// 	headers: {
-		// 		'Content-type': 'application/x-www-form-urlencoded'
-		// 	}
-		// }
-		// request(PostOptions, (err, res, body) => {
-		// 	if (err) console.error(err);
-		// 	else {
-		// 		// const body = JSON.parse(body);
-		// 		console.log(`is res typeof undefined?? ${typeof(res)}`);
-		// 		console.log(`is body typeof undefined?? ${typeof(body)}`);
-		// 		// console.log(`body includes ${body}`);
-		// 		console.dir(res);
-		// 		// console.log(`-------------res presence_query:${util.inspect(res, { depth: null })}`);
-		// 		// console.log(`-------------body presence_query:${util.inspect(body, { depth: null })}`);
-		// 	}
+	// rtm.on('presence_query', (events) => {
+	// 	console.log('heard query')
+	// 	console.log(`-------------presence_query evemts:${util.inspect(events, { depth: null })}`);
+	// 	events.users.forEach(userId => console.log(userId));
+	// });
+	//--------------------------------
+	//posting the POST request from app directly ti rtn.connect
+	// const PostOptions = {
+	// 	//uri: `${apiUrl}/events/presence_query`,
+	// 	uri: `${apiUrl}/rtm.connect`,
+	// 	method: 'POST',
+	// 	body: qs.stringify({
+	// 		'type': 'presence_query',
+	// 		'ids': [`${body.members}`]
+	// 	}),
+	// 	token: process.env.BOT_USER_OAUTH_ACCESS_TOKEN,
+	// 	headers: {
+	// 		'Content-type': 'application/x-www-form-urlencoded'
+	// 	}
+	// }
+	// request(PostOptions, (err, res, body) => {
+	// 	if (err) console.error(err);
+	// 	else {
+	// 		// const body = JSON.parse(body);
+	// 		console.log(`is res typeof undefined?? ${typeof(res)}`);
+	// 		console.log(`is body typeof undefined?? ${typeof(body)}`);
+	// 		// console.log(`body includes ${body}`);
+	// 		console.dir(res);
+	// 		// console.log(`-------------res presence_query:${util.inspect(res, { depth: null })}`);
+	// 		// console.log(`-------------body presence_query:${util.inspect(body, { depth: null })}`);
+	// 	}
 
-		// });
-		////^ not working
-		// // rtm.disconnect();
-		// another WEB API method //WebClient.users.getPresence() working
-		// const PostOptions = {
-		// 	uri: `${apiUrl}/users.getPresence`,
-		// 	method: 'GET',//'POST',
-		// 	qs: {
-		// 		token: process.env.BOT_USER_OAUTH_ACCESS_TOKEN,
-		// 		user: 'U0A4G9E86'//[`${body.members}`]
-		// 	}
-		// 	// ,
-		// 	// headers: {
-		// 	// 	'Content-type': 'application/x-www-form-urlencoded'
-		// 	// }
-		// };
-		// console.log(PostOptions);
-		// request(PostOptions, (err, res, body) => {
-		// 	if (err) console.error(err);
-		// 	else {
-		// 		if (body != undefined) var body = JSON.parse(body);
-		// 		console.log(`is res typeof undefined?? ${typeof (res)}`);
-		// 		console.log(`is body typeof undefined?? ${typeof (body)}`);
-		// 		console.log(`body includes ${body}`);
-		// 		// console.log(`-------------res presence_query:${util.inspect(res, { depth: null })}`);
-		// 		console.log(`-------------body presence_query:${util.inspect(body, { depth: null })}`);
-		// 	}
+	// });
+	////^ not working
+	// // rtm.disconnect();
+	// another WEB API method //WebClient.users.getPresence() working
+	// const PostOptions = {
+	// 	uri: `${apiUrl}/users.getPresence`,
+	// 	method: 'GET',//'POST',
+	// 	qs: {
+	// 		token: process.env.BOT_USER_OAUTH_ACCESS_TOKEN,
+	// 		user: 'U0A4G9E86'//[`${body.members}`]
+	// 	}
+	// 	// ,
+	// 	// headers: {
+	// 	// 	'Content-type': 'application/x-www-form-urlencoded'
+	// 	// }
+	// };
+	// console.log(PostOptions);
+	// request(PostOptions, (err, res, body) => {
+	// 	if (err) console.error(err);
+	// 	else {
+	// 		if (body != undefined) var body = JSON.parse(body);
+	// 		console.log(`is res typeof undefined?? ${typeof (res)}`);
+	// 		console.log(`is body typeof undefined?? ${typeof (body)}`);
+	// 		console.log(`body includes ${body}`);
+	// 		// console.log(`-------------res presence_query:${util.inspect(res, { depth: null })}`);
+	// 		console.log(`-------------body presence_query:${util.inspect(body, { depth: null })}`);
+	// 	}
 
-		// });
+	// });
+	// });//end of conversations.members with request uri
+	//using web client
 
-		//using web client
-		const web = new SlackWebClient(process.env.BOT_USER_OAUTH_ACCESS_TOKEN);
-		body.members.forEach(member => {
-			web.users.getPresence({ user: member })
-			.then(res => {
-				console.log(`${member} presence status is ${res.presence}`);
-			})
-		})
+	OnlineNow(req.body.channel_id, req.body.response_url);
 
-	});
+
+
+
+
 });
 
 app.post('/slack/actions', urlencodedParser, (req, res) => {
@@ -263,15 +261,12 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 	const { type, text, token, trigger_id } = body;
 	console.log(`the req body includes + ${util.inspect(req.body, { depth: null })}`);
 
-	// var message = {
-	//     "text": body.user.name+" chose "+body.actions[0].name,
-	//     "replace_original": false
-	// };
-	// sendMessageToSlackResponseURL(body.response_url, message);
 	if (type == 'interactive_message') {
 		console.log(`trigger id is ${trigger_id}`);
 		switch (body.actions[0].value) {
-			case 'now': console.log('now selected'); break;
+			case 'now': console.log('now selected');
+				OnlineNow(body.channel.id, body.response_url);//body.response_url
+				break;
 			case 'later': console.log('later selected');
 
 				//// create the dialog payload - includes the dialog structure, Slack API token,
@@ -339,6 +334,79 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 				})
 				// sendMessageToSlackResponseURL(`${apiUrl}/dialog.open`, dialog);
 				break;
+			case 'hangout':
+
+				console.log('launch hangout and invite ppl');
+				// const p = new Promise((res, rej) => {
+				// 	// ;
+				// 	(async ()=> {
+
+				// 		console.log('after onlinenow');
+				// 		res(await OnlineNow(body.channel.id, false)) ;
+
+				// 	})();
+				// });
+				// p.then(activeMembers => {
+				// 	console.log(`is this promise: ${activeMembers}`)
+				// 	const message = {
+				// 		'text': 'Type `/hangout` and copy the following emails to invite your online peers to join you on a Hangout session',
+				// 		replace_original: false,
+				// 		"attachments": [
+				// 			{
+				// 				"text": activeMembers
+				// 			}
+				// 		]
+				// 	}
+				// 	sendMessageToSlackResponseURL(body.response_url, message);
+				// })
+
+
+				//-------
+				// OnlineNow(body.channel.id, false);
+				// const message = {
+				// 	'text': 'Type `/hangout` and copy the following emails to invite your online peers to join you on a Hangout session',
+				// 	replace_original: false
+				// }
+				// sendMessageToSlackResponseURL(body.response_url, message);
+				(async ()=> {
+					const activeMembers = await ActiveWho(body.channel.id);
+					console.log(`who is online with ActiveWho func: ${util.inspect(activeMembers, { depth: 2 })}`);
+					const usersnames = activeMembers.map(x => x.username), emails = activeMembers.map(x => x.email);
+
+					web.chat.postMessage({
+						channel: body.channel.id,
+						text: `Type \`/hangout\` and Copy the emails for ${usersnames} as follows: ${emails}`
+					})
+				})()
+				//-------
+				// (async () => {
+				// 	var activeMembers = await OnlineNow(body.channel.id, null);
+
+				// 	console.log(`is this promise: ${activeMembers}`)
+				// 	const message = await {
+				// 		'text': 'Type `/hangout` and copy the following emails to invite your online peers to join you on a Hangout session',
+				// 		replace_original: false,
+				// 		"attachments": [
+				// 			{
+				// 				"text": await OnlineNow(body.channel.id, null)
+				// 			}
+				// 		]
+				// 	}
+				// 	console.log(`message after await: ${message.attachments.text}`)
+				// 	sendMessageToSlackResponseURL(body.response_url, message);
+				// })();
+
+
+
+
+
+
+
+				break;
+			case 'mention':
+				console.log('mention selected');
+				sendMessageToSlackResponseURL(body.response_url, { text: '@here', replace_original: false });
+				break;
 			default: console.log('nothing cased'); break;
 		}
 
@@ -350,8 +418,152 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 	}
 });
 
+async function ActiveWho(channel_id) {
+	var members = [], activeMembers = [], activeProfiles = [];
+	var promiseArray = [];
+	await web.conversations.members({
+		token: process.env.BOT_USER_OAUTH_ACCESS_TOKEN,
+		channel: channel_id,
+		limit: 20 //TODO: change this number 
+	})
+		.then(async (res) => {
+			// console.log(`the web client result is ${util.inspect(res, { depth: 2, color: true })}`);
+			members = res.members;
+			// console.log(`members are ${members}`);
 
+			members.forEach(member => {
 
+				var promise = web.users.getPresence({ user: member })
+					.then(async (resp) => {
+						// console.log(`${member} presence status is ${resp.presence}`);
+						await web.users.info({ user: member, include_locale: true })
+							.then(res => {
+								// console.log(`user name is ${res.user.profile.real_name}`);
+								if (resp.presence == 'active' && !res.user.is_bot) {
+									console.log(`user name is ${res.user.profile.real_name}`);
+									activeMembers.push({
+										id: member,
+										username: res.user.name,
+										name: res.user.profile.real_name,
+										email: res.user.profile.email
+									});
+								}
+
+							});
+						// promiseArray.push(inner_promise);
+
+					});
+				promiseArray.push(promise);
+
+			});
+			await Promise.all(promiseArray).then(res => {
+				console.log(promiseArray)
+				console.log(`now active members:${util.inspect(activeMembers, { depth: 2, color: true })}`);
+
+			})
+			
+		});
+	return activeMembers;
+}
+function OnlineNow(channel_id, responseURL) {
+	var members = [], activeMembers = [], activeProfiles = [];
+	var promiseArray = [];
+	web.conversations.members({
+		token: process.env.BOT_USER_OAUTH_ACCESS_TOKEN,
+		channel: channel_id,
+		limit: 20 //TODO: change this number 
+	})
+		.then(res => {
+			// console.log(`the web client result is ${util.inspect(res, { depth: 2, color: true })}`);
+			members = res.members;
+			// console.log(`members are ${members}`);
+
+			members.forEach(member => {
+
+				var promise = web.users.getPresence({ user: member })
+					.then(async (resp) => {
+						// console.log(`${member} presence status is ${resp.presence}`);
+						await web.users.info({ user: member, include_locale: true })
+							.then(res => {
+								// console.log(`user name is ${res.user.profile.real_name}`);
+								if (resp.presence == 'active' && !res.user.is_bot) {
+									console.log(`user name is ${res.user.profile.real_name}`);
+									activeMembers.push({
+										id: member,
+										username: res.user.name,
+										name: res.user.profile.real_name,
+										email: res.user.profile.email
+									});
+								}
+
+							});
+						// promiseArray.push(inner_promise);
+
+					});
+				promiseArray.push(promise);
+
+			});
+			Promise.all(promiseArray).then(res => {
+				console.log(promiseArray)
+				// console.log(`now active members:${util.inspect(activeMembers, { depth: 2, color: true })}`);
+				// const promise = new Promise((resolve, reject) => {
+				// 	resolve(activeMembers);
+				// });
+				if (responseURL) {
+					var message = {
+						"text": `There are ${activeMembers.length} students of this channel online`,
+						"attachments": [
+							{
+								"text": "Would you like to invite them for video call or a Slack group chat",
+								"fallback": "Shame... buttons aren't supported in this land",
+								"callback_id": "ContactNow",
+								"color": "#3AA3E3",
+								"attachment_type": "default",
+								"actions": [
+									{
+										"name": "hangout",
+										"text": "Video call",
+										"type": "button",
+										"value": "hangout"
+									},
+									{
+										"name": "mention",
+										"text": "@here in the channel",
+										"type": "button",
+										"value": "mention"
+									},
+									{
+										"name": "Cancel",
+										"text": "Cancel",
+										"type": "button",
+										"value": "cancel",
+										"style": "danger"
+									}
+								]
+							}
+						]
+						// ,
+						// replace_original: false,
+					}
+					sendMessageToSlackResponseURL(responseURL, message);
+				}
+				else {
+					const usersnames = activeMembers.map(x => x.username), emails = activeMembers.map(x => x.email);
+
+					web.chat.postMessage({
+						channel: channel_id,
+						text: `Copy the emails for ${usersnames} as follows: ${emails}`
+					})
+				}
+
+				// return promise;
+				// return new Promise((resolve, reject) => {
+				// 		resolve(activeMembers);
+				// 	});
+				return activeMembers;
+			})
+		});
+}
 function sendMessageToSlackResponseURL(responseURL, JSONmessage) {
 	console.log(`Sending msg : ${JSONmessage.text} to Slack with a response url to be ${responseURL}`);
 	var postOptions = {
