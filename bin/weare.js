@@ -5,6 +5,7 @@ const path = require('path');
 const http = require('http');
 const util = require('util');
 const ticket = require('../ticket.js');
+const onboard = require('../server/onboard.js')
 // const app = http.createServer(server);
 // console.log(`this is the PORT: ${process.env.PORT}`)
 
@@ -60,12 +61,38 @@ app.get('/auth', (req, res) => {
 })
 
 app.post('/slack/events', (req, res, next) => {
+	switch (req.body.type) {
+		case 'url_verification': {
+			// verify Events API endpoint by returning challenge if present
+			// res.send({ challenge: req.body.challenge });
+			const challenge = req.body.challenge;
+			res.send(challenge);
+			console.log(`challenge is ${challenge}`);
+			// console.log(util.inspect(req, { depth: null }));
+			next();
+			break;
+		}
+		case 'event_callback': {
+			// Verify the signing secret
+			// if (signature.isVerified(req)) {
+			const event = req.body.event;
+			console.log(`within event callback: ${event}`);
 
-	const challenge = req.body.challenge;
-	res.send(challenge);
-	console.log(`challenge is ${challenge}`);
-	// console.log(util.inspect(req, { depth: null }));
-	next();
+			// `team_join` is fired whenever a new user (incl. a bot) joins the team
+			if (event.type === 'member_joined_channel' && !event.is_bot) {
+				console.log(`the event body is ${util.inspect(event, { depth: null })}`)
+				const { team, channel } = event;
+				onboard.initialMessage(team, channel);
+			}
+
+			res.sendStatus(200);
+			next();
+			// } else { res.sendStatus(500); next();}
+			break;
+		}
+		default: { res.sendStatus(500); next(); }
+	}
+
 });
 
 app.post('/slack/commands/study', urlencodedParser, (req, res) => {
@@ -78,7 +105,7 @@ app.post('/slack/commands/study', urlencodedParser, (req, res) => {
 		"text": "Would you like to study with others Now or Later?",
 		"attachments": [
 			{
-				"text": "Check who is online or Schedule a meeting with others.",
+				// "text": "Check who is online or schedule a meeting.",
 				"fallback": "Shame... buttons aren't supported in this land",
 				"callback_id": "schedule_0",
 				"color": "#3AA3E3",
@@ -113,12 +140,12 @@ app.post('/slack/commands/study', urlencodedParser, (req, res) => {
 
 app.post('/slack/commands/WhoIsOnline', urlencodedParser, (req, res) => {
 	res.status(200).end();
-	(async ()=> {
+	(async () => {
 		const active = await ActiveWho(req.body.channel_id);
 		console.log(`who is online with ActiveWho func: ${util.inspect(active, { depth: 2 })}`);
 	})()
 	console.log(`the req body in WhoIsOnline Command includes + ${util.inspect(req.body, { depth: null })}`);
-	
+
 	// const body = JSON.parse(req.body);
 	// const PostOptions = {
 	// 	uri: `${apiUrl}/conversations.members`,
@@ -303,15 +330,15 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 								],
 							},
 							{
-								label: 'Urgency',
+								label: 'With whom',
 								type: 'select',
-								name: 'urgency',
+								name: 'who',
 								options: [
-									{ label: 'Low', value: 'Low' },
-									{ label: 'Medium', value: 'Medium' },
-									{ label: 'High', value: 'High' },
+									{ label: 'All the channel members', value: 'all' },
+									{ label: 'All active members', value: 'active' },
+									{ label: 'Specify a subgroup', value: 'custom' }, //TODO
 								],
-							},
+							}
 						],
 					}),
 				}, uri = `${apiUrl}/dialog.open`;
@@ -335,77 +362,74 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 				// sendMessageToSlackResponseURL(`${apiUrl}/dialog.open`, dialog);
 				break;
 			case 'hangout':
-
 				console.log('launch hangout and invite ppl');
-				// const p = new Promise((res, rej) => {
-				// 	// ;
-				// 	(async ()=> {
 
-				// 		console.log('after onlinenow');
-				// 		res(await OnlineNow(body.channel.id, false)) ;
-
-				// 	})();
-				// });
-				// p.then(activeMembers => {
-				// 	console.log(`is this promise: ${activeMembers}`)
-				// 	const message = {
-				// 		'text': 'Type `/hangout` and copy the following emails to invite your online peers to join you on a Hangout session',
-				// 		replace_original: false,
-				// 		"attachments": [
-				// 			{
-				// 				"text": activeMembers
-				// 			}
-				// 		]
-				// 	}
-				// 	sendMessageToSlackResponseURL(body.response_url, message);
-				// })
-
-
-				//-------
-				// OnlineNow(body.channel.id, false);
-				// const message = {
-				// 	'text': 'Type `/hangout` and copy the following emails to invite your online peers to join you on a Hangout session',
-				// 	replace_original: false
-				// }
-				// sendMessageToSlackResponseURL(body.response_url, message);
-				(async ()=> {
+				(async () => {
 					const activeMembers = await ActiveWho(body.channel.id);
 					console.log(`who is online with ActiveWho func: ${util.inspect(activeMembers, { depth: 2 })}`);
 					const usersnames = activeMembers.map(x => x.username), emails = activeMembers.map(x => x.email);
-
-					web.chat.postMessage({
+					console.log('before empheral');
+					web.chat.postEphemeral({
+						as_user: false,
 						channel: body.channel.id,
+						user: body.user.id,
 						text: `Type \`/hangout\` and Copy the emails for ${usersnames} as follows: ${emails}`
-					})
-				})()
-				//-------
-				// (async () => {
-				// 	var activeMembers = await OnlineNow(body.channel.id, null);
-
-				// 	console.log(`is this promise: ${activeMembers}`)
-				// 	const message = await {
-				// 		'text': 'Type `/hangout` and copy the following emails to invite your online peers to join you on a Hangout session',
-				// 		replace_original: false,
-				// 		"attachments": [
-				// 			{
-				// 				"text": await OnlineNow(body.channel.id, null)
-				// 			}
-				// 		]
-				// 	}
-				// 	console.log(`message after await: ${message.attachments.text}`)
-				// 	sendMessageToSlackResponseURL(body.response_url, message);
-				// })();
-
-
-
-
-
-
-
+					}).catch(err => console.error(err));
+					console.log('after empheral');
+				})();
 				break;
 			case 'mention':
 				console.log('mention selected');
-				sendMessageToSlackResponseURL(body.response_url, { text: '@here', replace_original: false });
+				sendMessageToSlackResponseURL(body.response_url, { text: '@here', as_user: true, replace_original: false });
+				break;
+			case 'intro':
+				var msg = {
+					title: 'I am, We Are!',
+					callback_id: 'self_intro',
+					submit_label: 'Hello!',
+					elements: [
+						{
+							label: 'Fun fact',
+							type: 'text',
+							name: 'fun',
+							hint: 'Tell them something fun!'
+						},
+						{
+							label: 'I have lived in',
+							type: 'text',
+							name: 'city',
+							optional: true,
+							hint: 'Separate places with "," !'
+						},
+						{
+							label: 'Career',
+							type: 'select',
+							name: 'topic',
+							options: [
+								{ label: 'Veteran/military', value: 'military' },
+								{ label: 'Industry sector', value: 'industry' },
+								{ label: 'Education sector', value: 'education' },
+							],
+						},
+						{
+							label: 'Something unique',
+							type: 'select',
+							name: 'unique',
+							options: [
+								{ label: 'First-generation college student', value: 'first-gen' },
+								{ label: 'Parent', value: 'parent' },
+								{ label: 'Early bird', value: 'early' },
+							],
+							hint: 'What else do you identify with most'
+						},
+					],
+				};
+				console.log('before dialog web method');
+				console.log(util.inspect(msg, { depth: 3 }));
+				web.dialog.open({
+					trigger_id: trigger_id,
+					dialog: msg
+				}).then(res => console.log(`successfully opened welcome dialog`)).catch(err => { console.error(err); console.log(util.inspect(err, { depth: 3 })) });
 				break;
 			default: console.log('nothing cased'); break;
 		}
@@ -413,7 +437,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 	}
 	else if (type == 'dialog_submission') {
 		const { submission } = body;
-		console.log(`action type is ${type}`);
+		console.log(`action type is ${type} and body user is ${body.user.id}`);
 		ticket.create(body.user.id, body.channel.id, submission);
 	}
 });
@@ -461,7 +485,7 @@ async function ActiveWho(channel_id) {
 				console.log(`now active members:${util.inspect(activeMembers, { depth: 2, color: true })}`);
 
 			})
-			
+
 		});
 	return activeMembers;
 }
@@ -509,57 +533,45 @@ function OnlineNow(channel_id, responseURL) {
 				// const promise = new Promise((resolve, reject) => {
 				// 	resolve(activeMembers);
 				// });
-				if (responseURL) {
-					var message = {
-						"text": `There are ${activeMembers.length} students of this channel online`,
-						"attachments": [
-							{
-								"text": "Would you like to invite them for video call or a Slack group chat",
-								"fallback": "Shame... buttons aren't supported in this land",
-								"callback_id": "ContactNow",
-								"color": "#3AA3E3",
-								"attachment_type": "default",
-								"actions": [
-									{
-										"name": "hangout",
-										"text": "Video call",
-										"type": "button",
-										"value": "hangout"
-									},
-									{
-										"name": "mention",
-										"text": "@here in the channel",
-										"type": "button",
-										"value": "mention"
-									},
-									{
-										"name": "Cancel",
-										"text": "Cancel",
-										"type": "button",
-										"value": "cancel",
-										"style": "danger"
-									}
-								]
-							}
-						]
-						// ,
-						// replace_original: false,
-					}
-					sendMessageToSlackResponseURL(responseURL, message);
-				}
-				else {
-					const usersnames = activeMembers.map(x => x.username), emails = activeMembers.map(x => x.email);
 
-					web.chat.postMessage({
-						channel: channel_id,
-						text: `Copy the emails for ${usersnames} as follows: ${emails}`
-					})
+				var message = {
+					"text": `There are ${activeMembers.length} students of this channel online`,
+					"attachments": [
+						{
+							"text": "Would you like to invite them for video call or a Slack group chat",
+							"fallback": "Shame... buttons aren't supported in this land",
+							"callback_id": "ContactNow",
+							"color": "#3AA3E3",
+							"attachment_type": "default",
+							"actions": [
+								{
+									"name": "hangout",
+									"text": "Video call",
+									"type": "button",
+									"value": "hangout"
+								},
+								{
+									"name": "mention",
+									"text": "@here in the channel",
+									"type": "button",
+									"value": "mention"
+								},
+								{
+									"name": "Cancel",
+									"text": "Cancel",
+									"type": "button",
+									"value": "cancel",
+									"style": "danger"
+								}
+							]
+						}
+					]
+					// ,
+					// replace_original: false,
 				}
+				sendMessageToSlackResponseURL(responseURL, message);
 
-				// return promise;
-				// return new Promise((resolve, reject) => {
-				// 		resolve(activeMembers);
-				// 	});
+
 				return activeMembers;
 			})
 		});

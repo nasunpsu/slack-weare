@@ -10,18 +10,19 @@ const apiUrl = 'https://slack.com/api';
  */
 const sendConfirmation = (ticket) => {
     const PostOptions = {
-        url: `${apiUrl}/chat.postMessage`, 
+        url: `${apiUrl}/chat.postEphemeral`, 
         body: qs.stringify({
             token: process.env.BOT_USER_OAUTH_ACCESS_TOKEN,
             channel: ticket.channelId,
-            as_user: true,
-            text: 'Invitations to the meeting sent out!',
+            as_user: false,
+            text: 'Invitations for meeting sent out!',
             attachments: JSON.stringify([
                 {
-                    title: `Request to meet sent out for ${ticket.userEmail}`,
+                    title: `Request to meet sent out`,
                     // Get this from the 3rd party helpdesk system
                     title_link: 'http://example.com', //TODO: make a dashboard for this or ???
                     text: ticket.text,
+                    response_type: 'ephemeral',
                     fields: [
                         {
                             title: 'Purpose',
@@ -41,8 +42,8 @@ const sendConfirmation = (ticket) => {
                             value: ticket.topic,
                         },
                         {
-                            title: 'Urgency',
-                            value: ticket.urgency,
+                            title: 'With',
+                            value: ticket.who,
                             short: true,
                         },
                     ],
@@ -59,6 +60,13 @@ const sendConfirmation = (ticket) => {
         console.log(`success in inviting people in!`);
     });
 };
+
+// const InviteWho = (channelId) => {
+//     const activeMembers = await ActiveWho(body.channel.id);
+// 					console.log(`who is online with ActiveWho func: ${util.inspect(activeMembers, { depth: 2 })}`);
+// 					const usersnames = activeMembers.map(x => x.username), emails = activeMembers.map(x => x.email);
+
+// }
 
 // Create helpdesk ticket. Call users.find to get the user's email address
 // from their user ID
