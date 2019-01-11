@@ -258,7 +258,10 @@ app.post('/slack/events', (req, res, next) => {
 			// next();
 			break;
 		}
-		default: { res.sendStatus(500); next(); }
+		default: { 
+			console.error('nothing cased events');
+			res.sendStatus(500); next(); 
+		}
 	}
 
 });
@@ -309,74 +312,6 @@ app.post('/slack/commands/study', urlencodedParser, (req, res) => {
 app.post('/slack/commands/WhoIsOnline', urlencodedParser, (req, res) => {
 	res.status(200).end();
 	console.log(`the req body in WhoIsOnline Command includes + ${util.inspect(req.body, { depth: null })}`);
-	// (async () => {
-	// 	const active = await ActiveWho(req.body.channel_id, req.body.user_id);
-	// 	console.log(`who is online with ActiveWho func: ${util.inspect(active, { depth: 2 })}`);
-	// 	var message = active.length?{
-	// 		"text": `There are ${active.length} students of this channel online except you`,
-	// 		"attachments": [
-	// 			{
-	// 				"text": "Would you like to invite them for video call or a Slack group chat",
-	// 				"fallback": "Shame... buttons aren't supported in this land",
-	// 				"callback_id": "ContactNow",
-	// 				"color": "#3AA3E3",
-	// 				"attachment_type": "default",
-	// 				"actions": [
-	// 					{
-	// 						"name": "hangout",
-	// 						"text": "Video call",
-	// 						"type": "button",
-	// 						"value": "hangout"
-	// 					},
-	// 					{
-	// 						"name": "mention",
-	// 						"text": "@here in the channel",
-	// 						"type": "button",
-	// 						"value": "mention"
-	// 					},
-	// 					{
-	// 						"name": "Cancel",
-	// 						"text": "Cancel",
-	// 						"type": "button",
-	// 						"value": "cancel",
-	// 						"style": "danger"
-	// 					}
-	// 				]
-	// 			}
-	// 		]
-	// 		// ,
-	// 		// replace_original: false,
-	// 	}: {'text':'Ohh...bad time, nobody is online',
-	// 	'attachments': [
-	// 		{
-	// 			'text': 'Would you like to send an email to set up something later',
-	// 			"fallback": "Shame... buttons aren't supported in this land",
-	// 				"callback_id": "Nobody-Online",
-	// 				"color": "#3AA3E3",
-	// 				"attachment_type": "default",
-	// 				"actions": [
-
-	// 					{
-	// 						"name": "Later",
-	// 						"text": "Yes, schedule something later",
-	// 						"type": "button",
-	// 						"value": "later"
-	// 					},
-	// 					{
-	// 						"name": "Cancel",
-	// 						"text": "Cancel",
-	// 						"type": "button",
-	// 						"value": "cancel",
-	// 						"style": "danger"
-	// 					}
-	// 				]
-	// 		}
-	// 	]
-	// }
-	// 	sendMessageToSlackResponseURL(req.body.response_url, message);
-	// })()
-
-
 	OnlineNow(req.body.channel_id, req.body.user_id, req.body.response_url);
 });
 
