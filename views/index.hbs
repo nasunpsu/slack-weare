@@ -1,0 +1,62 @@
+<div class="ui main container">
+    <div class="ui centered grid">
+        <div class="ten wide column">
+            <div class="ui header">
+                <div class="ui four statistics">
+                    <div class="teal statistic">
+                        <div class="value">
+                            <i class="slack hash icon"></i>{{channels_info.channels_total}}
+                        </div>
+                        <div class="label">
+                            Channels
+                        </div>
+                    </div>
+                    <div class="blue statistic">
+                        <div class="value">
+                            <i class="users icon"></i> {{members.members_total}}
+                        </div>
+                        <div class="label">
+                            Team members
+                        </div>
+                    </div>
+                    <div class="grey statistic">
+                        <div class="value">
+                            <i class="comments icon"></i>{{channels_info.msg_total}}
+                        </div>
+                        <div class="label">
+                            Messages
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="six wide column">
+            <div class="ui fluid search selection dropdown">
+                <input type="hidden" name="channels">
+                <i class="dropdown icon"></i>
+                <div class="default text">Filter by... (All)</div>
+                <div class="menu">
+                    <div class="item channel filter" data-value="channel"><i class="slack hash icon"></i>
+                        <div class="default text">Select channel</div>
+                        <i class="dropdown icon"></i>
+                        <div class="menu">
+                            <div class="item">Aegean</div>
+                            <div class="item">Balinese</div>
+                            <div class="item">Persian</div>
+                        </div>
+                    </div>
+                    <div class="item group filter" data-value="group"><i class="users icon"></i>
+                        <div class="text">Select group</div>
+                        <i class="dropdown icon"></i>
+                        <div class="menu">
+                            <div class="item">Aegean</div>
+                            <div class="item">Balinese</div>
+                            <div class="item">Persian</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,33 @@
+<div id="tz-wrapper">
+    {{#each members.tz_members as |members tz|}}
+    <div class="ui item timezone-container">
+        <div class="ui fluid card tz-header">
+            <div class="content">
+                <div class="header"></div>
+                <div class="meta">
+                    <span>{{tz}} hours</span>
+                </div>
+                <div class="meta">
+                    <span>{{members.0.tz_label}}</span>
+                </div>
+                <div class="description">{{members.0.local_area}}</div>
+            </div>
+            
+        </div>
+
+        <div class="ui horizontal list">
+            {{#each members as |member|}}
+            <div class="item user">
+                <img class="ui mini circular image user-img" src="{{member.image_48}}">
+                <div class="content">
+                    <div class="ui sub header user-name">{{member.first_name}}</div>
+                    {{member.status_text}}
+                </div>
+            </div>
+            {{/each}}
+        </div>
+    </div>
+    {{/each}}
+    
+
+</div>

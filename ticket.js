@@ -14,6 +14,7 @@ const sendConfirmation = (ticket) => {
         body: qs.stringify({
             token: process.env.BOT_USER_OAUTH_ACCESS_TOKEN,
             channel: ticket.channelId,
+            user: ticket.userId,
             as_user: false,
             text: 'Invitations for meeting sent out!',
             attachments: JSON.stringify([

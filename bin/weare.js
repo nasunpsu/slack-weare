@@ -3,6 +3,7 @@ const app = require('../server/service.js');
 //const SlackRTMClient = require('../server/SlackRTMClient');
 const path = require('path');
 const http = require('http');
+const createError = require('http-errors')
 const util = require('util');
 const ticket = require('../ticket.js');
 const onboard = require('../server/onboard.js')
@@ -16,42 +17,197 @@ const request = require('request');
 const apiUrl = 'https://slack.com/api';
 // const methodUril = 'https://slack.com/api/';
 const qs = require('querystring');
+const hbs = require('express-handlebars');
+const session = require('express-session');
+const MongoStore = require('connect-mongo')(session);
+const cookieParser = require('cookie-parser');
+const morgan = require('morgan')
 
 app.use(bodyParser.json());
-// app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({ extended: true }));
 const urlencodedParser = bodyParser.urlencoded({ extended: false });
 const jsonParser = bodyParser.json();
+app.use(cookieParser());
 
 const SlackRTMClient = require('@slack/client').RTMClient;
 const SlackWebClient = require('@slack/client').WebClient;
-// const RTM_EVENTS = require('@slack/client').RTM_EVENTS;
-// const RTM_EVENTS = require('@slack/client').CLIENT_EVENTS.RTM;
-
 
 const fs = require('fs');
 const async = require('async');
-const MongoClient = require('mongodb').MongoClient;
+var favicon = require('serve-favicon');
+app.use(favicon(path.join(__dirname, '/../public/favicon.ico')));
 
-const DB = null;
+const mongoClient = require('mongodb').MongoClient;
+
+let DB = null;
+
+mongoClient.connect(process.env.MONGO_DB, { useNewUrlParser: true }, function (err, db) {
+	if (!err) {
+		console.log('Mongo Connected');
+		DB = db.db("weare");
+		initDB();
+	}
+	else console.log(err);
+});
+
+var sess = {
+	secret: 'keyboard cat',
+	resave: false,
+	saveUninitialized: true,
+	store: new MongoStore({
+		url: process.env.MONGO_DB,
+		collection: 'sessions'
+	}),
+	cookie: { maxAge: 24 * 60 * 60 * 1000 } //<=24h, 60000 1min
+	// cookie: { secure: true }
+};
+
+app.set('trust proxy', 1);//comment this out...
+if (app.get('env') === 'production') {
+	app.set('trust proxy', 1) // trust first proxy
+	sess.cookie.secure = true // serve secure cookies
+}
+app.use(morgan('dev'));//combined				        
+app.use(session(sess));
 
 const web = new SlackWebClient(process.env.BOT_USER_OAUTH_ACCESS_TOKEN);
+const web_slack = new SlackWebClient(process.env.SLACK_OAUTH_ACCESS_TOKEN);
+
+// view engine setup 
+// app.set('views', path.join(__dirname, '/../views'));
+app.set('view engine', 'hbs');
+
+app.engine('hbs', hbs({
+	extname: 'hbs',
+	defaultView: 'default',//'layout'
+	layoutsDir: path.join(__dirname, '/../views/layouts/'),
+	partialsDir: [
+		path.join(__dirname, '/../views/partials/'),
+		path.join(__dirname, '/../semantic/dist/')
+	]
+}));
+
+app.get('/install', (req, res) => {
+	let to_be_rendered = {
+		layout: 'default',
+		template: 'add_to_slack-template'
+	};
+	res.render('add_to_slack', to_be_rendered);
+});
+app.get('/login', function (req, res) {
+	let to_be_rendered = {
+		layout: 'default',
+		template: 'login-template'
+	};
+	res.render('login', to_be_rendered);
+});
+
 
 app.get('/api/oauth', function (req, res, next) {
-	var code = req.body.params.code;
+	var code = req.query.code;
+	console.log(`code is ${code}`);
+	console.log(`locals are ${util.inspect(res.locals, { depth: 2 })}`)
+	var data = {
+		form: {
+			client_id: process.env.SLACK_CLIENT_ID,
+			client_secret: process.env.SLACK_CLIENT_SECRET,
+			code: req.query.code
+		}
+	};
+	web.oauth.access(data.form, async function (err, result) {
+		if (err) console.error(err);
+		console.log(`enter the oauth access: ${util.inspect(result, { depth: 2 })}`)
+		if (!err) {
+			if (!result.bot) { //this is signed in with slack
+				console.log(`entering signed with Slack condition -----------`);
+				await DB.collection('oauthtokens').find({ team_id: result.team.id }).toArray()
+					.then(async (docs, err) => {
+						if (err) console.error(err);
+						if (docs.length == 0) {
+							//NOT autherized
+							return res.redirect('/install');
+						}
+						else {
+							if (docs[0].scopes.indexOf('channels:read') === -1) {
+								console.log('the scopes are not enough');
+								return res.redirect('/install');
+							}
+							console.log('before retrieving usr DB');
+							await DB.collection('users').find({ uid: result.team.id + '_' + result.user.id }).toArray()
+								.then((users_docs, err) => {
+									console.log(`the user is read from MongoDB: ${util.inspect(users_docs[0], { depth: 2 })}`);
+									if (err) console.error(err);
+									req.session.user = users_docs[0];
+									req.session.team = docs[0];
+									res.redirect('/home');
+								});
 
-	SlackRTMClient.oauth.access(process.env.SLACK_CLIENT_ID, process.env.SLACK_CLIENT_SECRET, code,
 
-		function (err, result) {
-			if (!err) {
-				DB.collection("oauthtokens").update(
-					{ team_id: result.team_id },
-					result, { upsert: true });
-
-				res.redirect('https://tildachat.com/instructions.html', next);//TODO: replace the url
+						}
+					});
 			}
-		});
+			else { //the oauth is used to install the WeAre! App to a new workspace
+				console.log(`entering install WeAre! to Slack team condition -----------`);
+				DB.collection("oauthtokens").updateOne(
+					{ team_id: result.team_id },
+					{
+						$set: {
+							authenticated_user: result.team_id + '_' + result.user_id,
+							access_token: result.access_token,
+							bot_access_token: result.bot.bot_access_token,
+							bot_id: result.bot.bot_user_id,
+							team_name: result.team_name,
+							url: result.incoming_webhook.configuration_url,
+							scopes: result.scope
+						}
+					}, { upsert: true }, async function (err, db_result) {
+						console.log(`team id is ${result.team_id}, and token is ${result.access_token}`);
+						await InitTeamMembers(result.team_id, result.access_token, null);
+						await InitTeamChannels(result.team_id, result.access_token, null);
+						await DB.collection('users').find({ uid: result.team_id + '_' + result.user_id }).toArray()
+							.then((user_docs, err) => {
+								if (err) console.error(err);
+								req.session.user = user_docs[0];
+								req.session.team = {
+									team_id: result.team_id,
+									team_name: result.team_name,
+									app_url: result.incoming_webhook.configuration_url
+								}
+								console.log(`signed in after installing WeAre! bot: team is ${util.inspect(req.session.team, { depth: 3 })}`);
+								res.redirect('/home');//TODO: replace the url
+							});
 
 
+					});
+
+			}
+
+		}
+		console.log('OUT of oauth access')
+	});
+	// request.post(apiUrl + '/oauth.access', data, function (error, response, body) {
+	// 	// if (!error && response.statusCode == 200) {
+
+	// 	//   // Get an auth token (and store the team_id / token)
+	// 	// //   storage.setItemSync(JSON.parse(body).team_id, JSON.parse(body).access_token);
+	// 	// console.log(`enter the access: ${util.inspect(body, {depth: null})}`)
+	// 	// //   res.sendStatus(200);
+
+	// 	//   // Show a nicer web page or redirect to Slack, instead of just giving 200 in reality!
+	// 	// //   res.redirect(__dirname + "/home.html");
+	// 	// res.redirect('/home');
+	// 	// ;
+	// 	// }
+	// 	var JSONresponse = JSON.parse(body)
+	//     if (!JSONresponse.ok){
+	//         console.log(JSONresponse)
+	//         res.send("Error encountered: \n"+JSON.stringify(JSONresponse)).status(200).end()
+	//     }else{
+	//         console.log(JSONresponse)
+	// 		// res.send("Success!")
+	// 		res.redirect('/home');
+	//     }
+	//   });
 });
 
 app.get('/auth', (req, res) => {
@@ -59,6 +215,20 @@ app.get('/auth', (req, res) => {
 	console.log(__filename);
 	res.sendFile(path.resolve(__dirname + '/../views/add_to_slack.html'));
 })
+
+app.get('/test', (req, res) => {
+	res.send('haha');
+	res.status(200).end();
+	(async () => {									//TODO: MOVE this Block to the Init Module
+		await InitTeamMembers('T0A286J8K', null);
+	})();
+	(async () => {
+		await InitTeamChannels('T0A286J8K', null);;
+	})();
+
+	console.log('---------------test----------------');
+});
+
 
 app.post('/slack/events', (req, res, next) => {
 	switch (req.body.type) {
@@ -69,7 +239,7 @@ app.post('/slack/events', (req, res, next) => {
 			res.send(challenge);
 			console.log(`challenge is ${challenge}`);
 			// console.log(util.inspect(req, { depth: null }));
-			next();
+			// next();
 			break;
 		}
 		case 'event_callback': {
@@ -81,13 +251,11 @@ app.post('/slack/events', (req, res, next) => {
 			// `team_join` is fired whenever a new user (incl. a bot) joins the team
 			if (event.type === 'member_joined_channel' && !event.is_bot) {
 				console.log(`the event body is ${util.inspect(event, { depth: null })}`)
-				const { team, channel } = event;
-				onboard.initialMessage(team, channel);
+				const { user, channel } = event;
+				onboard.initialMessage(user, channel);
 			}
-
 			res.sendStatus(200);
-			next();
-			// } else { res.sendStatus(500); next();}
+			// next();
 			break;
 		}
 		default: { res.sendStatus(500); next(); }
@@ -140,146 +308,76 @@ app.post('/slack/commands/study', urlencodedParser, (req, res) => {
 
 app.post('/slack/commands/WhoIsOnline', urlencodedParser, (req, res) => {
 	res.status(200).end();
-	(async () => {
-		const active = await ActiveWho(req.body.channel_id);
-		console.log(`who is online with ActiveWho func: ${util.inspect(active, { depth: 2 })}`);
-	})()
 	console.log(`the req body in WhoIsOnline Command includes + ${util.inspect(req.body, { depth: null })}`);
+	// (async () => {
+	// 	const active = await ActiveWho(req.body.channel_id, req.body.user_id);
+	// 	console.log(`who is online with ActiveWho func: ${util.inspect(active, { depth: 2 })}`);
+	// 	var message = active.length?{
+	// 		"text": `There are ${active.length} students of this channel online except you`,
+	// 		"attachments": [
+	// 			{
+	// 				"text": "Would you like to invite them for video call or a Slack group chat",
+	// 				"fallback": "Shame... buttons aren't supported in this land",
+	// 				"callback_id": "ContactNow",
+	// 				"color": "#3AA3E3",
+	// 				"attachment_type": "default",
+	// 				"actions": [
+	// 					{
+	// 						"name": "hangout",
+	// 						"text": "Video call",
+	// 						"type": "button",
+	// 						"value": "hangout"
+	// 					},
+	// 					{
+	// 						"name": "mention",
+	// 						"text": "@here in the channel",
+	// 						"type": "button",
+	// 						"value": "mention"
+	// 					},
+	// 					{
+	// 						"name": "Cancel",
+	// 						"text": "Cancel",
+	// 						"type": "button",
+	// 						"value": "cancel",
+	// 						"style": "danger"
+	// 					}
+	// 				]
+	// 			}
+	// 		]
+	// 		// ,
+	// 		// replace_original: false,
+	// 	}: {'text':'Ohh...bad time, nobody is online',
+	// 	'attachments': [
+	// 		{
+	// 			'text': 'Would you like to send an email to set up something later',
+	// 			"fallback": "Shame... buttons aren't supported in this land",
+	// 				"callback_id": "Nobody-Online",
+	// 				"color": "#3AA3E3",
+	// 				"attachment_type": "default",
+	// 				"actions": [
 
-	// const body = JSON.parse(req.body);
-	// const PostOptions = {
-	// 	uri: `${apiUrl}/conversations.members`,
-	// 	body: qs.stringify({
-	// 		token: process.env.BOT_USER_OAUTH_ACCESS_TOKEN,
-	// 		channel: req.body.channel_id,
-	// 		limit: 20
-	// 	}),
-	// 	method: 'POST',
-	// 	headers: {
-	// 		'Content-type': 'application/x-www-form-urlencoded'
-	// 	}
-	// };
-	// request(PostOptions, (err, res, body) => {
-	// 	if (err) console.error(err);
-	// 	body = JSON.parse(body);
-	// 	console.log(typeof (body));
-	// 	console.log(body);
-	// 	console.log(`success in getting conversation.members:${body.members}`);
-
-	//------------------
-	// const rtm = new SlackRTMClient(process.env.BOT_USER_OAUTH_ACCESS_TOKEN, {
-	// 	dataStore: false,
-	// 	useRtmConnect: true,
-	// });
-	// // rtm.start({ batch_presence_aware: true });
-	// rtm.start({
-	// 	"type": "presence_query",
-	// 	"ids": [
-	// 		"U061F7AUR",
-	// 		"W123456"
+	// 					{
+	// 						"name": "Later",
+	// 						"text": "Yes, schedule something later",
+	// 						"type": "button",
+	// 						"value": "later"
+	// 					},
+	// 					{
+	// 						"name": "Cancel",
+	// 						"text": "Cancel",
+	// 						"type": "button",
+	// 						"value": "cancel",
+	// 						"style": "danger"
+	// 					}
+	// 				]
+	// 		}
 	// 	]
-	// });
-
-	// rtm.on('ready', () => {
-	// 	console.log('Connected!');
-
-	//presence_query event emitting does not return anything (void/undefined)
-	// 	const message = {
-	// 		type: 'message',
-	// 		channel: req.body.channel_id,
-	// 		user: req.body.user_id,
-	// 		text: "hello world",
-	// 	};
-	// 	rtm.addOutgoingEvent(false, message.type, message)
-	// 		.then((resp) => console.log('Successfully sent message back:', resp))
-	// 		.catch(console.error);
-	// 	rtm.addOutgoingEvent(false, 'presence_query', {
-	// 		// rtm.send({
-	// 		// rtm.presence_query({
-	// 		type: "presence_query",
-	// 		ids: `[${body.members}]`
-	// 		// "channel": req.body.channel_id
-	// 	}).then((res) => {
-	// 			console.log(`-------------presence_query:${util.inspect(res, { depth: null })}`);
-	// 			console.log(typeof (res));
-	// 		}, (reason) => {
-	// 			// rejection
-	// 			console.log('rejected for' +reason);
-	// 		  })
-	// 		.catch((err) => console.error(err));
-
-	// });
-
-	// rtm.on('presence_query', (events) => {
-	// 	console.log('heard query')
-	// 	console.log(`-------------presence_query evemts:${util.inspect(events, { depth: null })}`);
-	// 	events.users.forEach(userId => console.log(userId));
-	// });
-	//--------------------------------
-	//posting the POST request from app directly ti rtn.connect
-	// const PostOptions = {
-	// 	//uri: `${apiUrl}/events/presence_query`,
-	// 	uri: `${apiUrl}/rtm.connect`,
-	// 	method: 'POST',
-	// 	body: qs.stringify({
-	// 		'type': 'presence_query',
-	// 		'ids': [`${body.members}`]
-	// 	}),
-	// 	token: process.env.BOT_USER_OAUTH_ACCESS_TOKEN,
-	// 	headers: {
-	// 		'Content-type': 'application/x-www-form-urlencoded'
-	// 	}
 	// }
-	// request(PostOptions, (err, res, body) => {
-	// 	if (err) console.error(err);
-	// 	else {
-	// 		// const body = JSON.parse(body);
-	// 		console.log(`is res typeof undefined?? ${typeof(res)}`);
-	// 		console.log(`is body typeof undefined?? ${typeof(body)}`);
-	// 		// console.log(`body includes ${body}`);
-	// 		console.dir(res);
-	// 		// console.log(`-------------res presence_query:${util.inspect(res, { depth: null })}`);
-	// 		// console.log(`-------------body presence_query:${util.inspect(body, { depth: null })}`);
-	// 	}
-
-	// });
-	////^ not working
-	// // rtm.disconnect();
-	// another WEB API method //WebClient.users.getPresence() working
-	// const PostOptions = {
-	// 	uri: `${apiUrl}/users.getPresence`,
-	// 	method: 'GET',//'POST',
-	// 	qs: {
-	// 		token: process.env.BOT_USER_OAUTH_ACCESS_TOKEN,
-	// 		user: 'U0A4G9E86'//[`${body.members}`]
-	// 	}
-	// 	// ,
-	// 	// headers: {
-	// 	// 	'Content-type': 'application/x-www-form-urlencoded'
-	// 	// }
-	// };
-	// console.log(PostOptions);
-	// request(PostOptions, (err, res, body) => {
-	// 	if (err) console.error(err);
-	// 	else {
-	// 		if (body != undefined) var body = JSON.parse(body);
-	// 		console.log(`is res typeof undefined?? ${typeof (res)}`);
-	// 		console.log(`is body typeof undefined?? ${typeof (body)}`);
-	// 		console.log(`body includes ${body}`);
-	// 		// console.log(`-------------res presence_query:${util.inspect(res, { depth: null })}`);
-	// 		console.log(`-------------body presence_query:${util.inspect(body, { depth: null })}`);
-	// 	}
-
-	// });
-	// });//end of conversations.members with request uri
-	//using web client
-
-	OnlineNow(req.body.channel_id, req.body.response_url);
+	// 	sendMessageToSlackResponseURL(req.body.response_url, message);
+	// })()
 
 
-
-
-
+	OnlineNow(req.body.channel_id, req.body.user_id, req.body.response_url);
 });
 
 app.post('/slack/actions', urlencodedParser, (req, res) => {
@@ -291,8 +389,17 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 	if (type == 'interactive_message') {
 		console.log(`trigger id is ${trigger_id}`);
 		switch (body.actions[0].value) {
+			case 'accept':
+				console.log('accepted term from new channel member!');
+				web.chat.postEphemeral({
+					as_user: false,
+					channel: body.channel.id,
+					user: body.user.id,
+					text: `Thanks for accepting the conduct of behaviors in the group. Remember to introduce yourself :point_up_2:`
+				}).catch(err => console.error(err));
+				break;
 			case 'now': console.log('now selected');
-				OnlineNow(body.channel.id, body.response_url);//body.response_url
+				OnlineNow(body.channel.id, body.user.id, body.response_url);//body.response_url
 				break;
 			case 'later': console.log('later selected');
 
@@ -334,8 +441,27 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 								type: 'select',
 								name: 'who',
 								options: [
+									// {
+									// 	"name": "email-tz",
+									// 	"text": "Email people of the same time zone",
+									// 	"type": "button",
+									// 	"value": "email-tz"
+									// },
+									// {
+									// 	"name": "email-similar",
+									// 	"text": "Email to peers similar to myself",
+									// 	"type": "button",
+									// 	"value": "email-similar"
+									// },
+									// {
+									// 	"name": "email-all",
+									// 	"text": "Email to all channel members",
+									// 	"type": "button",
+									// 	"value": "email-channel"
+									// },
 									{ label: 'All the channel members', value: 'all' },
-									{ label: 'All active members', value: 'active' },
+									{ label: 'Channel members of the near time zone with me', value: 'schedule-tz' },
+									{ label: 'Channel members similar to myself', value: 'schedule-similar' },
 									{ label: 'Specify a subgroup', value: 'custom' }, //TODO
 								],
 							}
@@ -365,7 +491,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 				console.log('launch hangout and invite ppl');
 
 				(async () => {
-					const activeMembers = await ActiveWho(body.channel.id);
+					const activeMembers = await ActiveWho(body.channel.id, body.user.id);
 					console.log(`who is online with ActiveWho func: ${util.inspect(activeMembers, { depth: 2 })}`);
 					const usersnames = activeMembers.map(x => x.username), emails = activeMembers.map(x => x.email);
 					console.log('before empheral');
@@ -436,17 +562,446 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 
 	}
 	else if (type == 'dialog_submission') {
-		const { submission } = body;
-		console.log(`action type is ${type} and body user is ${body.user.id}`);
-		ticket.create(body.user.id, body.channel.id, submission);
+		const { submission, callback_id } = body;
+		console.log(`Someone submit a dialog form, inside body: ${util.inspect(body, { depth: null })}`);
+		console.log(`callback id is ${callback_id}`);
+		switch (callback_id) {
+			case 'self_intro':
+				console.log(`this is in self-intro, say hello and welcome! ${body.channel_id}`)
+				web.chat.postMessage({
+					channel: body.channel.id,
+					text: `${body.user.name} just joined here`,
+					attachments: [
+						{
+							"text": `Coming from XXXX, ${body.user.name} has done something really fun: YYYY `,
+							color: 'good'
+						},
+						{
+							"text": `Welcome ${body.user.name} with We Are! or Hello!`,
+							"fallback": "Shame... buttons aren't supported in this land",
+							"callback_id": "hello_all",
+							"color": "#3AA3E3",
+							"attachment_type": "default",
+							"actions": [
+								{
+									"name": "weare-welcome",
+									"text": "We Are!",
+									"type": "button",
+									// color: "#093162",//this is the PSU team color
+									"value": "weare-welcome"
+								},
+								{
+									"name": "Hi",
+									"text": "Hello",
+									"type": "button",
+									"value": "hi"
+								},
+								{
+									"name": "dismiss",
+									"text": "Dismiss",
+									"type": "button",
+									"value": "cancel",
+									"style": "danger"
+								}
+							]
+						}
+					]
+				})
+				break;
+			case 'schedule_later':
+				console.log(`action type is ${type} and body user is ${body.user.id}`);
+				ticket.create(body.user.id, body.channel.id, submission);
+				break;
+			default:
+				break;
+		}
+
 	}
 });
 
-async function ActiveWho(channel_id) {
+app.use(checkSignIn);
+
+app.get('/home', async function (req, res) {
+	//you could do a combo of res.session.locals = res.locals() and res.locals(res.session.locals), but kinda hacky
+	// console.log(`session info is ${util.inspect(req.session, { depth: 3 })}, and the locals are ${util.inspect(res.locals, { depth: 2 })}`)
+	let to_be_rendered = {};
+	to_be_rendered.layout = 'default';
+	to_be_rendered.template = 'home-template';
+	to_be_rendered.members = await DB.collection('users').find({ team_id: req.session.team.team_id }).toArray().then((results, err) => {
+		if (err) console.error(err);
+		else if (results.length != 0) {
+			//categorize the users based on their tz_labels, sorted by tz_offset
+			results.sort((a, b) => {
+				return a.tz_offset - b.tz_offset;
+			});
+			var num_tz = 0; var members_by_tz = {};
+			results.forEach(r => {
+				if (r.tz_offset in members_by_tz) members_by_tz[r.tz_offset].push(r);
+				else {
+					members_by_tz[r.tz_offset] = [];
+					members_by_tz[r.tz_offset].push(r);
+				}
+			});
+			console.log(`the total time zones are ${Object.keys(members_by_tz)}`)
+			var obj = {
+				tz_members: members_by_tz,
+				members_total: results.length
+			}
+			return Promise.resolve(obj);
+			// res.render('index', { layout: 'default', template: 'home-template', tz_members: members_by_tz });
+		}
+	});
+	to_be_rendered.channels_info = await DB.collection('channels').find({ team_id: req.session.team.team_id }).toArray().then((results, err) => {
+		if (err) console.error(err);
+		if (results.length != 0) { //this is current all the channels of the team, but perhaps it is good to differentiate which ones the logged user belongs to vs not
+			var TopSizeChannels = [], TopActiveChannels = [], msg_total = 0, limit = 3, c_list = []; //LIMIT is the number of Top X channels
+			results.sort((a, b) => { //from big to small
+				return b.num_members - a.num_members;
+			});
+			if (limit > results.length) limit = results.length;
+			for (var i = 0; i < limit; i++) {
+				msg_total += results[i].msgs.length;
+				TopSizeChannels.push(results[i]);
+			}
+			results.sort((a, b) => { //from active to inactive
+				return a.msgs.length - b.msgs.length;
+			});
+			for (var i = 0; i < limit; i++) {
+				TopActiveChannels.push(results[i]);
+			};
+			results.forEach(r => {
+				c_list.push({
+					cid: r.cid,
+					cname: r.cname
+				});
+			})
+			var obj = {
+				TopSizeChannels: TopSizeChannels,
+				TopActiveChannels: TopActiveChannels,
+				channels_total: results.length,
+				msg_total: msg_total,
+				channel_list: c_list
+			}
+			return Promise.resolve(obj);
+		}
+	});
+	// console.log(util.inspect(to_be_rendered, { depth: 2 }));
+	res.render('index', to_be_rendered);
+});
+
+app.get('/temporal', async function (req, res) {
+	let to_be_rendered = {};
+	to_be_rendered.layout = 'default';
+	to_be_rendered.template = 'home-template';
+	to_be_rendered.members = await DB.collection('users').find({ team_id: req.session.team.team_id }).toArray().then((results, err) => {
+		if (err) console.error(err);
+		else if (results.length != 0) {
+			//categorize the users based on their tz_labels, sorted by tz_offset
+			results.sort((a, b) => {
+				return a.tz_offset - b.tz_offset;
+			});
+			var num_tz = 0; var members_by_tz = {};
+			results.forEach(r => {
+				if (r.tz_offset in members_by_tz) members_by_tz[r.tz_offset].push(r);
+				else {
+					members_by_tz[r.tz_offset] = [];
+					members_by_tz[r.tz_offset].push(r);
+				}
+			});
+			console.log(`the total time zones are ${Object.keys(members_by_tz)}`)
+			var obj = {
+				tz_members: members_by_tz,
+				members_total: results.length
+			}
+			return Promise.resolve(obj);
+			// res.render('index', { layout: 'default', template: 'home-template', tz_members: members_by_tz });
+		}
+	});
+	to_be_rendered.channels_info = await DB.collection('channels').find({ team_id: 'T0A286J8K' }).toArray().then((results, err) => {
+		if (err) console.error(err);
+		if (results.length != 0) { //this is current all the channels of the team, but perhaps it is good to differentiate which ones the logged user belongs to vs not
+			var TopSizeChannels = [], TopActiveChannels = [], msg_total = 0, limit = 3, c_list = []; //LIMIT is the number of Top X channels
+			results.sort((a, b) => { //from big to small
+				return b.num_members - a.num_members;
+			});
+
+			for (var i = 0; i < limit; i++) {
+				msg_total += results[i].msgs.length;
+				TopSizeChannels.push(results[i]);
+			}
+			results.sort((a, b) => { //from active to inactive
+				return a.msgs.length - b.msgs.length;
+			});
+			for (var i = 0; i < limit; i++) {
+				TopActiveChannels.push(results[i]);
+			};
+			results.forEach(r => {
+				c_list.push({
+					cid: r.cid,
+					cname: r.cname
+				});
+			})
+			var obj = {
+				TopSizeChannels: TopSizeChannels,
+				TopActiveChannels: TopActiveChannels,
+				channels_total: results.length,
+				msg_total: msg_total,
+				channel_list: c_list
+			}
+			return Promise.resolve(obj);
+		}
+	});
+	// console.log(util.inspect(to_be_rendered, { depth: 2 }));
+	res.render('temporal', to_be_rendered);
+});
+
+async function InitTeamMembers(team_id, token, limit = null) {
+	var first = true, cursor = "fake", counter = 0;
+	let local_slack = new SlackWebClient(token);
+	while (cursor) {
+		if (first || limit) {
+			console.log(`first while iteration in InitTeamMembers: round ${counter}`)
+
+			await local_slack.users.list({
+				include_locale: true,
+				limit: limit | 20
+			}).then(res => {
+				// console.log(`members in the team include ${util.inspect(res.members, { depth: null })}`);
+				cursor = res.response_metadata.next_cursor;
+				counter += 1;
+				// console.log(`cursor is ${cursor} and counter is ${counter}`)
+				res.members.forEach(m => {
+					var uid = m.team_id + '_' + m.id;
+					if (!m.is_bot && m.id != 'USLACKBOT') DB.collection('users').updateOne(
+						{ uid: uid },
+						{
+							$set: {
+								uid: uid,
+								team_id: m.team_id,
+								name: m.name,
+								email: m.profile.email,
+								real_name: m.real_name,
+								tz: m.tz,
+								tz_label: m.tz_label,
+								local_area: m.tz ? m.tz.match(/([a-zA-Z]+)\//)[1] : 'unknown',
+								tz_offset: m.tz_offset / (60 * 60),
+								title: m.profile.title,
+								phone: m.profile.phone,
+								status_text: m.profile.status_text,
+								status_emoji: m.profile.status_emoji,
+								status_expiration: m.profile.status_expiration,
+								first_name: m.profile.first_name ? m.profile.first_name : m.profile.real_name.split(' ')[0],
+								last_name: m.profile.last_name,
+								image_48: m.profile.image_48,
+								is_custom_image: m.profile.is_custom_image,
+								is_bot: m.is_bot,
+								last_updated: m.updated,
+								locale: m.locale
+							}
+						},
+						{ upsert: true },
+						function (err, res) {
+							if (err) console.error(err);
+							console.log('user updated succesfully');
+
+						});
+
+				})
+			});
+			first = false;
+			if (limit || !cursor) break;
+		}
+		else {
+			console.log('iteration in InitTeamMembers else')
+			await local_slack.users.list({
+				cursor: cursor,
+				include_locale: true,
+				limit: limit | 20
+			}).then(res => {
+				// console.log(`members in the team include ${util.inspect(res.members, { depth: null })}`);
+				cursor = res.response_metadata.next_cursor;
+				counter += 1;
+				// console.log(`cursor is ${cursor} and counter is ${counter}`)
+				res.members.forEach(m => {
+					// console.log(`the m value inside res.members are (from users.list): ${util.inspect(m, { depth: null })}`)
+					var uid = m.team_id + '_' + m.id;
+					if (!m.is_bot && m.id != 'USLACKBOT') DB.collection('users').updateOne(
+						{ uid: uid },
+						{
+							$set: {
+								uid: uid,
+								team_id: m.team_id,
+								name: m.name,
+								real_name: m.real_name,
+								email: m.profile.email,
+								tz: m.tz,
+								tz_label: m.tz_label,
+								local_area: m.tz ? m.tz.match(/([a-zA-Z]+)\//)[1] : 'unknown',
+								tz_offset: m.tz_offset / (60 * 60),
+								title: m.profile.title,
+								phone: m.profile.phone,
+								status_text: m.profile.status_text,
+								status_emoji: m.profile.status_emoji,
+								status_expiration: m.profile.status_expiration,
+								first_name: m.profile.first_name ? m.profile.first_name : m.profile.real_name.split(' ')[0],
+								last_name: m.profile.last_name,
+								image_48: m.profile.image_48,
+								is_custom_image: m.profile.is_custom_image,
+								is_bot: m.is_bot,
+								last_updated: m.updated,
+								locale: m.locale
+							}
+						},
+						{ upsert: true },
+						function (err, res) {
+							if (err) console.error(err);
+							console.log('user updated succesfully');
+						});
+
+				});
+			});
+			if (!cursor) break;
+		}
+	}
+}
+
+async function InitTeamChannels(team_id, token, limit = null) {
+	var first = true, cursor = "fake", counter = 0;
+	var local_slack = new SlackWebClient(token);
+	while (cursor) {
+		if (first || limit) {
+			// console.log(`iteration in InitTeamChannels: round ${counter}`)
+			await local_slack.conversations.list({ //find all the channel info given a teamID; default: public channels as 'types' param
+				limit: limit | 20
+			}).then(res => {
+				cursor = res.response_metadata.next_cursor;
+				counter += 1;
+				// console.log(`cursor is ${cursor} and counter is ${counter}`)
+				res.channels.forEach(m => {
+					var cid = team_id + '_' + m.id;
+
+					DB.collection('channels').updateOne(
+						{ cid: cid },
+						{
+							$set: {
+								cid: cid,
+								cname: m.name,
+								team_id: team_id,
+								topic: m.topic.value,
+								purpose: m.purpose.value,
+								num_members: m.num_members,
+								msgs: []
+							}
+						},
+						{ upsert: true },
+						function (err, res) {
+							if (err) console.error(err);
+							(async () => {
+								await UpdateChannelRecentMsgs(cid, token, limit);
+								console.log('channel updated succesfully');
+							})();
+						});
+				})
+			});
+			first = false;
+			if (limit || !cursor) break;
+		}
+		else {
+			console.log('iteration in InitTeamChannels else')
+
+			await local_slack.conversations.list({
+				cursor: cursor,
+				limit: limit | 20
+			}).then(res => {
+				// console.log(`members in the team include ${util.inspect(res.members, { depth: null })}`);
+				cursor = res.response_metadata.next_cursor;
+				counter += 1;
+				// console.log(`cursor is ${cursor} and counter is ${counter}`)
+				res.channels.forEach(m => {
+					// console.log(`the m value inside res.channels are (from conversations.list): ${util.inspect(m, { depth: null })}`)
+					var cid = team_id + '_' + m.id;
+					DB.collection('channels').updateOne(
+						{ cid: cid },
+						{
+							$set: {
+								cid: cid,
+								cname: m.name,
+								team_id: team_id,
+								topic: m.topic.value,
+								purpose: m.purpose.value,
+								num_members: m.num_members,
+								msgs: []
+							}
+						},
+						{ upsert: true },
+						function (err, res) {
+							if (err) console.error(err);
+							(async () => {
+								await UpdateChannelRecentMsgs(cid, token, limit);
+								console.log('channel updated succesfully');
+							})();
+						});
+				});
+			});
+			if (!cursor) break;
+		}
+	}
+
+}
+
+async function UpdateChannelRecentMsgs(c_id, token, limit = 200) {
+	//init the channel info with the msgs from real users in the past month from now
+	let local_slack = new SlackWebClient(token);
+	console.log(`channel id passed in is ${c_id}`)
+	var recent_msgs = [];
+	var x = new Date();
+	x.setDate(1);
+	x.setMonth(x.getMonth() - 1);
+	local_slack.channels.history({ // pay attention the user token (for reading history from channel/groups) but the bot is used to write
+		channel: c_id.split('_')[1], //#test-bot (left) #learning-tech C0A34HJVA
+		count: limit | 200,
+		latest: new Date().getTime(),
+		// oldest: x.getTime() //since previous month
+	}).then(res => {
+		const msgs = res.messages;
+
+		// console.log(`msg in the Update func is ${util.inspect(msgs, {depth: 2})}`);
+		// console.log(`there are ${msgs.length} results from a channel history \n the first one is ${util.inspect(msgs[0], { depth: 2 })}`)
+		msgs.forEach(msg => {
+			if (msg.type == 'message' && !msg.bot_id && !msg.subtype) { // only look at the plain text msgs from real users
+				// console.log(`Real msg from user in the Update func is ${util.inspect(msg, {depth: 2})}`);
+				var msg_obj = {
+					mid: msg.client_msg_id,
+					username: msg.name,
+					text: msg.text,
+					ts: msg.ts,
+					is_starred: msg.is_starred,
+					reactions: msg.reactions
+				}
+				recent_msgs.push(msg_obj);
+
+			}
+		});
+		// console.log(`recent msgs array is ${util.inspect(recent_msgs, {depth: null})}`)
+		DB.collection('channels').updateOne(
+			{ cid: c_id },
+			{
+				$set: {
+					msgs: recent_msgs
+				}
+			},
+			function (err, res) {
+				if (err) console.error(err);
+				// else console.log(`msgs entered with DB transaction ${res}`)
+			});
+
+	})
+		.catch(err => console.error(err));
+}
+async function ActiveWho(channel_id, user_id) {
 	var members = [], activeMembers = [], activeProfiles = [];
 	var promiseArray = [];
 	await web.conversations.members({
-		token: process.env.BOT_USER_OAUTH_ACCESS_TOKEN,
 		channel: channel_id,
 		limit: 20 //TODO: change this number 
 	})
@@ -456,13 +1011,12 @@ async function ActiveWho(channel_id) {
 			// console.log(`members are ${members}`);
 
 			members.forEach(member => {
-
+				if (member === user_id) return;
 				var promise = web.users.getPresence({ user: member })
 					.then(async (resp) => {
 						// console.log(`${member} presence status is ${resp.presence}`);
 						await web.users.info({ user: member, include_locale: true })
 							.then(res => {
-								// console.log(`user name is ${res.user.profile.real_name}`);
 								if (resp.presence == 'active' && !res.user.is_bot) {
 									console.log(`user name is ${res.user.profile.real_name}`);
 									activeMembers.push({
@@ -489,92 +1043,157 @@ async function ActiveWho(channel_id) {
 		});
 	return activeMembers;
 }
-function OnlineNow(channel_id, responseURL) {
-	var members = [], activeMembers = [], activeProfiles = [];
-	var promiseArray = [];
-	web.conversations.members({
-		token: process.env.BOT_USER_OAUTH_ACCESS_TOKEN,
-		channel: channel_id,
-		limit: 20 //TODO: change this number 
-	})
-		.then(res => {
-			// console.log(`the web client result is ${util.inspect(res, { depth: 2, color: true })}`);
-			members = res.members;
-			// console.log(`members are ${members}`);
+function OnlineNow(channel_id, user_id, responseURL) {
 
-			members.forEach(member => {
-
-				var promise = web.users.getPresence({ user: member })
-					.then(async (resp) => {
-						// console.log(`${member} presence status is ${resp.presence}`);
-						await web.users.info({ user: member, include_locale: true })
-							.then(res => {
-								// console.log(`user name is ${res.user.profile.real_name}`);
-								if (resp.presence == 'active' && !res.user.is_bot) {
-									console.log(`user name is ${res.user.profile.real_name}`);
-									activeMembers.push({
-										id: member,
-										username: res.user.name,
-										name: res.user.profile.real_name,
-										email: res.user.profile.email
-									});
-								}
-
-							});
-						// promiseArray.push(inner_promise);
-
-					});
-				promiseArray.push(promise);
-
-			});
-			Promise.all(promiseArray).then(res => {
-				console.log(promiseArray)
-				// console.log(`now active members:${util.inspect(activeMembers, { depth: 2, color: true })}`);
-				// const promise = new Promise((resolve, reject) => {
-				// 	resolve(activeMembers);
-				// });
-
-				var message = {
-					"text": `There are ${activeMembers.length} students of this channel online`,
-					"attachments": [
+	(async () => {
+		const active = await ActiveWho(channel_id, user_id);
+		console.log(`who is online with ActiveWho func: ${util.inspect(active, { depth: 2 })}`);
+		var message = active.length ? {
+			"text": `There are ${active.length} students of this channel online except you`,
+			"attachments": [
+				{
+					"text": "Would you like to invite them for video call or a Slack group chat",
+					"fallback": "Shame... buttons aren't supported in this land",
+					"callback_id": "ContactNow",
+					"color": "#3AA3E3",
+					"attachment_type": "default",
+					"actions": [
 						{
-							"text": "Would you like to invite them for video call or a Slack group chat",
-							"fallback": "Shame... buttons aren't supported in this land",
-							"callback_id": "ContactNow",
-							"color": "#3AA3E3",
-							"attachment_type": "default",
-							"actions": [
-								{
-									"name": "hangout",
-									"text": "Video call",
-									"type": "button",
-									"value": "hangout"
-								},
-								{
-									"name": "mention",
-									"text": "@here in the channel",
-									"type": "button",
-									"value": "mention"
-								},
-								{
-									"name": "Cancel",
-									"text": "Cancel",
-									"type": "button",
-									"value": "cancel",
-									"style": "danger"
-								}
-							]
+							"name": "hangout",
+							"text": "Video call",
+							"type": "button",
+							"value": "hangout"
+						},
+						{
+							"name": "mention",
+							"text": "@here in the channel",
+							"type": "button",
+							"value": "mention"
+						},
+						{
+							"name": "Cancel",
+							"text": "Cancel",
+							"type": "button",
+							"value": "cancel",
+							"style": "danger"
 						}
 					]
-					// ,
-					// replace_original: false,
 				}
-				sendMessageToSlackResponseURL(responseURL, message);
+			]
+			// ,
+			// replace_original: false,
+		} : {
+				'text': 'Ohh...bad time, nobody is online',
+				'attachments': [
+					{
+						'text': 'Would you like to send an email to set up something later',
+						"fallback": "Shame... buttons aren't supported in this land",
+						"callback_id": "Nobody-Online",
+						"color": "#3AA3E3",
+						"attachment_type": "default",
+						"actions": [
+
+							{
+								"name": "Later",
+								"text": "Yes, schedule something later",
+								"type": "button",
+								"value": "later"
+							},
+							{
+								"name": "Cancel",
+								"text": "Cancel",
+								"type": "button",
+								"value": "cancel",
+								"style": "danger"
+							}
+						]
+					}
+				]
+			}
+		sendMessageToSlackResponseURL(responseURL, message);
+	})()
+
+	// //another way of implementation
+	// var members = [], activeMembers = [], activeProfiles = [];
+	// var promiseArray = [];
+	// web.conversations.members({
+	// 	token: process.env.BOT_USER_OAUTH_ACCESS_TOKEN,
+	// 	channel: channel_id,
+	// 	limit: 20 //TODO: change this number 
+	// })
+	// 	.then(res => {
+	// 		// console.log(`the web client result is ${util.inspect(res, { depth: 2, color: true })}`);
+	// 		members = res.members;
+	// 		// console.log(`members are ${members}`);
+
+	// 		members.forEach(member => {
+
+	// 			var promise = web.users.getPresence({ user: member })
+	// 				.then(async (resp) => {
+	// 					// console.log(`${member} presence status is ${resp.presence}`);
+	// 					await web.users.info({ user: member, include_locale: true })
+	// 						.then(res => {
+	// 							// console.log(`user name is ${res.user.profile.real_name}`);
+	// 							if (resp.presence == 'active' && !res.user.is_bot) {
+	// 								console.log(`user name is ${res.user.profile.real_name}`);
+	// 								activeMembers.push({
+	// 									id: member,
+	// 									username: res.user.name,
+	// 									name: res.user.profile.real_name,
+	// 									email: res.user.profile.email
+	// 								});
+	// 							}
+
+	// 						});
+	// 					// promiseArray.push(inner_promise);
+
+	// 				});
+	// 			promiseArray.push(promise);
+
+	// 		});
+	// 		Promise.all(promiseArray).then(res => {
+	// 			console.log(promiseArray);
+	// 			var message = {
+	// 				"text": `There are ${activeMembers.length} students of this channel online`,
+	// 				"attachments": [
+	// 					{
+	// 						"text": "Would you like to invite them for video call or a Slack group chat",
+	// 						"fallback": "Shame... buttons aren't supported in this land",
+	// 						"callback_id": "ContactNow",
+	// 						"color": "#3AA3E3",
+	// 						"attachment_type": "default",
+	// 						"actions": [
+	// 							{
+	// 								"name": "hangout",
+	// 								"text": "Video call",
+	// 								"type": "button",
+	// 								"value": "hangout"
+	// 							},
+	// 							{
+	// 								"name": "mention",
+	// 								"text": "@here in the channel",
+	// 								"type": "button",
+	// 								"value": "mention"
+	// 							},
+	// 							{
+	// 								"name": "Cancel",
+	// 								"text": "Cancel",
+	// 								"type": "button",
+	// 								"value": "cancel",
+	// 								"style": "danger"
+	// 							}
+	// 						]
+	// 					}
+	// 				]
+	// 				// ,
+	// 				// replace_original: false,
+	// 			}
+	// 			sendMessageToSlackResponseURL(responseURL, message);
 
 
-				return activeMembers;
-			})
-		});
+	// 			return activeMembers;
+	// 		})
+	// 	});
 }
 function sendMessageToSlackResponseURL(responseURL, JSONmessage) {
 	console.log(`Sending msg : ${JSONmessage.text} to Slack with a response url to be ${responseURL}`);
@@ -594,7 +1213,58 @@ function sendMessageToSlackResponseURL(responseURL, JSONmessage) {
 	});
 }
 
+function timeConverter(UNIX_timestamp) {
+	var a = new Date(UNIX_timestamp * 1000);
+	var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+	var year = a.getFullYear();
+	var month = months[a.getMonth()];
+	var date = a.getDate();
+	var hour = a.getHours();
+	var min = a.getMinutes();
+	var sec = a.getSeconds();
+	var time = date + ' ' + month + ' ' + year + ' ' + hour + ':' + min + ':' + sec;
+	return time;
+}
 
+function checkSignIn(req, res, next) {
+	if (req.session.user) {
+		// console.log(`user logged in: ${req.session.user}`);
+		// console.log(`locals are ${util.inspect(res.locals, { depth: 2 })}`)
+		res.locals.login = true;
+		console.log(`req ip is ${req.ip}, if there is list, then ${req.ips}`)
+		next();     //If session exists, proceed to page
+	} else {
+		var err = new Error("Not logged in!");
+		// console.log(req.session.user);
+		// next(err);  //Error, trying to access unauthorized page!
+		console.error(err);
+		res.redirect('/login');
+	}
+}
+
+app.use((req, res, next) => {
+	return next(createError(404, 'File not found'));
+});
+
+app.use((err, req, res, next) => {
+	res.locals.message = err.message; //makiong the error message available in the template
+	const status = err.status | 500;
+	res.locals.error = req.app.get('env') === 'development' ? err : {};
+	res.status(status);
+	return res.render('error')
+});
 app.listen(process.env.PORT, () => {
 	console.log(`WeAre! server is running on PORT ${process.env.PORT}`);
 });
+
+function initDB() {
+	DB.createCollection('commands', function (err, collection) { });
+	DB.createCollection('users', function (err, collection) { });
+	DB.createCollection('chats', function (err, collection) { });
+	DB.createCollection('userlogs', function (err, collection) { });
+	DB.createCollection('channeladdress', function (err, collection) { });
+	DB.createCollection('channels', function (err, collection) { });
+	DB.createCollection('teamnames', function (err, collection) { });
+	DB.createCollection('oauthtokens', function (err, collection) { });
+	// DB.createCollection('tildaposts', function (err, collection) { });
+}

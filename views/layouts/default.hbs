@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>We Are! Penn State Community Of Learners</title>
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2, user-scalable=no, viewport-fit=cover" />
+    <meta name="description" content="Community of online learners are connected here." />
+    <meta name="keywords" content="we are, PSU, World Campus, Network, Community" />
+    <meta name="author" content="Na Sun" />
+    <meta name="theme-color" content="#ffffff" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/components/icon.min.css">
+    {{!--
+    <link rel="stylesheet" href="semantic.min.css">
+    <link rel="stylesheet" href="icon.min.css"> --}}
+    <link rel="stylesheet" href="/stylesheets/custom.css">
+</head>
+
+<body class="{{template}}">
+    {{#if login}}
+    {{> header }}
+    {{else}}
+    {{> header_anon}}
+    {{/if}}
+
+    <div class="container pusher"> {{{body}}} </div>
+    {{!-- {{> member_tz }} --}}
+    {{> footer}}
+
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+        crossorigin="anonymous"></script>
+    <script src="semantic.min.js"></script>
+    <script src="/js/app.js"></script>
+</body>
+
+</html>
