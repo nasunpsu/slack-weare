@@ -1,7 +1,6 @@
 <script src="//d3js.org/d3.v3.min.js"></script>
 
-<style type="text/css">
-	
+{{!-- <style type="text/css">
 	.links line {
 		stroke: #999;
 		stroke-opacity: 0.6;
@@ -11,14 +10,46 @@
 		stroke: #fff;
 		stroke-width: 1.5px;
 	}
+</style> --}}
+<style type="text/css">
+	svg {
+		margin-top: 20%;
+		border: 1px solid #ccc;
+	}
+
+	body {
+		font: 10px sans-serif;
+	}
+
+	circle.node {
+		fill: lightsteelblue;
+		stroke: #555;
+		stroke-width: 3px;
+	}
+
+	circle.leaf {
+		stroke: #fff;
+		stroke-width: 1.5px;
+	}
+
+	path.hull {
+		fill: lightsteelblue;
+		fill-opacity: 0.3;
+	}
+
+	line.link {
+		stroke: #333;
+		stroke-opacity: 0.5;
+		pointer-events: none;
+	}
 </style>
 
 <body>
-	
+
 	<div id="connect" class="ui container canvas draw fullwidth first-page-element">
 		<div class="ui grid page">
 			<div class="ui selection dropdown connectedby">
-				We are connected by 
+				We are connected by
 				<input type="hidden" name="language">
 				<span class="text">Filter</span>
 				<div class="menu">
@@ -45,11 +76,11 @@
 				</div>
 			</div>
 		</div>
-		
+
 		<div class="ui modal initiatemsg">
 			<div class="ui text container aligned center middle padded">
 				<h3 class="ui header">Compose the message for <strong class="receiver"></strong></h3>
-				<div class="ui form">					
+				<div class="ui form">
 					<div class="field">
 						<div class="field">
 							<div class="ui inverted black label">She/he might be waiting for you to reach out to! Remember we are connected!</div>
@@ -75,11 +106,12 @@
 				<li>You can remove the filter condition above by deleting the tag.</li>
 			</ul>
 		</div>
-		<div id="chart" class="canvas draw fullwidth">
-			
+		<div id="chart" visdata='{{{json data}}}' class="network canvas draw fullwidth">
+
 		</div>
 	</div>
-
-	
-	<script type="text/javascript" src="javascripts/graph.js"> </script>
+	{{!--
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.7.0/d3.min.js"></script> --}}
+	<script src="https://fastcdn.org/D3.js/3.5.6/d3.min.js"></script>
+	<script src="/js/d3_network.js"></script>
 </body>

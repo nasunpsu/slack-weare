@@ -84,8 +84,11 @@ app.engine('hbs', hbs({
 	partialsDir: [
 		path.join(__dirname, '/../views/partials/'),
 		path.join(__dirname, '/../semantic/dist/')
-	]
+	],
+	helpers: { json: function (context) { return JSON.stringify(context); } }
 }));
+
+// app.engine('handlebars', exphbs({ helpers: { json: function (context) { return JSON.stringify(context); } } }));
 
 app.get('/install', (req, res) => {
 	let to_be_rendered = {
@@ -258,9 +261,9 @@ app.post('/slack/events', (req, res, next) => {
 			// next();
 			break;
 		}
-		default: { 
+		default: {
 			console.error('nothing cased events');
-			res.sendStatus(500); next(); 
+			res.sendStatus(500); next();
 		}
 	}
 
@@ -622,6 +625,53 @@ app.get('/home', async function (req, res) {
 	});
 	// console.log(util.inspect(to_be_rendered, { depth: 2 }));
 	res.render('index', to_be_rendered);
+});
+
+app.get('/network', async function (req, res) {
+	let to_be_rendered = {};
+	to_be_rendered.layout = 'default';
+	to_be_rendered.template = 'home-template';
+	to_be_rendered.data = await DB.collection('users').find({ team_id: req.session.team.team_id }).toArray().then((results, err) => {
+		if (err) console.error(err);
+		else if (results.length != 0) {
+			var nodes = [];
+			var groups = [];
+			var links = []
+			var link_ends = {};
+			results.forEach(r => {
+				obj = r;
+				obj.name = r.first_name;
+				obj.id = r.uid;
+				nodes.push(obj);
+				if (groups.indexOf(obj.group) == -1) {
+					groups.push(obj.group);
+					link_ends[obj.group] = [obj.id];
+				}
+				else {
+					console.log(`link_ends list is ${util.inspect(link_ends[obj.group], {depth: null})}`);
+					link_ends[obj.group].forEach( end => {//for (var end in link_ends[obj.group]) { loop through the index instead of array item
+						console.log(`the pushed source end is ${end}`)
+						console.log(`the pushed target end is ${r.uid}`)
+						links.push({
+							source: end,
+							target: r.uid,
+							value: Math.random()
+						});
+					});
+					link_ends[obj.group].push(obj.id);
+				}
+			});
+			console.log(`the total groups are ${Object.keys(link_ends)}`)
+			var obj = {
+				nodes: nodes,
+				links: links
+			}
+			console.log(`links are ${util.inspect(links, {depth: 3})}`);
+			return Promise.resolve(obj);
+			// res.render('index', { layout: 'default', template: 'home-template', tz_members: members_by_tz });
+		}
+	});
+	res.render('network', to_be_rendered);
 });
 
 app.get('/temporal', async function (req, res) {
