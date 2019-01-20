@@ -1,19 +1,22 @@
 //File used to extract basic ldap data like major from psu's database
 
 const LDAP = require('ldap-client');
+
+/** ldap object that allows us to search psu's data */
+let ldap = null;
+
 /**
- * Function to get ldap object used to query psu's ldap database
+ * Function to get ldap object used to query psu's ldap database (opens ldap connection if necessary)
  * @returns promise containing ldap object connected and ready to use for psu's ldap database
  */
-const getLdap = (() => {
-    /** ldap object to return */
-    let ldap = null;
-    return () => new Promise((resolve, reject) => {
+const getLdap = () => {
+    return new Promise((resolve, reject) => {
         //if ldap defined, return it otherwise set it up
         if (!!ldap) {
             resolve(ldap);
             return;
         }
+        /** Function when ldap connection is established */
         const onReady = (error) => {
             // if there is an error reject the promise
             if (error) {
@@ -32,7 +35,7 @@ const getLdap = (() => {
             scope: LDAP.SUBTREE,
         }, onReady);
     });
-})();
+};
 
 /**
  * Function that searches the ldap database for a given email
@@ -47,19 +50,19 @@ const searchLdap = async (email) => {
     }
     return new Promise((resolve, reject) => {
         ldap.search(options, (err, data) => {
-            if(err){
+            if (err) {
                 reject(err);
                 return;
             }
-            if(!Array.isArray(data)){
+            if (!Array.isArray(data)) {
                 reject('Result is an unexpected type');
                 return;
             }
-            if(data.length === 0){
+            if (data.length === 0) {
                 reject('No results found');
                 return;
             }
-            if(data.length > 1){
+            if (data.length > 1) {
                 console.log(`Multiple results found for ldap query ${options.filter}`);
             }
             const user = new User(data[0]);
@@ -68,57 +71,62 @@ const searchLdap = async (email) => {
     });
 }
 
+/** Closes ldap connection if it was opened (void) */
+const closeLdapConnection = () => {
+    if(!ldap){
+        return;
+    }
+    ldap.close();
+    ldap = null;
+}
 
-searchLdap('mrm6089@psu.edu').then(res => {
-    console.log(res.mail);
-});
-
-class User{
-    constructor(user){
+/** Class containing all attributes the ldap provides */
+class User {
+    constructor(ldapUser) {
         /** Email address */
-        this.eduPersonPrincipalName = user.eduPersonPrincipalName[0];
+        this.eduPersonPrincipalName = ldapUser.eduPersonPrincipalName[0];
 
         //3 id numbers represented as strings
-        this.uidNumber = user.uidNumber[0];
-        this.psDirIDN = user.psDirIDN[0];
-        this.gidNumber = user.gidNumber[0];
+        this.uidNumber = ldapUser.uidNumber[0];
+        this.psDirIDN = ldapUser.psDirIDN[0];
+        this.gidNumber = ldapUser.gidNumber[0];
 
         //3 directories for computs
-        this.psMacLabHomeDir = user.psMacLabHomeDir[0];
-        this.loginShell = user.loginShell[0];
-        this.homeDirectory = user.homeDirectory[0];
+        this.psMacLabHomeDir = ldapUser.psMacLabHomeDir[0];
+        this.loginShell = ldapUser.loginShell[0];
+        this.homeDirectory = ldapUser.homeDirectory[0];
 
         /** PSU email */
-        this.mail = user.mail[0];
+        this.mail = ldapUser.mail[0];
         /** Array of waht this person is a part of like 'eduPerson', 'person', 'eduMember' */
-        this.objectClass = user.objectClass;
+        this.objectClass = ldapUser.objectClass;
         /** Array of strings that may contain email lists or enrolled courses not sure */
-        this.psMemberOf = user.psMemberOf;
+        this.psMemberOf = ldapUser.psMemberOf;
         /** Campus name that student attends */
-        this.psCampus = user.psCampus[0];
+        this.psCampus = ldapUser.psCampus[0];
         /** Title like 'Undergrad Student' */
-        this.title = user.title[0];
+        this.title = ldapUser.title[0];
         /** Title like 'Student' */
-        this.eduPrimaryAffiliation = user.eduPrimaryAffiliation;
+        this.eduPrimaryAffiliation = ldapUser.eduPrimaryAffiliation;
         /** Array of all affiliations */
-        this.eduPersonalAffiliation = user.eduPersonalAffiliation;
+        this.eduPersonalAffiliation = ldapUser.eduPersonalAffiliation;
         /** Array of all emails and aliases */
-        this.psuMailID = user.psuMailID;
+        this.psuMailID = ldapUser.psuMailID;
         /** Full name */
-        this.cn = user.cn[0];
+        this.cn = ldapUser.cn[0];
         /** Full name */
-        this.displayName = user.displayName[0];
+        this.displayName = ldapUser.displayName[0];
         /** PSU microsoft email */
-        this.psMailbox = user.psMailbox[0];
-        this.psMailHost = user.psMailHost[0];
+        this.psMailbox = ldapUser.psMailbox[0];
+        this.psMailHost = ldapUser.psMailHost[0];
         /** Frist name */
-        this.givenName = user.givenName[0];
-        this.psFERPAExam = user.psFERPAExam[0];
+        this.givenName = ldapUser.givenName[0];
+        this.psFERPAExam = ldapUser.psFERPAExam[0];
         /** Major */
-        this.psCurriculum = user.psCurriculum[0];
+        this.psCurriculum = ldapUser.psCurriculum[0];
         /** Search param */
-        this.dn = user.dn;
+        this.dn = ldapUser.dn;
     }
 }
 
-module.exports = searchLdap;
+module.exports = {searchLdap, closeLdapConnection};
