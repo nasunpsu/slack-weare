@@ -603,17 +603,20 @@ app.get('/home', async function (req, res) {
 });
 
 app.get('/tablelist', async function(req, res) {
-	//generate the basic table for the logged in user to check who is closet to him/her
-	// let to_be_rendered = {};
-	// to_be_rendered.layout = 'default';
-	// to_be_rendered.template = 'home-template';
+	// res.send('This is table list');
+	console.log('get table list from users');
+	// generate the basic table for the logged in user to check who is closet to him/her
+	let to_be_rendered = {};
+	to_be_rendered.layout = 'default';
+	to_be_rendered.template = 'home-template';
 	// to_be_rendered.data = await DB.collection('users').find({ team_id: req.session.team.team_id }).toArray().then((results, err) => {
 	// 	if (err) console.error(err);
 	// 	else if (results.length != 0) {
 	// 		//do something with it
 	// 	};
 	// });
-	// res.render('table', to_be_rendered);
+	to_be_rendered.data = "this is the data passed in to generate list";
+	res.render('table', to_be_rendered);
 });
 app.get('/network11', async function(req, res) {
 	let to_be_rendered = {};
