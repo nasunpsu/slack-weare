@@ -1,8 +1,9 @@
 require('dotenv').config();
 const app = require('../server/service.js');
+const similarIdx = require('../server/calculators.js');
 //const SlackRTMClient = require('../server/SlackRTMClient');
 const path = require('path');
-const http = require('http');
+const https = require('https');
 const createError = require('http-errors')
 const util = require('util');
 const ticket = require('../ticket.js');
@@ -12,7 +13,6 @@ const onboard = require('../server/onboard.js')
 
 
 const bodyParser = require("body-parser");
-// const superagent = require("superagent");
 const request = require('request');
 const apiUrl = 'https://slack.com/api';
 // const methodUril = 'https://slack.com/api/';
@@ -137,15 +137,13 @@ app.get('/api/oauth', function (req, res, next) {
 							}
 							console.log('before retrieving usr DB');
 							await DB.collection('users').find({ uid: result.team.id + '_' + result.user.id }).toArray()
-								.then((users_docs, err) => {
+								.then(async (users_docs, err) => {
 									console.log(`the user is read from MongoDB: ${util.inspect(users_docs[0], { depth: 2 })}`);
 									if (err) console.error(err);
-									req.session.user = users_docs[0];
-									req.session.team = docs[0];
+									req.session.user = await users_docs[0];
+									req.session.team = await docs[0];
 									res.redirect('/home');
 								});
-
-
 						}
 					});
 			}
@@ -168,14 +166,14 @@ app.get('/api/oauth', function (req, res, next) {
 						await InitTeamMembers(result.team_id, result.access_token, null);
 						await InitTeamChannels(result.team_id, result.access_token, null);
 						await DB.collection('users').find({ uid: result.team_id + '_' + result.user_id }).toArray()
-							.then((user_docs, err) => {
+							.then(async (user_docs, err) => {
 								if (err) console.error(err);
-								req.session.user = user_docs[0];
-								req.session.team = {
+								req.session.user = await user_docs[0];
+								req.session.team = await {
 									team_id: result.team_id,
 									team_name: result.team_name,
 									app_url: result.incoming_webhook.configuration_url
-								}
+								};
 								console.log(`signed in after installing WeAre! bot: team is ${util.inspect(req.session.team, { depth: 3 })}`);
 								res.redirect('/home');//TODO: replace the url
 							});
@@ -188,29 +186,6 @@ app.get('/api/oauth', function (req, res, next) {
 		}
 		console.log('OUT of oauth access')
 	});
-	// request.post(apiUrl + '/oauth.access', data, function (error, response, body) {
-	// 	// if (!error && response.statusCode == 200) {
-
-	// 	//   // Get an auth token (and store the team_id / token)
-	// 	// //   storage.setItemSync(JSON.parse(body).team_id, JSON.parse(body).access_token);
-	// 	// console.log(`enter the access: ${util.inspect(body, {depth: null})}`)
-	// 	// //   res.sendStatus(200);
-
-	// 	//   // Show a nicer web page or redirect to Slack, instead of just giving 200 in reality!
-	// 	// //   res.redirect(__dirname + "/home.html");
-	// 	// res.redirect('/home');
-	// 	// ;
-	// 	// }
-	// 	var JSONresponse = JSON.parse(body)
-	//     if (!JSONresponse.ok){
-	//         console.log(JSONresponse)
-	//         res.send("Error encountered: \n"+JSON.stringify(JSONresponse)).status(200).end()
-	//     }else{
-	//         console.log(JSONresponse)
-	// 		// res.send("Success!")
-	// 		res.redirect('/home');
-	//     }
-	//   });
 });
 
 app.get('/auth', (req, res) => {
@@ -223,10 +198,10 @@ app.get('/test', (req, res) => {
 	res.send('haha');
 	res.status(200).end();
 	(async () => {									//TODO: MOVE this Block to the Init Module
-		await InitTeamMembers('T0A286J8K', null);
+		await InitTeamMembers('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, null);
 	})();
 	(async () => {
-		await InitTeamChannels('T0A286J8K', null);;
+		await InitTeamChannels('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, null);;
 	})();
 
 	console.log('---------------test----------------');
@@ -627,6 +602,57 @@ app.get('/home', async function (req, res) {
 	res.render('index', to_be_rendered);
 });
 
+app.get('/tablelist', async function(req, res) {
+	// res.send('This is table list');
+	console.log('get table list from users');
+	// generate the basic table for the logged in user to check who is closet to him/her
+	let to_be_rendered = {};
+	to_be_rendered.layout = 'default';
+	to_be_rendered.template = 'home-template';
+	// to_be_rendered.data = await DB.collection('users').find({ team_id: req.session.team.team_id }).toArray().then((results, err) => {
+	// 	if (err) console.error(err);
+	// 	else if (results.length != 0) {
+	// 		//do something with it
+	// 	};
+	// });
+	to_be_rendered.data = "this is the data passed in to generate list";
+	res.render('table', to_be_rendered);
+});
+app.get('/network11', async function(req, res) {
+	let to_be_rendered = {};
+	to_be_rendered.layout = 'default';
+	to_be_rendered.template = 'home-template';
+	to_be_rendered.data = await DB.collection('users').find({ team_id: req.session.team.team_id }).toArray().then((results, err) => {
+		if (err) console.error(err);
+		else if (results.length != 0) {
+			var nodes = results, links = [], c_node = req.session.user, channel_nodes = req.session.user.channels;
+			var m_channels = {}; //input to compute Jaccard similarity
+			nodes.forEach(n => {
+				if(n.uid == c_node.uid) {
+					n.center = true;
+					m_channels[n.uid] = n.channels;
+					return;
+				}
+				req.session.user.channels.forEach(c => {
+					if(n.channels.indexOf(c)!=-1) {
+						if(!m_channels[n.uid]) m_channels[n.uid] = n.channels;
+						n.shared_channels = c;
+						n.group = c;
+						links.push({
+							source: n.uid,
+							target: c_node.cid,
+						})
+					}
+				})
+			});
+			jac_links = similarIdx.JaccardIdx(m_channels);
+			console.log(`the jaclinks are ${util.inspect(jac_links, {depth: null})}`);
+			console.log(`the common channels links are ${util.inspect(links, {depth: null})}`);
+		}
+	});
+	res.render('network', to_be_rendered);
+});
+
 app.get('/network', async function (req, res) {
 	let to_be_rendered = {};
 	to_be_rendered.layout = 'default';
@@ -755,8 +781,20 @@ async function InitTeamMembers(team_id, token, limit = null) {
 				cursor = res.response_metadata.next_cursor;
 				counter += 1;
 				// console.log(`cursor is ${cursor} and counter is ${counter}`)
-				res.members.forEach(m => {
+				res.members.forEach(async (m) => {
 					var uid = m.team_id + '_' + m.id;
+					var user_channels = [];
+					await local_slack.users.conversations({
+						user: m.id,
+						limit: 200, //this should be c_limit for channel limit per member instead of the limit as the users list
+						// cursor: c_cursor this should also be initialized
+					}).then( res_channels => {
+						res_channels.channels.forEach(c => {
+							console.log(c.id);
+							user_channels.push({cid: m.team_id + '_' + c.id,
+							cname: c.cname});
+						});
+					});
 					if (!m.is_bot && m.id != 'USLACKBOT') DB.collection('users').updateOne(
 						{ uid: uid },
 						{
@@ -781,7 +819,8 @@ async function InitTeamMembers(team_id, token, limit = null) {
 								is_custom_image: m.profile.is_custom_image,
 								is_bot: m.is_bot,
 								last_updated: m.updated,
-								locale: m.locale
+								locale: m.locale,
+								channels: user_channels
 							}
 						},
 						{ upsert: true },
@@ -807,9 +846,20 @@ async function InitTeamMembers(team_id, token, limit = null) {
 				cursor = res.response_metadata.next_cursor;
 				counter += 1;
 				// console.log(`cursor is ${cursor} and counter is ${counter}`)
-				res.members.forEach(m => {
+				res.members.forEach(async (m) => {
 					// console.log(`the m value inside res.members are (from users.list): ${util.inspect(m, { depth: null })}`)
 					var uid = m.team_id + '_' + m.id;
+					var user_channels = [];
+					await local_slack.users.conversations({
+						user: m.id,
+						limit: 200, //this should be c_limit for channel limit per member instead of the limit as the users list
+						// cursor: c_cursor this should also be initialized
+					}).then( res_channels => {
+						res_channels.channels.forEach(c => {
+							console.log(c.id);
+							user_channels.push(m.team_id + '_' + c.id);
+						});
+					});
 					if (!m.is_bot && m.id != 'USLACKBOT') DB.collection('users').updateOne(
 						{ uid: uid },
 						{
@@ -834,7 +884,8 @@ async function InitTeamMembers(team_id, token, limit = null) {
 								is_custom_image: m.profile.is_custom_image,
 								is_bot: m.is_bot,
 								last_updated: m.updated,
-								locale: m.locale
+								locale: m.locale,
+								channels: user_channels
 							}
 						},
 						{ upsert: true },
@@ -1238,9 +1289,16 @@ app.use((err, req, res, next) => {
 	res.status(status);
 	return res.render('error')
 });
+
+// Set up express server here
+// const options = {
+//     cert: fs.readFileSync('/etc/letsencrypt/live/93b290fd.ngrok.io/fullchain.pem'),
+//     key: fs.readFileSync('/etc/letsencrypt/live/93b290fd.ngrok.io/privkey.pem')
+// };
 app.listen(process.env.PORT, () => {
 	console.log(`WeAre! server is running on PORT ${process.env.PORT}`);
 });
+// https.createServer(options, app).listen(8443);
 
 function initDB() {
 	DB.createCollection('commands', function (err, collection) { });
