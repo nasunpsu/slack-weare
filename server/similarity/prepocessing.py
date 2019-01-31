@@ -6,6 +6,13 @@ import collections
 import re
 
 def prepocess(users):
+    """ Fixes dataframe for use in distance function
+
+    Arguments:
+        users {Dataframe} -- users to clean
+    Returns:
+        Dataframe -- Modified users dataframe
+    """
     users.channels = users.channels.apply(clean_channels)
     users = add_binarized_channels(users)
     users = drop_student_columns(users)
@@ -15,11 +22,13 @@ def prepocess(users):
     return users
 
 def clean_email(students): 
+    """ Fix up email column in students, returning students """
     students = students.rename(columns={'Email': 'email'})
     students.email = students.email.apply(lambda x: x.lower())
     return students
 
 def clean_channels(channel_obj_array):
+    """ Given an entry in the channel column, return an array resprenting that column """
     channels = []
     if isinstance(channel_obj_array, str):
         channel_obj_array = json.loads(channel_obj_array) 
@@ -36,6 +45,7 @@ def clean_channels(channel_obj_array):
     return channels
 
 def add_binarized_channels(users):
+    """ Adds columns for each channel to the users dataframe, returning users """
     binarized_channels = users.channels.apply('|'.join).str.get_dummies()
     col_list = list(binarized_channels.columns)
     column_mappings = {name: f'channel_{i}' for i, name in enumerate(col_list)}
@@ -46,6 +56,7 @@ def add_binarized_channels(users):
     return users
 
 def drop_student_columns(users):
+    """ Removes columns that are too dirty or unnecesary returning new datafram"""
     users['id']=users.email.str.split("@", n=1, expand=True)[0]
     if '_id' in users.columns:
         del users['_id']
@@ -62,7 +73,7 @@ def drop_student_columns(users):
     return users
 
 def generate_ordinal_mapping(users, SOCs, CCEs):
-
+    """ Creates an array of mappings from ordinal column values to numerical column values """
     ordinal_cols_mapping = []
     #the following are mappings from textual column values to numberical ones
     important_scale = [
@@ -116,6 +127,7 @@ def generate_ordinal_mapping(users, SOCs, CCEs):
     return ordinal_cols_mapping
 
 def enumerate_ordinal_columns(users):
+    """ Converts ordinal columns to numeric columns """
     #names of all the soc columns
     SOCs = ['SOC'+str(x+1) for x in range(10)]
     #names of all the CCE columns
@@ -135,6 +147,7 @@ def enumerate_ordinal_columns(users):
     return users
 
 def clean_kids_column(users):
+    """ Fixes kids columns """
     none_i = re.compile(r'none', flags=re.IGNORECASE)
     users['kids'].replace(none_i, 0, inplace=True)
     none_i = re.compile(r'zero', flags=re.IGNORECASE)
@@ -144,6 +157,7 @@ def clean_kids_column(users):
     return users
 
 def fix_nan_columns(users):
+    """ Altes nan columns for use in distance function """
     categorical_cols = ["gender", "InUS", "ethnicity", "Usstate", "marrital", "employment", "industry"]
     categorical_cols = [c for c in categorical_cols if c in users.columns]
     users_c_mode = users[categorical_cols].mode()
