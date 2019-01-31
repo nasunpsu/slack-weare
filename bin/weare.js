@@ -106,19 +106,23 @@ app.get('/login', function (req, res) {
 	res.render('login', to_be_rendered);
 });
 
-const insertUser = async (result) => {
-    const { email, name } = result.user;
-    let user = {email, name};
+/**
+ * Uses ldap data to insert user into database
+ * @param {any} user User to insert into database
+ */
+const insertUser = async (user) => {
+    const { email, name } = user;
+    let insertObj = {email, name};
     try{
         const ldapUser = await ldap.searchLdap(email);
-        user[affililiation] = ldapUser.eduPrimaryAffiliation,
-        user[campus] = ldapUser.psCampus,
-        user[major] = ldapUser.psCurriculum
+        insertObj[affililiation] = ldapUser.eduPrimaryAffiliation,
+        insertObj[campus] = ldapUser.psCampus,
+        insertObj[major] = ldapUser.psCurriculum
     }
     catch(e){
         console.warn(`Email ${email} not found in ldap`);
     }
-    await DB.collection('users').insertOne(user);
+    await DB.collection('users').insertOne(insertObj);
 }
 
 
@@ -135,6 +139,7 @@ app.get('/api/oauth', function (req, res, next) {
 	};
 	web.oauth.access(data.form, async function (err, result) {
 		if (err) console.error(err);
+        await insertUser(result.user);
 		console.log(`enter the oauth access: ${util.inspect(result, { depth: 2 })}`)
 		if (!err) {
 			if (!result.bot) { //this is signed in with slack
