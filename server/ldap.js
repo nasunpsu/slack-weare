@@ -39,8 +39,8 @@ const getLdap = () => {
 
 /**
  * Function that searches the ldap database for a given email
- * @param {*} email Email of the user to search for
- * @returns promise containing full ldap data for the user found
+ * @param {string} email Email of the user to search for
+ * @returns {Promise<User>} promise containing full ldap data for the user found
  */
 const searchLdap = async (email) => {
     const ldap = await getLdap();
