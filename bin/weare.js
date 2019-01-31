@@ -22,6 +22,7 @@ const session = require('express-session');
 const MongoStore = require('connect-mongo')(session);
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan')
+const ldap = require('../server/ldap');
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -104,6 +105,21 @@ app.get('/login', function (req, res) {
 	};
 	res.render('login', to_be_rendered);
 });
+
+const insertUser = async (result) => {
+    const { email, name } = result.user;
+    let user = {email, name};
+    try{
+        const ldapUser = await ldap.searchLdap(email);
+        user[affililiation] = ldapUser.eduPrimaryAffiliation,
+        user[campus] = ldapUser.psCampus,
+        user[major] = ldapUser.psCurriculum
+    }
+    catch(e){
+        console.warn(`Email ${email} not found in ldap`);
+    }
+    await DB.collection('users').insertOne(user);
+}
 
 
 app.get('/api/oauth', function (req, res, next) {
