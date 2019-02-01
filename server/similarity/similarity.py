@@ -13,7 +13,6 @@ from prepocessing import clean_email, prepocess
 from gower import gower_distances
 import sys
 
-
 def compute_similarity(user_email):
     """ Updates database with similar users
     Arguments:
@@ -25,9 +24,20 @@ def compute_similarity(user_email):
     user = users.loc[users.email == user_email].iloc[[0]]
     distances = compute_distances(users, user)
     users['distance'] = distances
+    users.sort_values(by='distance')
     res = users[['distance', 'email']]
     matrix = res.as_matrix(columns=['distance', 'email'])
-    print(matrix, flush=True)
+    update_db(user_email, matrix)
+    # print(matrix, flush=True)
+
+def update_db(user_email, matrix):
+    query = {'email': user_email}
+    similar_users = [{'distance':entry[0],'user': entry[1]} for entry in matrix]
+    new_value = {'$set': {'similar_users': similar_users}}
+    client = MongoClient(port=27017)
+    db = client.weare    
+    result = db.users.update_one(query, new_value)
+    print(result.modified_count, flush=True)
 
 def get_data(user_email):
     """ Gets relevant data from database for computing similarity
