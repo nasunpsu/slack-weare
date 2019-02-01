@@ -24,11 +24,10 @@ def compute_similarity(user_email):
     user = users.loc[users.email == user_email].iloc[[0]]
     distances = compute_distances(users, user)
     users['distance'] = distances
-    users.sort_values(by='distance')
+    users = users.sort_values(by='distance')
     res = users[['distance', 'email']]
-    matrix = res.as_matrix(columns=['distance', 'email'])
+    matrix = res.values
     update_db(user_email, matrix)
-    # print(matrix, flush=True)
 
 def update_db(user_email, matrix):
     query = {'email': user_email}
@@ -37,6 +36,7 @@ def update_db(user_email, matrix):
     client = MongoClient(port=27017)
     db = client.weare    
     result = db.users.update_one(query, new_value)
+    # print(matrix, flush=True)
     print(result.modified_count, flush=True)
 
 def get_data(user_email):
