@@ -29,4 +29,4 @@ const createCommand = (email) => {
     return `${condaActivate}; ${runPython}`;
 }
 
-storeSimilarUsers('JPK14@PSU.EDU');
+module.exports = {storeSimilarUsers}

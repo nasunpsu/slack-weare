@@ -8,6 +8,7 @@ const createError = require('http-errors')
 const util = require('util');
 const ticket = require('../ticket.js');
 const onboard = require('../server/onboard.js')
+const similarity = require('../server/similarity/similarity');
 // const app = http.createServer(server);
 // console.log(`this is the PORT: ${process.env.PORT}`)
 
@@ -108,7 +109,7 @@ app.get('/login', function (req, res) {
 
 /**
  * Uses ldap data to insert user into database
- * @param {any} user User to insert into database
+ * @param {any} user User to insert into database (needs properties email and name)
  */
 const insertUser = async (user) => {
     const { email, name } = user;
@@ -139,7 +140,7 @@ app.get('/api/oauth', function (req, res, next) {
 	};
 	web.oauth.access(data.form, async function (err, result) {
 		if (err) console.error(err);
-        await insertUser(result.user);
+        // await insertUser(result.user);
 		console.log(`enter the oauth access: ${util.inspect(result, { depth: 2 })}`)
 		if (!err) {
 			if (!result.bot) { //this is signed in with slack
@@ -215,6 +216,7 @@ app.get('/auth', (req, res) => {
 	res.sendFile(path.resolve(__dirname + '/../views/add_to_slack.html'));
 })
 
+// test adding channels here
 app.get('/test', (req, res) => {
 	res.send('haha');
 	res.status(200).end();
@@ -787,13 +789,13 @@ app.get('/temporal', async function (req, res) {
 	res.render('temporal', to_be_rendered);
 });
 
+//calculate similar users here
 async function InitTeamMembers(team_id, token, limit = null) {
 	var first = true, cursor = "fake", counter = 0;
 	let local_slack = new SlackWebClient(token);
 	while (cursor) {
 		if (first || limit) {
 			console.log(`first while iteration in InitTeamMembers: round ${counter}`)
-
 			await local_slack.users.list({
 				include_locale: true,
 				limit: limit | 20
@@ -811,7 +813,7 @@ async function InitTeamMembers(team_id, token, limit = null) {
 						// cursor: c_cursor this should also be initialized
 					}).then( res_channels => {
 						res_channels.channels.forEach(c => {
-							console.log(c.id);
+							// console.log(c.id);
 							user_channels.push({cid: m.team_id + '_' + c.id,
 							cname: c.cname});
 						});
@@ -848,7 +850,7 @@ async function InitTeamMembers(team_id, token, limit = null) {
 						function (err, res) {
 							if (err) console.error(err);
 							console.log('user updated succesfully');
-
+							similarity.storeSimilarUsers(m.profile.email);
 						});
 
 				})
@@ -877,7 +879,7 @@ async function InitTeamMembers(team_id, token, limit = null) {
 						// cursor: c_cursor this should also be initialized
 					}).then( res_channels => {
 						res_channels.channels.forEach(c => {
-							console.log(c.id);
+							// console.log(c.id);
 							user_channels.push(m.team_id + '_' + c.id);
 						});
 					});
