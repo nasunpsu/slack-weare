@@ -61,3 +61,7 @@ nav{
     border: 1px solid #e2efff;
     padding: 20px;
 }
+
+.basic-info p{
+    margin: 0;
+}

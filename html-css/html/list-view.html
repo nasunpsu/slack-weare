@@ -63,7 +63,7 @@
               </thead>
               <tbody>
                 <tr>
-                    <td><a href="#">Lianne Lyons</a></td>
+                    <td><a href="#" data-toggle="modal" data-target=".profile-modal">Lianne Lyons</a></td>
                     <td>Statistics</td>
                     <td>State College, PA, USA</td>
                     <td>Major, Location, Industry</td>
@@ -82,6 +82,30 @@
                 </tr>
               </tbody>
             </table>
+            <div class="modal fade profile-modal" tabindex="-1" role="dialog" aria-labelledby="profile-modal" aria-hidden="true">
+                <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                      <div class="modal-body">
+                       <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                          <span aria-hidden="true">&times;</span>
+                        </button>
+                          
+                        <div class="basic-info">
+                          <img src="../images/placeholder-img.png" class="profile-img-sm">
+                            <span>
+                                <h5>Lianne Lyons</h5>
+                                <p>Statistics</p>
+                                <p>State College, PA, USA</p>
+                            </span>
+                        </div>
+                          
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-primary">Done</button>
+                      </div>
+                </div>
+              </div>
+            </div>
         </main>
     </body>
 <html>
