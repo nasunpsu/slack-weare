@@ -107,24 +107,6 @@ app.get('/login', function (req, res) {
 	res.render('login', to_be_rendered);
 });
 
-/**
- * Uses ldap data to insert user into database
- * @param {any} user User to insert into database (needs properties email and name)
- */
-const insertUser = async (user) => {
-    const { email, name } = user;
-    let insertObj = {email, name};
-    try{
-        const ldapUser = await ldap.searchLdap(email);
-        insertObj[affililiation] = ldapUser.eduPrimaryAffiliation,
-        insertObj[campus] = ldapUser.psCampus,
-        insertObj[major] = ldapUser.psCurriculum
-    }
-    catch(e){
-        console.warn(`Email ${email} not found in ldap`);
-    }
-    await DB.collection('users').insertOne(insertObj);
-}
 
 
 app.get('/api/oauth', function (req, res, next) {
@@ -850,7 +832,11 @@ async function InitTeamMembers(team_id, token, limit = null) {
 						function (err, res) {
 							if (err) console.error(err);
 							console.log('user updated succesfully');
-							similarity.storeSimilarUsers(m.profile.email);
+							const email = m.profile.email;
+							//tuy
+							//bikal
+							ldap.updateUserWithLdapData(email, DB);
+							similarity.storeSimilarUsers(email);
 						});
 
 				})
