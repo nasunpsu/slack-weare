@@ -51,7 +51,13 @@ nav{
     margin-top: 50px;
 }
 
-.filters{
+.filter-wrapper{
     grid-column: 3/23;
     margin-top: 50px;
+}
+
+.filters{
+    margin-top: 20px;
+    border: 1px solid #e2efff;
+    padding: 20px;
 }

@@ -32,17 +32,24 @@
         </nav>
         
         <main class="connect-wrapper">
-            <div class="filters">
+            <div class="filter-wrapper">
                 <h3>Connect with Peers Like You</h3>
-                <div class="dropdown">
-                  <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    Dropdown
-                  </button>
-                  <div class="dropdown-menu" aria-labelledby="dropdownMenu2">
-                    <button class="dropdown-item" type="button">Action</button>
-                    <button class="dropdown-item" type="button">Another action</button>
-                    <button class="dropdown-item" type="button">Something else here</button>
-                  </div>
+                <div class="filters">
+                    <p>View peers who share your</p>
+                    <form>
+                        <div class="form-group form-check-inline">
+                            <input type="checkbox" class="form-check-input" id="locationCheck">
+                            <label class="form-check-label" for="locationCheck">Location</label>
+                        </div>
+                        <div class="form-group form-check-inline">
+                            <input type="checkbox" class="form-check-input" id="majorCheck">
+                            <label class="form-check-label" for="majorCheck">Major</label>
+                        </div>
+                        <div class="form-group form-check-inline">
+                            <input type="checkbox" class="form-check-input" id="industryCheck">
+                            <label class="form-check-label" for="industryCheck">Industry</label>
+                        </div>
+                    </form>
                 </div>
             </div>
             <table class="table list-table">
