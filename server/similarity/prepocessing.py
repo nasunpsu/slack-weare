@@ -60,13 +60,11 @@ def drop_student_columns(users):
     users['id']=users.email.str.split("@", n=1, expand=True)[0]
     if '_id' in users.columns:
         del users['_id']
-    #drop rows with 5 or more null values
-    users.dropna(thresh=5, inplace=True)
     users = users.replace('', np.nan)
     #number of courses, credits are too dirty as many entered text instead of a number
     drop_columns = ["surveyCompletion", "Duration (in seconds)", "NumCourses", "transferCredits", "NumTranCredits",
                     "WhyProfile", "otherChannels", "otherEmploy", "NonUS", "otherIndusry", "KnownThroughProfile",
-                    "otherEth", "PPLinPerson", "otherEmail"]
+                    "otherEth", "PPLinPerson", "otherEmail", "ActiveDuty", "OCEnabler"]
     #only drop these columns if they actually exist in the data
     drop_columns = [col for col in drop_columns if col in users.columns]
     users.drop(columns=drop_columns, inplace=True)

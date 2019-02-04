@@ -1,3 +1,4 @@
+import traceback
 from pymongo import MongoClient
 from random import randint
 import pandas as pd
@@ -18,10 +19,18 @@ def compute_similarity(user_email):
     Arguments:
         user_email {str} -- Email to find similar users to
     """
-    users = get_data(user_email)
+    print(user_email, flush=True)
+    users = get_data()
     users = prepocess(users)
-    # Get first index of row with correct email
-    user = users.loc[users.email == user_email].iloc[[0]]
+    try: 
+        # Get first index of row with correct email
+        user = users.loc[users.email == user_email].iloc[[0]]
+    except Exception as e:
+        print(f'Error: user not found in database {e}', flush=True)
+        traceback.print_exc()
+        return
+    #drop rows with 5 or more null values
+    users.dropna(thresh=5, inplace=True)
     distances = compute_distances(users, user)
     users['distance'] = distances
     users = users.sort_values(by='distance')
@@ -30,25 +39,38 @@ def compute_similarity(user_email):
     update_db(user_email, matrix)
 
 def update_db(user_email, matrix):
-    query = {'email': user_email}
     similar_users = [{'distance':entry[0],'user': entry[1]} for entry in matrix]
     new_value = {'$set': {'similar_users': similar_users}}
+    db = get_db()
+    if is_email_from_students(user_email):
+        query = {'Email': re.compile(user_email, re.IGNORECASE)}
+        result = db.students.update_one(query, new_value)
+    else:
+        query = {'email': re.compile(user_email, re.IGNORECASE)}
+        result = db.users.update_one(query, new_value)
+    if result.modified_count != 1:
+        print(f'Error, {result.modified_count} users modified', flush=True)
+        print(f'\t', flush=True)
+        return
+    print('One user modified', flush=True)
+
+def is_email_from_students(user_email):
+    db = get_db()
+    result = db.students.find({"Email": re.compile(user_email, re.IGNORECASE)})
+    return result.count() > 0
+
+def get_db():
     client = MongoClient(port=27017)
     db = client.weare    
-    result = db.users.update_one(query, new_value)
-    # print(matrix, flush=True)
-    print(result.modified_count, flush=True)
+    return db
 
-def get_data(user_email):
+def get_data():
     """ Gets relevant data from database for computing similarity
 
-    Arguments:
-        user_email {str} -- Email to find similar users to
     Returns:
         df {Dataframe} -- Dataframe containing all users
     """
-    client = MongoClient(port=27017)
-    db = client.weare    
+    db = get_db()
     # Students is a collection of survey responses
     # Users is a collection of users data collected from slack and ldap
     student_queries, user_queries = db.students.find({}), db.users.find({})

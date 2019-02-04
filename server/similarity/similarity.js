@@ -6,6 +6,7 @@ const { resolve } = require('path');
  * @param {string} email email of the user to store
  */
 const storeSimilarUsers = (email) => {
+    email = email.toLowerCase();
     const command = createCommand(email);
     const pythonProcess = exec(command, {shell: '/bin/bash'});
     pythonProcess.stdout.on('data', (data) => {
@@ -28,4 +29,4 @@ const createCommand = (email) => {
     return `${condaActivate}; ${runPython}`;
 }
 
-storeSimilarUsers('matthewrmancini@gmail.com');
+storeSimilarUsers('JPK14@PSU.EDU');
