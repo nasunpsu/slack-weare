@@ -4,3 +4,4 @@ __pycache__/
 .vscode/settings.json
 semantic.json
 semantic/
+.DS_store
