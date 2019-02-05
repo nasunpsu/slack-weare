@@ -833,8 +833,6 @@ async function InitTeamMembers(team_id, token, limit = null) {
 							if (err) console.error(err);
 							console.log('user updated succesfully');
 							const email = m.profile.email;
-							//tuy
-							//bikal
 							ldap.updateUserWithLdapData(email, DB);
 							similarity.storeSimilarUsers(email);
 						});

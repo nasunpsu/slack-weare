@@ -93,16 +93,12 @@ const updateUserWithLdapData = async (email, DB) => {
         console.warn(`Email ${email} not found in ldap`);
         return;
     }
-    const insertObj = {
+    const insertObj = removeUndefinedEntries({
         affiliation: ldapUser.eduPrimaryAffiliation,
         campus: ldapUser.psCampus,
         major: ldapUser.psCurriculum
-    };
-    for(key in insertObj){
-        if(!insertObj[key]){
-            delete insertObj[key];
-        }
-    }
+    });
+    //If empty object do nothing
     if(Object.keys(insertObj).length === 0){
         return;
     }
@@ -112,7 +108,20 @@ const updateUserWithLdapData = async (email, DB) => {
     if(!res.result.ok){
         console.warn('Problematic ldap query');
     }
-    closeLdapConnection();
+}
+
+/**
+ * Remove all entries in object that are undefined
+ * @param {any} obj 
+ * @return {any} Modified version of object
+ */ 
+const removeUndefinedEntries = (obj) => {
+    for(key in obj){
+        if(!obj[key]){
+            delete obj[key];
+        }
+    }
+    return obj;
 }
 
 /** Class containing all attributes the ldap provides */
@@ -120,24 +129,21 @@ class User {
     constructor(ldapUser) {
         /** Email address */
         this.eduPersonPrincipalName = ldapUser.eduPersonPrincipalName[0];
-
-        //3 id numbers represented as strings
-        // this.uidNumber = ldapUser.uidNumber[0];
-        // this.psDirIDN = ldapUser.psDirIDN[0];
-        // this.gidNumber = ldapUser.gidNumber[0];
-
-        //3 directories for computs
-        // this.psMacLabHomeDir = ldapUser.psMacLabHomeDir[0];
-        // this.loginShell = ldapUser.loginShell[0];
-        // this.homeDirectory = ldapUser.homeDirectory[0];
-        if(this.isValidField(ldapUser.mail)){
-            /** PSU email */
-            this.mail = ldapUser.mail[0];
-        }
         /** Array of waht this person is a part of like 'eduPerson', 'person', 'eduMember' */
         this.objectClass = ldapUser.objectClass;
         /** Array of strings that may contain email lists or enrolled courses not sure */
         this.psMemberOf = ldapUser.psMemberOf;
+        /** Array of all affiliations */
+        this.eduPersonalAffiliation = ldapUser.eduPersonalAffiliation;
+        /** Array of all emails and aliases */
+        this.psuMailID = ldapUser.psuMailID;
+        /** Search param */
+        this.dn = ldapUser.dn;
+
+        if(this.isValidField(ldapUser.mail)){
+            /** PSU email */
+            this.mail = ldapUser.mail[0];
+        }
         if(this.isValidField(ldapUser.psCampus)){
             /** Campus name that student attends */
             this.psCampus = ldapUser.psCampus[0];
@@ -150,10 +156,6 @@ class User {
             /** Title like 'Student' */
             this.eduPrimaryAffiliation = ldapUser.eduPrimaryAffiliation;
         }
-        /** Array of all affiliations */
-        this.eduPersonalAffiliation = ldapUser.eduPersonalAffiliation;
-        /** Array of all emails and aliases */
-        this.psuMailID = ldapUser.psuMailID;
         if(this.isValidField(ldapUser.cn)){
             /** Full name */
             this.cn = ldapUser.cn[0];
@@ -162,9 +164,8 @@ class User {
             /** Major */
             this.psCurriculum = ldapUser.psCurriculum[0];
         }
-        /** Search param */
-        this.dn = ldapUser.dn;
 
+        //ommitted fields for simplicity
         /** Full name */
         // this.displayName = ldapUser.displayName[0];
         /** PSU microsoft email */
@@ -173,8 +174,21 @@ class User {
         /** First name */
         // this.givenName = ldapUser.givenName[0];
         // this.psFERPAExam = ldapUser.psFERPAExam[0];
+        //3 id numbers represented as strings
+        // this.uidNumber = ldapUser.uidNumber[0];
+        // this.psDirIDN = ldapUser.psDirIDN[0];
+        // this.gidNumber = ldapUser.gidNumber[0];
+
+        //3 directories for computs
+        // this.psMacLabHomeDir = ldapUser.psMacLabHomeDir[0];
+        // this.loginShell = ldapUser.loginShell[0];
+        // this.homeDirectory = ldapUser.homeDirectory[0];
     }
 
+    /**
+     * Tests whether a field given from ldap is value
+     * @param {any} field field to test
+     */
     isValidField(field){
         return !!field && Array.isArray(field) && field.length > 0
     }
