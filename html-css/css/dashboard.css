@@ -1,7 +1,7 @@
 body{
     background: rgba(74, 144, 226, .9);
     margin: 0;
-    padding-bottom: 100px;
+    padding-bottom: 200px;
 }
 
 nav{
@@ -42,7 +42,7 @@ h1{
 }
 
 .we-are-message{
-    grid-column: 4/21;
+    grid-column: 5/21;
     text-align: center;
 }
 
@@ -50,8 +50,6 @@ p{
     font-size: 10px;
     font-weight: 200;
     text-align: left;
-    margin-left: 60px;
-    margin-right: 60px;
 }
 
 .slack-stats{
@@ -94,7 +92,8 @@ p{
     display: flex;
     justify-content: center;
     margin: auto;
-    margin-bottom: 20px;
+    margin-top: 20px;
+    margin-bottom: 80px;
 }
 
 .post-title{
@@ -125,17 +124,19 @@ p{
     width: 100%;
 }
 
+.signin-wrapper{
+    padding-top: 100px;
+    display: grid;
+    grid-template: auto / repeat(24,1fr);
+}
 
+.instructions{
+    margin-bottom: 60px;
+}
 
-
-
-
-
-
-
-
-
-
+.disclosure{
+    grid-column:  7/20;
+}
 
 
 
