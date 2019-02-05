@@ -49,6 +49,9 @@ h1{
 p{
     font-size: 10px;
     font-weight: 200;
+    text-align: left;
+    margin-left: 60px;
+    margin-right: 60px;
 }
 
 .slack-stats{
