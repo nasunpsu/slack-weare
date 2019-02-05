@@ -7,7 +7,6 @@ body{
 nav{
     background: #4A90E2;
     width: 100%;
-    
     box-shadow: 0 2px 2px rgba(0,0,0,.3);
 }
 
@@ -15,7 +14,6 @@ nav{
     display: flex;
     justify-content: flex-end;
     width: 100%;
-    
 }
 
 .nav-links > a{
@@ -25,6 +23,11 @@ nav{
     margin: 10px;
     text-decoration: none;
     font-size: 12px;
+}
+
+h2, h3, h4, h5, p {
+    font-family: 'Proxima Nova';
+    color: white;
 }
 
 h1{
@@ -41,6 +44,11 @@ h1{
 .we-are-message{
     grid-column: 4/21;
     text-align: center;
+}
+
+p{
+    font-size: 10px;
+    font-weight: 200;
 }
 
 .slack-stats{
