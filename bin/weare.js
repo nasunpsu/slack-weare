@@ -23,6 +23,7 @@ const session = require('express-session');
 const MongoStore = require('connect-mongo')(session);
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan')
+const express = require('express');
 const ldap = require('../server/ldap');
 
 app.use(bodyParser.json());
@@ -38,6 +39,7 @@ const fs = require('fs');
 const async = require('async');
 var favicon = require('serve-favicon');
 app.use(favicon(path.join(__dirname, '/../public/favicon.ico')));
+app.use(express.static(path.join(__dirname, '/../public')));
 
 const mongoClient = require('mongodb').MongoClient;
 
