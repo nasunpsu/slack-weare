@@ -39,24 +39,14 @@
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td><a href="#" data-toggle="modal" data-target=".profile-modal">Lianne Lyons</a></td>
-                    <td>Statistics</td>
-                    <td>State College, PA, USA</td>
-                    <td>Major, Location, Industry</td>
-                </tr>
-                <tr>
-                    <td><a href="#">Brendan Carey</a></td>
-                    <td>Information Science and Technology</td>
-                    <td>State College, PA, USA</td>
-                    <td>Location, Industry</td>
-                </tr>
-                <tr>
-                    <td><a href="#">Luke Lancaster</a></td>
-                    <td>Computer Science</td>
-                    <td>State College, PA, USA</td>
-                    <td>Location, Industry</td>
-                </tr>
+                {{#each users}}
+                    <tr>
+                        <td><a href="#" data-toggle="modal" data-target=".profile-modal">{{this.name}}</a></td>
+                        <td>{{this.major}}</td>
+                        <td>{{this.location}}</td>
+                        <td>{{this.similarities}}</td>
+                    </tr>
+                {{/each}}
             </tbody>
         </table>
         <div class="modal fade profile-modal" tabindex="-1" role="dialog" aria-labelledby="profile-modal" aria-hidden="true">
