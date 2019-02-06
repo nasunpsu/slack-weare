@@ -1,3 +1,89 @@
-<div id='tb-wrapper' style="margin-top: 60px;">
-    <p>{{data}}</p>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS"
+    crossorigin="anonymous">
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+    crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut"
+    crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k"
+    crossorigin="anonymous"></script>
+<div style="margin-top: 60px;">
+    <main class="connect-wrapper">
+        <div class="filter-wrapper">
+            <h3>Connect with Peers Like You</h3>
+            <div class="filters">
+                <p>View peers who share your</p>
+                <form>
+                    <div class="form-group form-check-inline">
+                        <input type="checkbox" class="form-check-input" id="locationCheck">
+                        <label class="form-check-label" for="locationCheck">Location</label>
+                    </div>
+                    <div class="form-group form-check-inline">
+                        <input type="checkbox" class="form-check-input" id="majorCheck">
+                        <label class="form-check-label" for="majorCheck">Major</label>
+                    </div>
+                    <div class="form-group form-check-inline">
+                        <input type="checkbox" class="form-check-input" id="industryCheck">
+                        <label class="form-check-label" for="industryCheck">Industry</label>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <table class="table list-table">
+            <thead>
+                <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Major</th>
+                    <th scope="col">Location</th>
+                    <th scope="col">Similarities</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><a href="#" data-toggle="modal" data-target=".profile-modal">Lianne Lyons</a></td>
+                    <td>Statistics</td>
+                    <td>State College, PA, USA</td>
+                    <td>Major, Location, Industry</td>
+                </tr>
+                <tr>
+                    <td><a href="#">Brendan Carey</a></td>
+                    <td>Information Science and Technology</td>
+                    <td>State College, PA, USA</td>
+                    <td>Location, Industry</td>
+                </tr>
+                <tr>
+                    <td><a href="#">Luke Lancaster</a></td>
+                    <td>Computer Science</td>
+                    <td>State College, PA, USA</td>
+                    <td>Location, Industry</td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="modal fade profile-modal" tabindex="-1" role="dialog" aria-labelledby="profile-modal" aria-hidden="true">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+
+                        <div class="basic-info">
+                            <img src="../images/placeholder-img.png" class="profile-img-sm">
+                            <span>
+                                <h5>Lianne Lyons</h5>
+                                <p>Statistics</p>
+                                <p>State College, PA, USA</p>
+                            </span>
+                        </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary">Done</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
 </div>
+{{!-- <div id='tb-wrapper' style="margin-top: 60px;">
+    <p>{{data}}</p>
+</div> --}}
