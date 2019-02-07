@@ -17,9 +17,8 @@ import sys
 def compute_similarity(uid):
     """ Updates database with similar users
     Arguments:
-        user_email {str} -- Email to find similar users to
+        uid {str} -- uid to find similar users to
     """
-    print(uid, flush=True)
     users = get_data()
     users = prepocess(users)
     try: 
@@ -41,7 +40,7 @@ def update_db(uid, matrix):
     """Puts matrix into database, updating the user document
 
     Arguments:
-        user_email {str} -- Email of user to update
+        uid {str} -- uid of user to update
         matrix {dict[]} -- Array of dicts with entries distance(num) and user(str)
     """
     similar_users = [{'distance':entry[0],'user': entry[1]} for entry in matrix]
@@ -93,7 +92,7 @@ def compute_distances(df, Y, weights=None):
     return [d[0] for d in distances]
 
 if __name__ == '__main__':
-    assert len(sys.argv) == 2, 'Email should be only argument'
-    email = sys.argv[1]
-    assert type(email) == str, 'Email should be a string'
-    compute_similarity(email)
+    assert len(sys.argv) == 2, 'uid should be only argument'
+    uid = sys.argv[1]
+    assert type(uid) == str, 'uid should be a string'
+    compute_similarity(uid)

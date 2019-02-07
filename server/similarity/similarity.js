@@ -3,7 +3,7 @@ const { resolve } = require('path');
 
 /**
  * Stores similar users to current user in database
- * @param {string} uid email of the user to store
+ * @param {string} uid uid of the user to store
  */
 const storeSimilarUsers = (uid) => {
     const command = createCommand(uid);
@@ -34,55 +34,80 @@ const createCommand = (uid) => {
     return `${condaActivate}; ${runPython}`;
 }
 
+/**
+ * Inflates the similar users field for a given user
+ * @param {string} uid uid of user to find similar users to 
+ * @param {database} DB database to query for user
+ * @returns {user[]} array of similar users
+ */
 const getSimilarUsers = async (uid, DB) => {
-    const res = await DB.collection('users').aggregate(
-        [
-            {
-                $match: {uid}
-            },
-            {
-                $project: {
-                    similar_users: {
-                        $slice: ['$similar_users', 4]
-                    }
-                }
-            },
-            {$unwind: '$similar_users'},
-            {
-                $lookup : {
-                    from: 'users',
-                    localField: 'similar_users.user',
-                    foreignField: 'uid',
-                    as: 'similar_users.user'
-                }
-            },
-            {$unwind: '$similar_users.user'},
-            {
-                $project: {
-                    similar_users: {
-                        distance: 1,
-                    },
-                    'similar_users.email': '$similar_users.user.email',
-                    'similar_users.name': '$similar_users.user.name',
-                    'similar_users.local_area': '$similar_users.user.local_area',
-                }
-            },
-            {
-                $group: {
-                    _id: '$_id',
-                    similar_users: { '$push': '$similar_users' }
-                }
-            },
-            {
-                $project: {
-                    similar_users: 1,
-                    _id: 0
-                }
-            }
-        ]
-    )
+    const query = [...selectAndProject(uid), ...join(), ...projectAndGroup()]; 
+    const res = await DB.collection('users').aggregate(query);
     const doc = await res.toArray();
     return doc[0].similar_users;
 }
 
+/** Construct and return pipline query to select user by uid and only keep a certain number of similar users */
+const selectAndProject = (uid) => {
+    return [
+        {
+            $match: { uid }
+        },
+        {
+            $project: {
+                similar_users: {
+                    $slice: ['$similar_users', 4]
+                }
+            }
+        }
+    ];
+}
+
+/** Construct and return pipline query to join users on the similar users field */
+const join = () => {
+    return [
+        { $unwind: '$similar_users' },
+        {
+            $lookup: {
+                from: 'users',
+                localField: 'similar_users.user',
+                foreignField: 'uid',
+                as: 'similar_users.user'
+            }
+        },
+        { $unwind: '$similar_users.user' }
+    ];
+}
+
+/** Construct and return pipeline query to group unwould similar users and select only necessary fields */
+const projectAndGroup = () => {
+    return [
+        {
+            $project: {
+                similar_users: {
+                    distance: 1,
+                },
+                'similar_users.email': '$similar_users.user.email',
+                'similar_users.name': '$similar_users.user.name',
+                'similar_users.local_area': '$similar_users.user.local_area',
+                'similar_users.major': '$similar_users.user.major',
+            }
+        },
+        {
+            $group: {
+                _id: '$_id',
+                similar_users: { '$push': '$similar_users' }
+            }
+        },
+        {
+            $project: {
+                similar_users: 1,
+                _id: 0
+            }
+        }
+    ]
+}
+storeSimilarUsers('T3A5YB0TG_U39J4N3FE');
+storeSimilarUsers('T3A5YB0TG_U39DH7LDR');
+storeSimilarUsers('T3A5YB0TG_U3A6ASG9M');
 module.exports = {storeSimilarUsers,getSimilarUsers}

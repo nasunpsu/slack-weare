@@ -629,6 +629,7 @@ app.get('/tablelist', async function(req, res) {
 		location: 'location2',
 		similarities: 'similarities2'
 	}];
+	to_be_rendered.users = await similarity.getSimilarUsers(req.session.user.uid, DB);
 	res.render('table', to_be_rendered);
 });
 app.get('/network11', async function(req, res) {
