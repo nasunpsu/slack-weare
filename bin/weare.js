@@ -205,7 +205,7 @@ app.get('/test', (req, res) => {
 	res.send('haha');
 	res.status(200).end();
 	(async () => {									//TODO: MOVE this Block to the Init Module
-		await InitTeamMembers('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, null);
+		await InitTeamMembers('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200);
 	})();
 	(async () => {
 		await InitTeamChannels('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, null);;
@@ -837,12 +837,12 @@ async function InitTeamMembers(team_id, token, limit = null) {
 							}
 						},
 						{ upsert: true },
-						function (err, res) {
+						async function (err, res) {
 							if (err) console.error(err);
 							console.log('user updated succesfully');
 							const email = m.profile.email;
-							ldap.updateUserWithLdapData(email, DB);
-							similarity.storeSimilarUsers(email);
+							await ldap.updateUserWithLdapData(email, DB);
+							await similarity.storeSimilarUsers(email);
 						});
 
 				})

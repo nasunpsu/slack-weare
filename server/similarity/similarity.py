@@ -37,6 +37,7 @@ def compute_similarity(user_email):
     res = users[['distance', 'email']]
     matrix = res.values
     update_db(user_email, matrix)
+    print('finished', flush=True)
 
 def update_db(user_email, matrix):
     """Puts matrix into database, updating the user document

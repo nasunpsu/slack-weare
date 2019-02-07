@@ -9,11 +9,17 @@ const storeSimilarUsers = (email) => {
     email = email.toLowerCase();
     const command = createCommand(email);
     const pythonProcess = exec(command, {shell: '/bin/bash'});
-    pythonProcess.stdout.on('data', (data) => {
-        console.log(data.toString());
-    });
-    pythonProcess.stderr.on('data', (data) => {
-        console.log(data.toString());
+    return new Promise((resolve, reject) => {
+        pythonProcess.stdout.on('data', (data) => {
+            if(data.toString() === 'finished'){
+                resolve();
+            }
+            console.log(data.toString());
+        });
+        pythonProcess.stderr.on('data', (data) => {
+            console.log(data.toString());
+        });
+
     });
 }
 
@@ -29,4 +35,61 @@ const createCommand = (email) => {
     return `${condaActivate}; ${runPython}`;
 }
 
-module.exports = {storeSimilarUsers}
+const getSimilarUsers = async (email, DB) => {
+    const res = await DB.collection('users').aggregate(
+        [
+            {
+                $match: {
+                    email 
+                }
+            },
+            {
+                $project: {
+                    similar_users: {
+                        $slice: ['$similar_users', 4]
+                    }
+                }
+            },
+            {
+                $unwind: '$similar_users',
+            },
+            {
+                $lookup : {
+                    from: 'users',
+                    localField: 'similar_users.user',
+                    foreignField: 'email',
+                    as: 'similar_users.user'
+                }
+            },
+            {
+                $unwind: '$similar_users.user',
+            },
+            {
+                $project: {
+                    similar_users: {
+                        distance: 1,
+                    },
+                    'similar_users.email': '$similar_users.user.email',
+                    'similar_users.name': '$similar_users.user.name',
+                    'similar_users.local_area': '$similar_users.user.local_area',
+                }
+            },
+            {
+                $group: {
+                    _id: '$_id',
+                    similar_users: { '$push': '$similar_users' }
+                }
+            },
+            {
+                $project: {
+                    similar_users: 1,
+                    _id: 0
+                }
+            }
+        ]
+    )
+    const doc = await res.toArray();
+    return doc[0].similar_users;
+}
+
+module.exports = {storeSimilarUsers,getSimilarUsers}
