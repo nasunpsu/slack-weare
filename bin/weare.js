@@ -616,20 +616,8 @@ app.get('/tablelist', async function(req, res) {
 	let to_be_rendered = {};
 	to_be_rendered.layout = 'default';
 	to_be_rendered.template = 'home-template';
-	to_be_rendered.data = "this is the data passed in to generate list";
-	to_be_rendered.users = [{
-		name: 'matt',
-		major: 'major',
-		location: 'location',
-		similarities: 'similarities'
-	},
-	{
-		name: 'matt2',
-		major: 'major2',
-		location: 'location2',
-		similarities: 'similarities2'
-	}];
-	to_be_rendered.users = await similarity.getSimilarUsers(req.session.user.uid, DB);
+	const numUsers = 10;
+	to_be_rendered.users = await similarity.getSimilarUsers(req.session.user.uid, DB, numUsers);
 	res.render('table', to_be_rendered);
 });
 app.get('/network11', async function(req, res) {

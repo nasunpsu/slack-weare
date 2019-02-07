@@ -38,17 +38,18 @@ const createCommand = (uid) => {
  * Inflates the similar users field for a given user
  * @param {string} uid uid of user to find similar users to 
  * @param {database} DB database to query for user
+ * @param {number} numUsers number of similar users to return 
  * @returns {user[]} array of similar users
  */
-const getSimilarUsers = async (uid, DB) => {
-    const query = [...selectAndProject(uid), ...join(), ...projectAndGroup()]; 
+const getSimilarUsers = async (uid, DB, numUsers) => {
+    const query = [...selectAndProject(uid, numUsers), ...join(), ...projectAndGroup()]; 
     const res = await DB.collection('users').aggregate(query);
     const doc = await res.toArray();
     return doc[0].similar_users;
 }
 
 /** Construct and return pipline query to select user by uid and only keep a certain number of similar users */
-const selectAndProject = (uid) => {
+const selectAndProject = (uid, numUsers) => {
     return [
         {
             $match: { uid }
@@ -56,7 +57,7 @@ const selectAndProject = (uid) => {
         {
             $project: {
                 similar_users: {
-                    $slice: ['$similar_users', 4]
+                    $slice: ['$similar_users', 1, numUsers]
                 }
             }
         }
