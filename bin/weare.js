@@ -808,6 +808,12 @@ async function InitTeamMembers(team_id, token, limit = null) {
 							cname: c.cname});
 						});
 					});
+					const onComplete = async () => {
+						console.log('user updated succesfully');
+						const email = m.profile.email;
+						await ldap.updateUserWithLdapData(email, uid, DB);
+						await similarity.storeSimilarUsers(uid);
+					}
 					if (!m.is_bot && m.id != 'USLACKBOT') DB.collection('users').updateOne(
 						{ uid: uid },
 						{
@@ -837,13 +843,7 @@ async function InitTeamMembers(team_id, token, limit = null) {
 							}
 						},
 						{ upsert: true },
-						async function (err, res) {
-							if (err) console.error(err);
-							console.log('user updated succesfully');
-							const email = m.profile.email;
-							await ldap.updateUserWithLdapData(email, DB);
-							await similarity.storeSimilarUsers(email);
-						});
+						onComplete);
 
 				})
 			});

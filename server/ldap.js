@@ -84,7 +84,7 @@ const closeLdapConnection = () => {
  * Uses ldap data to add fields for user in the database
  * @param {email} email Email of user to update
  */
-const updateUserWithLdapData = async (email, DB) => {
+const updateUserWithLdapData = async (email, uid, DB) => {
     let ldapUser = null;
     try{
         ldapUser = await searchLdap(email);
@@ -102,7 +102,7 @@ const updateUserWithLdapData = async (email, DB) => {
     if(Object.keys(insertObj).length === 0){
         return;
     }
-    const query = {email};
+    const query = {uid};
     const options = {upsert: true}
     const res = await DB.collection('users').updateOne(query, {$set: insertObj}, options);
     if(!res.result.ok){

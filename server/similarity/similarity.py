@@ -14,32 +14,30 @@ from prepocessing import clean_email, prepocess
 from gower import gower_distances
 import sys
 
-def compute_similarity(user_email):
+def compute_similarity(uid):
     """ Updates database with similar users
     Arguments:
         user_email {str} -- Email to find similar users to
     """
-    print(user_email, flush=True)
+    print(uid, flush=True)
     users = get_data()
     users = prepocess(users)
     try: 
         # Get first index of row with correct email
-        user = users.loc[users.email == user_email].iloc[[0]]
+        user = users.loc[users.uid == uid].iloc[[0]]
     except Exception as e:
         print(f'Error: user not found in database {e}', flush=True)
         traceback.print_exc()
         return
-    #drop rows with 5 or more null values
-    users.dropna(thresh=5, inplace=True)
     distances = compute_distances(users, user)
     users['distance'] = distances
     users = users.sort_values(by='distance')
-    res = users[['distance', 'email']]
+    res = users[['distance', 'uid']]
     matrix = res.values
-    update_db(user_email, matrix)
+    update_db(uid, matrix)
     print('finished', flush=True)
 
-def update_db(user_email, matrix):
+def update_db(uid, matrix):
     """Puts matrix into database, updating the user document
 
     Arguments:
@@ -49,23 +47,10 @@ def update_db(user_email, matrix):
     similar_users = [{'distance':entry[0],'user': entry[1]} for entry in matrix]
     new_value = {'$set': {'similar_users': similar_users}}
     db = get_db()
-    email_regex = re.compile(user_email, re.IGNORECASE)
-    if is_email_from_students(user_email):
-        query = {'Email': email_regex}
-        result = db.students.update_one(query, new_value)
-    else:
-        query = {'email': email_regex}
-        result = db.users.update_one(query, new_value)
+    query = {'uid': uid}
+    result = db.users.update_many(query, new_value)
     if result.modified_count != 1:
-        print(f'Error, {result.modified_count} users modified', flush=True)
-        print(f'\t', flush=True)
-        return
-
-def is_email_from_students(user_email):
-    """ Given str email, returns whether the email is from the students collection """
-    db = get_db()
-    result = db.students.find({"Email": re.compile(user_email, re.IGNORECASE)})
-    return result.count() > 0
+        print(f'Error, {result.modified_count} users modified, {result.matched_count} users matched', flush=True)
 
 def get_db():
     """ Gets and returns pymongo database client """
@@ -86,7 +71,7 @@ def get_data():
     students, users = pd.DataFrame(list(student_queries)), pd.DataFrame(list(user_queries))
     students = clean_email(students)
     # Merge both collections into one dataframe, without losing any columns
-    everybody = pd.merge(students, users, how='outer', on=['email'])
+    everybody = pd.merge(students, users, how='right', on=['email'])
     return everybody
 
 def compute_distances(df, Y, weights=None):

@@ -17,8 +17,8 @@ def prepocess(users):
     users = add_binarized_channels(users)
     users = drop_student_columns(users)
     users = enumerate_ordinal_columns(users)
-    users = clean_kids_column(users)
     users = fix_nan_columns(users)
+    users = clean_kids_column(users)
     return users
 
 def clean_email(students): 
@@ -146,6 +146,8 @@ def enumerate_ordinal_columns(users):
 
 def clean_kids_column(users):
     """ Fixes kids columns """
+    if 'kids' not in users.columns:
+        return users
     none_i = re.compile(r'none', flags=re.IGNORECASE)
     users['kids'].replace(none_i, 0, inplace=True)
     none_i = re.compile(r'zero', flags=re.IGNORECASE)
@@ -154,13 +156,18 @@ def clean_kids_column(users):
     users.kids = users['kids'].replace(stringany, '')
     return users
 
+def drop_nan_columns(users):
+    nan_percent_needed = .8
+    return users.loc[:, users.isnull().mean() < .8]
+
 def fix_nan_columns(users):
     """ Altes nan columns for use in distance function """
-    categorical_cols = ["gender", "InUS", "ethnicity", "Usstate", "marrital", "employment", "industry"]
+    users = drop_nan_columns(users)
+    categorical_cols = ["gender", "InUS", "ethnicity", "Usstate", "marrital", "employment", "industry", "kids"]
     categorical_cols = [c for c in categorical_cols if c in users.columns]
-    users_c_mode = users[categorical_cols].mode()
-    for col in categorical_cols+['kids']:
-        users[col].fillna(users[col].mode().iloc[0], inplace=True)
+    for col in categorical_cols:
+        mode = users[col].mode().iloc[0]
+        users[col].fillna(mode, inplace=True)
     # fill with mode, mean, or median
     users_mode, users_mean, users_median = users.mode().iloc[0], users.mean(), users.median()
     users.fillna(users_median, inplace=True)

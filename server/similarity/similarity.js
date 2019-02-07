@@ -3,11 +3,10 @@ const { resolve } = require('path');
 
 /**
  * Stores similar users to current user in database
- * @param {string} email email of the user to store
+ * @param {string} uid email of the user to store
  */
-const storeSimilarUsers = (email) => {
-    email = email.toLowerCase();
-    const command = createCommand(email);
+const storeSimilarUsers = (uid) => {
+    const command = createCommand(uid);
     const pythonProcess = exec(command, {shell: '/bin/bash'});
     return new Promise((resolve, reject) => {
         pythonProcess.stdout.on('data', (data) => {
@@ -25,23 +24,21 @@ const storeSimilarUsers = (email) => {
 
 /**
  * Create a bash command to store similar users
- * @param {string} email email of the user to store
+ * @param {string} uid email of the user to store
  * @returns {string} bash command 
  */
-const createCommand = (email) => {
+const createCommand = (uid) => {
     const fileName = resolve(__dirname, 'similarity.py');
     const condaActivate = 'source activate weare';
-    const runPython = `python ${fileName} ${email}`;
+    const runPython = `python ${fileName} ${uid}`;
     return `${condaActivate}; ${runPython}`;
 }
 
-const getSimilarUsers = async (email, DB) => {
+const getSimilarUsers = async (uid, DB) => {
     const res = await DB.collection('users').aggregate(
         [
             {
-                $match: {
-                    email 
-                }
+                $match: {uid}
             },
             {
                 $project: {
@@ -50,20 +47,16 @@ const getSimilarUsers = async (email, DB) => {
                     }
                 }
             },
-            {
-                $unwind: '$similar_users',
-            },
+            {$unwind: '$similar_users'},
             {
                 $lookup : {
                     from: 'users',
                     localField: 'similar_users.user',
-                    foreignField: 'email',
+                    foreignField: 'uid',
                     as: 'similar_users.user'
                 }
             },
-            {
-                $unwind: '$similar_users.user',
-            },
+            {$unwind: '$similar_users.user'},
             {
                 $project: {
                     similar_users: {
