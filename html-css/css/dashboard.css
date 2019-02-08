@@ -131,6 +131,8 @@ p{
     margin-left: 20px;
     background: rgb(62, 17, 63);
     margin-top: 20px;
+    border-radius: 4px;
+    box-shadow: 2px 2px 2px rgba(0,0,0,.2);
 }
 
 .channel-table thead{
@@ -138,6 +140,11 @@ p{
     font-size: 60%;
     background: rgb(52, 15, 53);
     border-bottom: 3px solid rgba(100,100,100,.4);
+    
+}
+
+.channel-table th{
+    border: none;
 }
 
 .channel-table td{

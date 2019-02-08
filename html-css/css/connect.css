@@ -30,20 +30,31 @@ nav{
 
 .card-wrapper{
     display: grid;
-    grid-template: auto/repeat(auto-fit,200px);
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    grid-template-rows: auto;
     grid-gap: 25px;
     grid-column: 4/23;
     margin-top: 100px;
+}
+
+.view-controller{
+    grid-column: 1/-1;
+    width: 250px;
+    margin: auto;
+    margin-top: 50px;
 }
 
 .card{
     background: white;
     box-shadow: 0 1px 1px rgba(0,0,0,.2);
     padding: 20px;
+    border-radius: 4px;
 }
 
 .profile-img-sm{
-    width: 120px;
+    width: 60%;
+    border-radius: 100%;
+    align-self: center;
 }
 
 .list-table{
