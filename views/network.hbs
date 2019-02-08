@@ -12,24 +12,12 @@
 	}
 </style> --}}
 <style type="text/css">
-	svg {
-		margin-top: 20%;
-		border: 1px solid #ccc;
-	}
-
-	body {
-		font: 10px sans-serif;
-	}
+	
 
 	circle.node {
 		fill: lightsteelblue;
 		stroke: #555;
 		stroke-width: 3px;
-	}
-
-	circle.leaf {
-		stroke: #fff;
-		stroke-width: 1.5px;
 	}
 
 	path.hull {
@@ -42,11 +30,18 @@
 		stroke-opacity: 0.5;
 		pointer-events: none;
 	}
+
+	.node text {
+		font: 15px helvetica;
+	}
+	.node:not(:hover) text {
+        display: none;
+      }
 </style>
 
 <body>
 
-	<div id="connect" class="ui container canvas draw fullwidth first-page-element">
+	{{!-- <div id="connect" class="ui container canvas draw fullwidth first-page-element">
 		<div class="ui grid page">
 			<div class="ui selection dropdown connectedby">
 				We are connected by
@@ -105,13 +100,16 @@
 				<li>Cick <a href="/map" class="">here</a> to select other states.</li>
 				<li>You can remove the filter condition above by deleting the tag.</li>
 			</ul>
-		</div>
-		<div id="chart" visdata='{{{json data}}}' class="network canvas draw fullwidth">
+		</div> --}}
+		<div id="nw-wrapper">
+		<label><input style="width:240px;" id = "strength" type="range" min="0" max="1" step="any" value="0.5"> Link Strength</label>
 
+		<div id="chart" visdata='{{{json data}}}' class="network canvas draw fullwidth">
+		</div>
 		</div>
 	</div>
 	{{!--
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.7.0/d3.min.js"></script> --}}
 	<script src="https://fastcdn.org/D3.js/3.5.6/d3.min.js"></script>
-	<script src="/js/d3_network.js"></script>
+	<script src="/js/d3_diagram_network.js"></script>
 </body>

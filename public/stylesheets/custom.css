@@ -100,7 +100,7 @@
     /* display: inline-block !important; */
 }
 
-#tz-wrapper{
+#tz-wrapper, #nw-wrapper{
   overflow-x: auto;
   display: flex;
   display: -webkit-flex;
