@@ -39,6 +39,7 @@ h1{
 .dashboard-wrapper{
     display: grid;
     grid-template: auto / repeat(24,1fr);
+    padding-top: 120px;
 }
 
 .we-are-message{
@@ -47,7 +48,7 @@ h1{
 }
 
 p{
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 200;
     text-align: left;
 }
@@ -101,19 +102,58 @@ p{
     font-family: 'Proxima Nova';
     color: white;
     margin-bottom: 0;
+    margin-left: 20px;  
+}
+
+.channel-title{
+    grid-column: 2/23;
+    font-family: 'Proxima Nova';
+    color: white;
+    margin-bottom: 0;
     margin-left: 20px;
-    
+    margin-top: 40px;
 }
 
 .post-wrapper{
+    grid-column: 2/23;
+    display: grid;
+    grid-template: auto / repeat(2, 300px);
+}
+
+.channel-wrapper{
     grid-column: 2/23;
     display: inline-flex;
     justify-content: space-between;
 }
 
+.channel-table{
+    margin-left: 20px;
+    background: rgb(62, 17, 63);
+}
+
+.channel-table thead{
+    text-align: center;
+    font-size: 60%;
+    background: rgb(52, 15, 53);
+    border-bottom: 3px solid rgba(100,100,100,.4);
+}
+
+.channel-table td{
+    color: white;
+    font-weight: 100;
+    font-size: 80%;
+    text-align: center;
+    border-bottom: 1px solid rgba(100,100,100,.4);
+    border-top: 1px solid rgba(100,100,100,.4);
+}
+
+.channel-table a{
+    color: white;
+    font-size: 120%;
+}
+
 .reacted-post{
     background: white;
-    width: 50%;
     margin: 20px;
     padding: 3%;
     box-shadow: 2px 2px 2px rgba(0,0,0,.2);
