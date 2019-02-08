@@ -111,13 +111,14 @@ p{
     color: white;
     margin-bottom: 0;
     margin-left: 20px;
-    margin-top: 40px;
+    margin-top: 50px;
 }
 
 .post-wrapper{
     grid-column: 2/23;
     display: grid;
-    grid-template: auto / repeat(2, 300px);
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-rows: auto;
 }
 
 .channel-wrapper{
@@ -129,6 +130,7 @@ p{
 .channel-table{
     margin-left: 20px;
     background: rgb(62, 17, 63);
+    margin-top: 20px;
 }
 
 .channel-table thead{
