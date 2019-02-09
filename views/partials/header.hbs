@@ -8,12 +8,13 @@
         <div class="menu">
           <div class="item">
             <i class="dropdown icon"></i>
-            
+
             <span class="text">Select channel</span>
-            
+
             <div class="scroll right menu">
               {{#each channels_info.channel_list as |channel|}}
-              <div class="channel-option item" value="{{channel.cid}}"> <i class="slack hash icon"></i>{{channel.cname}}</div>
+              <div class="channel-option item" value="{{channel.cid}}"> <i class="slack hash icon"></i>{{channel.cname}}
+              </div>
               {{/each}}
             </div>
           </div>
@@ -28,10 +29,16 @@
           </div>
         </div>
       </div>
-      <a class="item" href="/tablelist">Table</a>
-      <a class="item" href="/network">Similarity</a>
-      <a class="item" href="/temporal">Timezones</a>
-      <a class="item">Map</a>
+      <div class="ui dropdown item">
+        Connect
+        <i class="dropdown icon"></i>
+        <div class="menu">
+          <a class="item" href="/tablelist">Table</a>
+          <a class="item" href="/network">Similarity</a>
+          <a class="item" href="/temporal">Timezones</a>
+          <a class="item">Map</a>
+        </div>
+      </div>
       <div class="ui dropdown item">
         Profile
         <i class="dropdown icon"></i>
@@ -41,7 +48,9 @@
           <a class="item"><i class="settings icon"></i> Account Settings</a>
         </div>
       </div>
-      <a class="item" href="https://docs.google.com/document/d/1-nCasqUcPrLYbhDuAm9SmuvY0S5ZOevPLbp52-PpZLM/edit?usp=sharing" target="_blank"> Help</a>
+      <a class="item"
+        href="https://docs.google.com/document/d/1-nCasqUcPrLYbhDuAm9SmuvY0S5ZOevPLbp52-PpZLM/edit?usp=sharing"
+        target="_blank"> Help</a>
     </div>
   </div>
 </div>

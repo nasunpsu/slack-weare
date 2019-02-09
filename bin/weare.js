@@ -576,8 +576,8 @@ app.get('/home', async function (req, res) {
 				msg_total += results[i].msgs.length;
 				TopSizeChannels.push(results[i]);
 			}
-			results.sort((a, b) => { //from active to inactive
-				return a.msgs.length - b.msgs.length;
+			results.sort((a, b) => { //from active to inactive, large to small
+				return b.msgs.length - a.msgs.length;
 			});
 			for (var i = 0; i < limit; i++) {
 				TopActiveChannels.push(results[i]);
