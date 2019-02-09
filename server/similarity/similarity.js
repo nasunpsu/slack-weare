@@ -89,7 +89,7 @@ const projectAndGroup = () => {
                     distance: 1,
                 },
                 'similar_users.email': '$similar_users.user.email',
-                'similar_users.name': '$similar_users.user.name',
+                'similar_users.real_name': '$similar_users.user.real_name',
                 'similar_users.local_area': '$similar_users.user.local_area',
                 'similar_users.major': '$similar_users.user.major',
             }
@@ -108,7 +108,8 @@ const projectAndGroup = () => {
         }
     ]
 }
-storeSimilarUsers('T3A5YB0TG_U39J4N3FE');
-storeSimilarUsers('T3A5YB0TG_U39DH7LDR');
-storeSimilarUsers('T3A5YB0TG_U3A6ASG9M');
+// storeSimilarUsers('T3A5YB0TG_U39J4N3FE');
+// storeSimilarUsers('T3A5YB0TG_U3A6ASG9M');
+// storeSimilarUsers('T3A5YB0TG_U39DH7LDR');
+
 module.exports = {storeSimilarUsers,getSimilarUsers}
