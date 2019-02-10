@@ -617,7 +617,9 @@ app.get('/tablelist', async function(req, res) {
 	to_be_rendered.layout = 'default';
 	to_be_rendered.template = 'home-template';
 	const numUsers = 10;
-	to_be_rendered.users = await similarity.getSimilarUsers(req.session.user.uid, DB, numUsers);
+	const fields = ['real_name', 'channels', 'major', 'local_area', 'affiliation', 'campus'];
+	let users = await similarity.getSimilarUsers(req.session.user.uid, DB, numUsers, fields);
+	to_be_rendered.users = similarity.createSimilarityField(req.session.user, users, fields);
 	res.render('table', to_be_rendered);
 });
 app.get('/network11', async function(req, res) {
