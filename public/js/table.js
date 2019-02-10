@@ -45,7 +45,9 @@ class UserTable {
             this.rerenderUsers();
             return;
         }
-        const results = fuzzysort.go(query, this.originalUsers, {key: this.headings[0]});
+        const searchIndex = this.dropdown.selectedIndex;
+        const key = this.headings[searchIndex];
+        const results = fuzzysort.go(query, this.originalUsers, {key});
         this.users = results.map(result => result.obj);
         this.rerenderUsers();
         const results2 = fuzzysort.go(query, this.users, {keys: this.headings});
