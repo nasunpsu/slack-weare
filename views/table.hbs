@@ -8,6 +8,14 @@
     crossorigin="anonymous"></script>
 <link rel="stylesheet" type="text/css" href="/stylesheets/connect.css">
 <script src="https://rawgit.com/farzher/fuzzysort/master/fuzzysort.js"></script>
+<script>
+    const sessionUser = (() => {
+        const userString = `{{user}}`;
+        const text = document.createElement('textarea');
+        text.innerHTML = userString;
+        return JSON.parse(text.value);
+    })();
+</script>
 <script src="/js/table.js"></script>
 <div style="margin-top: 60px;">
     <main class="connect-wrapper">

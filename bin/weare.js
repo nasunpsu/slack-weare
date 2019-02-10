@@ -616,10 +616,11 @@ app.get('/tablelist', async function(req, res) {
 	let to_be_rendered = {};
 	to_be_rendered.layout = 'default';
 	to_be_rendered.template = 'home-template';
-	const numUsers = 10;
+	const numUsers = 80;
 	const fields = ['real_name', 'channels', 'major', 'local_area', 'affiliation', 'campus'];
 	let users = await similarity.getSimilarUsers(req.session.user.uid, DB, numUsers, fields);
 	to_be_rendered.users = similarity.createSimilarityField(req.session.user, users, fields);
+	to_be_rendered.user = JSON.stringify(req.session.user);
 	res.render('table', to_be_rendered);
 });
 app.get('/network11', async function(req, res) {

@@ -14,6 +14,8 @@ class UserTable {
         this.tableHeading = document.getElementById('table-head');
         this.search = document.getElementById('search');
         this.dropdown = document.getElementById('dropdown');
+        this.locationCheck = document.getElementById('locationCheck');
+        this.majorCheck = document.getElementById('majorCheck');
         bindAll(this);
         this.headings = this.getHeadings(this.tableHeading);
         this.setDropDownOptions(this.headings, this.dropdown);
@@ -23,6 +25,35 @@ class UserTable {
         this.search.addEventListener('keydown', () => {
             this.searchUsers(this.search.value, this.originalUsers, this.dropdown, this.tableBody, this.userElementName);
         });
+        const onCheck = () => {
+            const isLocation = this.locationCheck.checked; 
+            const isMajor = this.majorCheck.checked; 
+            this.filterUsers(isLocation, isMajor, this.tableBody, this.userElementName);
+        };
+
+        this.locationCheck.addEventListener('change', onCheck);
+        this.majorCheck.addEventListener('change', onCheck);
+    }
+
+    filterUsers(isLocation, isMajor, tableBody, userElementName){
+        if(!sessionUser){
+            console.error('Error: User is not defined');
+            return;
+        }
+        if(!sessionUser.local_area){
+            console.error('Error no local area');
+            return;
+        }
+        const newUsers = this.originalUsers.filter(user => {
+            if(isLocation && sessionUser.local_area !== user.Location){
+                return false;
+            }
+            if(isMajor && sessionUser.major !== user.Major){
+                return false;
+            }
+            return true;
+        });
+        this.rerenderUsers(newUsers, tableBody, userElementName);
     }
 
     getOriginalUsers(tableBody, headings, userElementName){
