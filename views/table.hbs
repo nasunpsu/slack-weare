@@ -7,6 +7,7 @@
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k"
     crossorigin="anonymous"></script>
 <link rel="stylesheet" type="text/css" href="/stylesheets/connect.css">
+<script src="/js/table.js"></script>
 <div style="margin-top: 60px;">
     <main class="connect-wrapper">
         <div class="filter-wrapper">
@@ -31,14 +32,14 @@
         </div>
         <table class="table list-table">
             <thead>
-                <tr>
+                <tr id="table-head">
                     <th scope="col">Name</th>
                     <th scope="col">Major</th>
                     <th scope="col">Location</th>
                     <th scope="col">Similarities</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="table-body">
                 {{#each users}}
                     <tr>
                         <td><a href="#" data-toggle="modal" data-target=".profile-modal">{{this.real_name}}</a></td>
@@ -75,6 +76,3 @@
         </div>
     </main>
 </div>
-{{!-- <div id='tb-wrapper' style="margin-top: 60px;">
-    <p>{{data}}</p>
-</div> --}}
