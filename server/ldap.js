@@ -40,35 +40,52 @@ const getLdap = () => {
 /**
  * Function that searches the ldap database for a given email
  * @param {string} email Email of the user to search for
- * @returns {Promise<User>} promise containing full ldap data for the user found
+ * @param {string} fullName Name of the user to search for like 'Matt Mancini' (must be an exact match in ldap directory)
+ * @returns {Promise<[User, Error]>} promise containing an array [full ldap data for the user found, error] (only 1 non null entry)
  */
-const searchLdap = async (email) => {
-    const ldap = await getLdap();
-    options = {
+const searchLdap = async (email, fullName) => {
+    let options = {
         filter: `(mail=${email})`,
         attrs: '*'
     }
-    return new Promise((resolve, reject) => {
+    let [user, error] = await ldapSearchAsync(options);
+    if(!!user){
+        return [user, null];
+    }
+    console.warn(error);
+    options.filter = `(cn=${fullName})`;
+    return await ldapSearchAsync(options);
+}
+
+/**
+ * Searches the ldap data for a user with the given options
+ * @param {any} options Search options to pass to ldap to complete the search
+ * @returns {Promise<[User, Error]>} promise containing an array [full ldap data for the user found, error] (only 1 non null entry)
+ */
+const ldapSearchAsync = async (options) => {
+    const ldap = await getLdap();
+    return new Promise((resolve) => 
         ldap.search(options, (err, data) => {
             if (err) {
-                reject(err);
+                resolve([null, err]);
                 return;
             }
             if (!Array.isArray(data)) {
-                reject('Result is an unexpected type');
+                resolve([null, new Error('Result is an unexpected type')]);
                 return;
             }
             if (data.length === 0) {
-                reject('No results found');
+                resolve([null, new Error('No results found')]);
                 return;
             }
             if (data.length > 1) {
-                console.log(`Multiple results found for ldap query ${options.filter}`);
+                resolve([null, new Error('Multiple results found for ldap query')]);
+                return;
             }
             const user = new User(data[0]);
-            resolve(user);
-        });
-    });
+            resolve([user, null]);
+        })
+    );
 }
 
 /** Closes ldap connection if it was opened (void) */
@@ -84,12 +101,9 @@ const closeLdapConnection = () => {
  * Uses ldap data to add fields for user in the database
  * @param {email} email Email of user to update
  */
-const updateUserWithLdapData = async (email, uid, DB) => {
-    let ldapUser = null;
-    try{
-        ldapUser = await searchLdap(email);
-    }
-    catch(e){
+const updateUserWithLdapData = async (email, fullName, uid, DB) => {
+    const [ldapUser, error] = await searchLdap(email, fullName);
+    if(!!error){
         console.warn(`Email ${email} not found in ldap`);
         return;
     }
@@ -127,8 +141,10 @@ const removeUndefinedEntries = (obj) => {
 /** Class containing all attributes the ldap provides */
 class User {
     constructor(ldapUser) {
-        /** Email address */
-        this.eduPersonPrincipalName = ldapUser.eduPersonPrincipalName[0];
+        if(this.isValidField(ldapUser.eduPersonPrincipalName)){
+            /** Email address */
+            this.eduPersonPrincipalName = ldapUser.eduPersonPrincipalName[0];
+        }
         /** Array of waht this person is a part of like 'eduPerson', 'person', 'eduMember' */
         this.objectClass = ldapUser.objectClass;
         /** Array of strings that may contain email lists or enrolled courses not sure */
@@ -194,4 +210,4 @@ class User {
     }
 }
 
-module.exports = {updateUserWithLdapData};
+module.exports = {updateUserWithLdapData, closeLdapConnection};

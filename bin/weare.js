@@ -800,7 +800,8 @@ async function InitTeamMembers(team_id, token, limit = null) {
 					const onComplete = async () => {
 						console.log('user updated succesfully');
 						const email = m.profile.email;
-						await ldap.updateUserWithLdapData(email, uid, DB);
+						const fullName = m.profile.real_name;
+						await ldap.updateUserWithLdapData(email, fullName, uid, DB);
 						await similarity.storeSimilarUsers(uid);
 					}
 					if (!m.is_bot && m.id != 'USLACKBOT') DB.collection('users').updateOne(
@@ -1302,6 +1303,11 @@ app.use((err, req, res, next) => {
 app.listen(process.env.PORT, () => {
 	console.log(`WeAre! server is running on PORT ${process.env.PORT}`);
 });
+
+process.on('exit', () => {
+	ldap.closeLdapConnection();
+});
+
 // https.createServer(options, app).listen(8443);
 
 function initDB() {

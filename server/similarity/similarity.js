@@ -29,9 +29,8 @@ const storeSimilarUsers = (uid) => {
  */
 const createCommand = (uid) => {
     const fileName = resolve(__dirname, 'similarity.py');
-    const condaActivate = 'source activate weare';
-    const runPython = `python ${fileName} ${uid}`;
-    return `${condaActivate}; ${runPython}`;
+    const python = process.env.PYTHON_PATH;
+    return `${python} ${fileName} ${uid}`;
 }
 
 /**
@@ -108,8 +107,5 @@ const projectAndGroup = () => {
         }
     ]
 }
-// storeSimilarUsers('T3A5YB0TG_U39J4N3FE');
-// storeSimilarUsers('T3A5YB0TG_U3A6ASG9M');
-// storeSimilarUsers('T3A5YB0TG_U39DH7LDR');
 
 module.exports = {storeSimilarUsers,getSimilarUsers}
