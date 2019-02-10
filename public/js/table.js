@@ -5,10 +5,19 @@ class UserTable {
         this.tableBody = document.getElementById('table-body');
         this.tableHeading = document.getElementById('table-head');
         this.search = document.getElementById('search');
+        this.dropdown = document.getElementById('dropdown');
         this.headings = (() => {
             const children = Array.from(this.tableHeading.children);
             return children.map(child => child.innerText);
         })();
+        {
+            this.headings.forEach((heading, index) => {
+                const option = document.createElement("option");
+                option.innerText = heading;
+                option.value = index;
+                this.dropdown.appendChild(option);
+            });
+        }
         this.users = (() => {
             const rows = Array.from(this.tableBody.children);
             return rows.map(tableRow => {
