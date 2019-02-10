@@ -1,3 +1,11 @@
+function bindAll(obj){
+    for (const key in obj) {
+        if (typeof obj[key] === 'function') {
+            obj[key] = obj[key].bind(obj);
+        }
+    }
+}
+
 class UserTable {
 
     constructor() {
@@ -6,82 +14,90 @@ class UserTable {
         this.tableHeading = document.getElementById('table-head');
         this.search = document.getElementById('search');
         this.dropdown = document.getElementById('dropdown');
-        this.headings = (() => {
-            const children = Array.from(this.tableHeading.children);
-            return children.map(child => child.innerText);
-        })();
-        {
-            this.headings.forEach((heading, index) => {
-                const option = document.createElement("option");
-                option.innerText = heading;
-                option.value = index + 1;
-                this.dropdown.appendChild(option);
-            });
-        }
-        this.users = (() => {
-            const rows = Array.from(this.tableBody.children);
-            return rows.map(tableRow => {
-                const cells = Array.from(tableRow.children); 
-                const user = cells.reduce((user, cell, index) => {
-                    const cellHeading = this.headings[index];
-                    user[cellHeading] = cell.innerText;
-                    return user;
-                }, {});
-                user[this.userElementName] = tableRow;
-                return user;
-            });
-        })();
-        this.originalUsers = [...this.users];
-        this.sortUsers = this.sortUsers.bind(this);
-        this.rerenderUsers = this.rerenderUsers.bind(this);
-        this.searchUsers = this.searchUsers.bind(this);
+        bindAll(this);
+        this.headings = this.getHeadings(this.tableHeading);
+        this.setDropDownOptions(this.headings, this.dropdown);
+        this.originalUsers = this.getOriginalUsers(this.tableBody, this.headings, this.userElementName);
+        this.users = [...this.originalUsers];
 
-        this.search.addEventListener('keydown', () => this.searchUsers(this.search.value));
+        this.search.addEventListener('keydown', () => {
+            this.searchUsers(this.search.value, this.originalUsers, this.dropdown, this.tableBody, this.userElementName);
+        });
     }
 
-    searchUsers(query){
+    getOriginalUsers(tableBody, headings, userElementName){
+        const rows = Array.from(tableBody.children);
+        return rows.map(tableRow => {
+            const cells = Array.from(tableRow.children);
+            const user = cells.reduce((user, cell, index) => {
+                const cellHeading = headings[index];
+                user[cellHeading] = cell.innerText;
+                return user;
+            }, {});
+            user[userElementName] = tableRow;
+            return user;
+        });
+    }
+
+    setDropDownOptions(headings, dropdown){            
+        headings.forEach((heading, index) => {
+            const option = document.createElement("option");
+            option.innerText = heading;
+            option.value = index + 1;
+            dropdown.appendChild(option);
+        });
+    }
+
+    getHeadings(tableHeading){
+        const children = Array.from(tableHeading.children);
+        return children.map(child => child.innerText);
+    }
+
+    searchUsers(query, originalUsers, dropdown, tableBody, userElementName){
         if(query === ''){
-            this.users = [...this.originalUsers];
-            this.rerenderUsers();
+            const newUsers = [...originalUsers];
+            this.rerenderUsers(newUsers, tableBody, userElementName);
             return;
         }
-        const searchIndex = this.dropdown.selectedIndex - 1;
+        const searchIndex = dropdown.selectedIndex - 1;
+        let results = null;
         if(searchIndex >= 0){
             const key = this.headings[searchIndex];
-            const results = fuzzysort.go(query, this.originalUsers, {key});
-            this.users = results.map(result => result.obj);
+            results = fuzzysort.go(query, originalUsers, {key});
         }
         else{
             const keys = this.headings;
-            const results = fuzzysort.go(query, this.users, {keys});
-            this.users = results.map(result => result.obj);
+            results = fuzzysort.go(query, originalUsers, {keys});
         }
-        this.rerenderUsers();
+        const users = results.map(result => result.obj);
+        this.rerenderUsers(users, tableBody, userElementName);
     }
 
-    sortUsers(fieldName, isReverse) {
-        let sortedList = this.users.sort((user1, user2) => {
-            const field1 = user1[fieldName];
-            const field2 = user2[fieldName];
-            return field1.localeCompare(field2);
-        });
-        if (isReverse) {
-            sortedList = sortedList.reverse();
-        }
-        this.users = sortedList;
-        rerenderUsers();
-    }
+    // sortUsers(fieldName, isReverse) {
+    //     let sortedList = this.users.sort((user1, user2) => {
+    //         const field1 = user1[fieldName];
+    //         const field2 = user2[fieldName];
+    //         return field1.localeCompare(field2);
+    //     });
+    //     if (isReverse) {
+    //         sortedList = sortedList.reverse();
+    //     }
+    //     this.users = sortedList;
+    //     rerenderUsers();
+    // }
 
-    rerenderUsers() {
-        while (this.tableBody.firstChild) {
-            this.tableBody.removeChild(this.tableBody.firstChild);
+    rerenderUsers(users, tableBody, userElementName){
+        this.users = users;
+        while (tableBody.firstChild) {
+            tableBody.removeChild(tableBody.firstChild);
         }
-        this.users.forEach((user) => {
-            const userElement = user[this.userElementName];
-            this.tableBody.appendChild(userElement);
+        users.forEach((user) => {
+            const userElement = user[userElementName];
+            tableBody.appendChild(userElement);
         });
     }
 }
+
 document.addEventListener("DOMContentLoaded", (event) => {
     const table = new UserTable();
 });
