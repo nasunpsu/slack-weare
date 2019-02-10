@@ -14,7 +14,7 @@ class UserTable {
             this.headings.forEach((heading, index) => {
                 const option = document.createElement("option");
                 option.innerText = heading;
-                option.value = index;
+                option.value = index + 1;
                 this.dropdown.appendChild(option);
             });
         }
@@ -45,14 +45,18 @@ class UserTable {
             this.rerenderUsers();
             return;
         }
-        const searchIndex = this.dropdown.selectedIndex;
-        const key = this.headings[searchIndex];
-        const results = fuzzysort.go(query, this.originalUsers, {key});
-        this.users = results.map(result => result.obj);
+        const searchIndex = this.dropdown.selectedIndex - 1;
+        if(searchIndex >= 0){
+            const key = this.headings[searchIndex];
+            const results = fuzzysort.go(query, this.originalUsers, {key});
+            this.users = results.map(result => result.obj);
+        }
+        else{
+            const keys = this.headings;
+            const results = fuzzysort.go(query, this.users, {keys});
+            this.users = results.map(result => result.obj);
+        }
         this.rerenderUsers();
-        const results2 = fuzzysort.go(query, this.users, {keys: this.headings});
-        console.log(results2);
-        // const elements = results.map(result => result.obj.element);
     }
 
     sortUsers(fieldName, isReverse) {
