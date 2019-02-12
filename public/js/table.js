@@ -35,25 +35,24 @@ class UserTable {
         this.originalUsers = this.getOriginalUsers(this.tableBody, this.headings, this.userElementName);
         this.users = [...this.originalUsers];
 
-        this.search.addEventListener('keyup', () => {
-            this.searchUsers(this.search.value, this.originalUsers, this.dropdown, this.tableBody, this.userElementName);
-        });
 
-        const onCheck = () => {
+        const onCheckOrSearch = () => {
             const isLocation = this.locationCheck.checked; 
             const isMajor = this.majorCheck.checked; 
-            this.filterUsers(isLocation, isMajor, this.tableBody, this.userElementName, this.sessionUser);
+            const query = this.search.value;
+            this.searchAndFilter(isLocation, isMajor, this.sessionUser, query, this.originalUsers, this.dropdown, this.tableBody, this.userElementName);
         };
 
-        this.locationCheck.addEventListener('change', onCheck);
-        this.majorCheck.addEventListener('change', onCheck);
+        this.locationCheck.addEventListener('change', onCheckOrSearch);
+        this.majorCheck.addEventListener('change', onCheckOrSearch);
+        this.search.addEventListener('keyup', onCheckOrSearch);
     }
 
-    filterUsers(isLocation, isMajor, tableBody, userElementName, sessionUser){
+    filterUsers(isLocation, isMajor, users, sessionUser){
         if(!sessionUser.local_area){
             throw new Error('No local_area defined')
         }
-        const newUsers = this.originalUsers.filter(user => {
+        return users.filter(user => {
             if(isLocation && sessionUser.local_area !== user.Location){
                 return false;
             }
@@ -62,7 +61,6 @@ class UserTable {
             }
             return true;
         });
-        this.rerenderUsers(newUsers, tableBody, userElementName);
     }
 
     getOriginalUsers(tableBody, headings, userElementName){
@@ -93,12 +91,10 @@ class UserTable {
         return children.map(child => child.innerText);
     }
 
-    searchUsers(query, originalUsers, dropdown, tableBody, userElementName){
+    searchUsers(query, originalUsers, dropdown){
         this.resetSorting();
         if(query === ''){
-            const newUsers = [...originalUsers];
-            this.rerenderUsers(newUsers, tableBody, userElementName);
-            return;
+            return originalUsers
         }
         const searchIndex = dropdown.selectedIndex - 1;
         let results = null;
@@ -108,9 +104,14 @@ class UserTable {
         }
         else{
             const keys = this.headings;
-                results = fuzzysort.go(query, originalUsers, {keys});
-            }
-        const users = results.map(result => result.obj);
+            results = fuzzysort.go(query, originalUsers, {keys});
+        }
+        return results.map(result => result.obj);
+    }
+
+    searchAndFilter(isLocation, isMajor, sessionUser, query, originalUsers, dropdown, tableBody, userElementName){
+        let users = this.searchUsers(query, originalUsers, dropdown);
+        users = this.filterUsers(isLocation, isMajor, users, sessionUser);
         this.rerenderUsers(users, tableBody, userElementName);
     }
 
