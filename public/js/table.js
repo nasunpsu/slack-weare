@@ -94,6 +94,7 @@ class UserTable {
     }
 
     searchUsers(query, originalUsers, dropdown, tableBody, userElementName){
+        this.resetSorting();
         if(query === ''){
             const newUsers = [...originalUsers];
             this.rerenderUsers(newUsers, tableBody, userElementName);
@@ -111,6 +112,10 @@ class UserTable {
             }
         const users = results.map(result => result.obj);
         this.rerenderUsers(users, tableBody, userElementName);
+    }
+
+    resetSorting(){
+        $('.sorted').removeClass('sorted');
     }
 
     rerenderUsers(users, tableBody, userElementName){
