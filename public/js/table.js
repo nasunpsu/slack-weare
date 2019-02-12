@@ -15,6 +15,9 @@ class UserTable {
     constructor() {
         bindAll(this);
 
+        this.maxResults = 10;
+        this.resultsLoaded = 10;
+        this.resultLoadIncrement = 5;
         this.userElementName = 'element';
         // Current signed in user must be passed from front end
         if(!window.sessionUser){
@@ -35,6 +38,8 @@ class UserTable {
         this.originalUsers = this.getOriginalUsers(this.tableBody, this.headings, this.userElementName);
         this.users = [...this.originalUsers];
 
+        const badChildren = Array.from(this.tableBody.children).slice(this.resultsLoaded);
+        badChildren.forEach(child => this.tableBody.removeChild(child));
 
         const onCheckOrSearch = () => {
             const isLocation = this.locationCheck.checked; 
@@ -46,6 +51,23 @@ class UserTable {
         this.locationCheck.addEventListener('change', onCheckOrSearch);
         this.majorCheck.addEventListener('change', onCheckOrSearch);
         this.search.addEventListener('keyup', onCheckOrSearch);
+
+        document.addEventListener('scroll', () => {
+            if(this.isDocumentAtBottom()){
+                this.loadMoreResults(this.resultLoadIncrement, this.tableBody, this.users);
+            }
+        });
+
+    }
+
+    loadMoreResults(numResults, tableBody, users){
+        const showUsers = users.slice(this.resultsLoaded, this.resultsLoaded + numResults);
+        showUsers.map(user => user.element).forEach(userElement => tableBody.appendChild(userElement));
+        this.resultsLoaded += numResults;
+    }
+
+    isDocumentAtBottom(){
+        return document.documentElement.scrollTop + window.innerHeight >= document.documentElement.scrollHeight
     }
 
     filterUsers(isLocation, isMajor, users, sessionUser){
