@@ -22,7 +22,7 @@ class UserTable {
         this.originalUsers = this.getOriginalUsers(this.tableBody, this.headings, this.userElementName);
         this.users = [...this.originalUsers];
 
-        this.search.addEventListener('keydown', () => {
+        this.search.addEventListener('keyup', () => {
             this.searchUsers(this.search.value, this.originalUsers, this.dropdown, this.tableBody, this.userElementName);
         });
         const onCheck = () => {
@@ -130,5 +130,6 @@ class UserTable {
 }
 
 document.addEventListener("DOMContentLoaded", (event) => {
+    $('.sortable').tablesort();
     const table = new UserTable();
 });
