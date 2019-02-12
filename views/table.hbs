@@ -8,7 +8,7 @@
 <script src="https://rawgit.com/farzher/fuzzysort/master/fuzzysort.js"></script>
 <script src="https://semantic-ui.com/javascript/library/tablesort.js"></script>
 <script>
-    const sessionUser = (() => {
+    window.sessionUser = (() => {
         const userString = `{{user}}`;
         const text = document.createElement('textarea');
         text.innerHTML = userString;

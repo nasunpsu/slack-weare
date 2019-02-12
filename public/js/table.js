@@ -1,3 +1,7 @@
+/**
+ * Binds all functions to always have 'this' to be the object itself
+ * @param {any} obj Object to bind all methods to
+ */
 function bindAll(obj){
     for (const key in obj) {
         if (typeof obj[key] === 'function') {
@@ -9,15 +13,24 @@ function bindAll(obj){
 class UserTable {
 
     constructor() {
+        bindAll(this);
+
         this.userElementName = 'element';
+        // Current signed in user must be passed from front end
+        if(!window.sessionUser){
+            throw Error('Session user not defined');
+        }
+        this.sessionUser = window.sessionUser;
+        delete window.sessionUser;
+
         this.tableBody = document.getElementById('table-body');
         this.tableHeading = document.getElementById('table-head');
         this.search = document.getElementById('search');
         this.dropdown = document.getElementById('dropdown');
         this.locationCheck = document.getElementById('locationCheck');
         this.majorCheck = document.getElementById('majorCheck');
-        bindAll(this);
         this.headings = this.getHeadings(this.tableHeading);
+
         this.setDropDownOptions(this.headings, this.dropdown);
         this.originalUsers = this.getOriginalUsers(this.tableBody, this.headings, this.userElementName);
         this.users = [...this.originalUsers];
@@ -25,24 +38,20 @@ class UserTable {
         this.search.addEventListener('keyup', () => {
             this.searchUsers(this.search.value, this.originalUsers, this.dropdown, this.tableBody, this.userElementName);
         });
+
         const onCheck = () => {
             const isLocation = this.locationCheck.checked; 
             const isMajor = this.majorCheck.checked; 
-            this.filterUsers(isLocation, isMajor, this.tableBody, this.userElementName);
+            this.filterUsers(isLocation, isMajor, this.tableBody, this.userElementName, this.sessionUser);
         };
 
         this.locationCheck.addEventListener('change', onCheck);
         this.majorCheck.addEventListener('change', onCheck);
     }
 
-    filterUsers(isLocation, isMajor, tableBody, userElementName){
-        if(!sessionUser){
-            console.error('Error: User is not defined');
-            return;
-        }
+    filterUsers(isLocation, isMajor, tableBody, userElementName, sessionUser){
         if(!sessionUser.local_area){
-            console.error('Error no local area');
-            return;
+            throw new Error('No local_area defined')
         }
         const newUsers = this.originalUsers.filter(user => {
             if(isLocation && sessionUser.local_area !== user.Location){
@@ -98,24 +107,11 @@ class UserTable {
         }
         else{
             const keys = this.headings;
-            results = fuzzysort.go(query, originalUsers, {keys});
-        }
+                results = fuzzysort.go(query, originalUsers, {keys});
+            }
         const users = results.map(result => result.obj);
         this.rerenderUsers(users, tableBody, userElementName);
     }
-
-    // sortUsers(fieldName, isReverse) {
-    //     let sortedList = this.users.sort((user1, user2) => {
-    //         const field1 = user1[fieldName];
-    //         const field2 = user2[fieldName];
-    //         return field1.localeCompare(field2);
-    //     });
-    //     if (isReverse) {
-    //         sortedList = sortedList.reverse();
-    //     }
-    //     this.users = sortedList;
-    //     rerenderUsers();
-    // }
 
     rerenderUsers(users, tableBody, userElementName){
         this.users = users;
@@ -129,7 +125,8 @@ class UserTable {
     }
 }
 
-document.addEventListener("DOMContentLoaded", (event) => {
+document.addEventListener('DOMContentLoaded', () => {
+    //Activate the sortable table using semantic UI
     $('.sortable').tablesort();
-    const table = new UserTable();
+    new UserTable();
 });
