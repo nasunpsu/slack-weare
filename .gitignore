@@ -4,7 +4,7 @@ node_modules/
 #Cached python scripts
 __pycache__/
 #Vscode settings
-.vscode/settings.json
+.vscode/
 #Semantic UI elements
 semantic.json
 semantic/
