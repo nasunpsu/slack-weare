@@ -16,8 +16,9 @@ class UserTable {
         bindAll(this);
 
         this.maxResults = 10;
-        this.resultsLoaded = 10;
+        this.resultsLoaded = this.maxResults;
         this.resultLoadIncrement = 5;
+        this.scrollThreshold = 10;
         this.userElementName = 'element';
         // Current signed in user must be passed from front end
         if(!window.sessionUser){
@@ -38,7 +39,7 @@ class UserTable {
         this.originalUsers = this.getOriginalUsers(this.tableBody, this.headings, this.userElementName);
         this.users = [...this.originalUsers];
 
-        const badChildren = Array.from(this.tableBody.children).slice(this.resultsLoaded);
+        const badChildren = Array.from(this.tableBody.children).slice(this.maxResults);
         badChildren.forEach(child => this.tableBody.removeChild(child));
 
         const onCheckOrSearch = () => {
@@ -53,7 +54,7 @@ class UserTable {
         this.search.addEventListener('keyup', onCheckOrSearch);
 
         document.addEventListener('scroll', () => {
-            if(this.isDocumentAtBottom()){
+            if(this.isDocumentAtBottom(this.scrollThreshold)){
                 this.loadMoreResults(this.resultLoadIncrement, this.tableBody, this.users);
             }
         });
@@ -66,8 +67,8 @@ class UserTable {
         this.resultsLoaded += numResults;
     }
 
-    isDocumentAtBottom(){
-        return document.documentElement.scrollTop + window.innerHeight >= document.documentElement.scrollHeight
+    isDocumentAtBottom(threshold){
+        return document.documentElement.scrollTop + window.innerHeight >= document.documentElement.scrollHeight - threshold
     }
 
     filterUsers(isLocation, isMajor, users, sessionUser){
@@ -146,10 +147,9 @@ class UserTable {
         while (tableBody.firstChild) {
             tableBody.removeChild(tableBody.firstChild);
         }
-        users.forEach((user) => {
-            const userElement = user[userElementName];
-            tableBody.appendChild(userElement);
-        });
+        const renderUsers = users.slice(0, this.maxResults);
+        renderUsers.map(user => user[userElementName]).forEach(userElement => tableBody.appendChild(userElement));
+        this.resultsLoaded = renderUsers.length;
     }
 }
 
