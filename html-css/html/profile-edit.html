@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     
-    <title>WeConnect | Connect</title>
+    <title>WeConnect | Dashboard</title>
     
     <!-- Bootstrap -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
@@ -14,12 +14,15 @@
         
     <!-- CSS -->
     <link rel="stylesheet" type="text/css" href="../css/connect.css">
+    <link rel="stylesheet" type="text/css" href="../css/profile-edit.css">
         
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css" integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ" crossorigin="anonymous">
+        
+    
     
     <!-- Proxima Nova Font -->
-    <link rel="stylesheet" href="https://use.typekit.net/ufx2dge.css">    
+    <link rel="stylesheet" href="https://use.typekit.net/ufx2dge.css">       
     </head>
     <body>
         <nav>
@@ -30,37 +33,35 @@
                 <a href="#">Settings</a>
             </span>
         </nav>
-        <div class="sidebar"></div>
-        <main class="connect-wrapper">
-            <div class="view-controller btn-group">
-                <button class="btn btn-primary view-btn">List</button>
-                <button class="btn btn-primary view-btn">Cards</button>
-                <button class="btn btn-primary view-btn">Map</button>
-                <button class="btn btn-primary view-btn">Network</button>
+        <main class="profile-wrapper">
+            <div class="basic-info card">
+                <img src="../images/placeholder-img.png" class="profile-img-lg">
+                <div class="basic-info-text">
+                    <h5>Student Name</h5>
+                    <p>Student Major</p>
+                    <p>abc1234@psu.edu</p>
+                    <a href="#" class="edit">edit</a>
+                </div>                
             </div>
-            <div class="similarities"></div>
-            <div class="card-wrapper">
-                <div class="card">
-                    <img src="../images/placeholder-img.png" class="profile-img-sm">
-                    <p>Student Name</p>
-                    <p>Student Major</p>
+            
+            <div class="basic-info card">
+                <div class="basic-info-text">
+                    <h5 class="card-title">Personal Info</h5>
+                    <b>Info Title</b>
+                    <p>info</p>
+                    <b>Info Title</b>
+                    <p>info</p>
+                    <a href="#" class="edit">edit</a>
                 </div>
-                <div class="card">
-                    <img src="../images/placeholder-img.png" class="profile-img-sm">
-                    <p>Student Name</p>
-                    <p>Student Major</p>
-                </div>
-                <div class="card">
-                    <img src="../images/placeholder-img.png" class="profile-img-sm">
-                    <p>Student Name</p>
-                    <p>Student Major</p>
-                </div>
-                <div class="card">
-                    <img src="../images/placeholder-img.png" class="profile-img-sm">
-                    <p>Student Name</p>
-                    <p>Student Major</p>
+                <div class="basic-info-text"> 
+                    <b>Info Title</b>
+                    <p>info</p>
+                    <b>Info Title</b>
+                    <p>info</p>
+                    <a href="#" class="edit">edit</a>
                 </div>
             </div>
         </main>
     </body>
 <html>
+    
