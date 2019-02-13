@@ -49,7 +49,7 @@ def update_db(uid, matrix):
     query = {'uid': uid}
     result = db.users.update_many(query, new_value)
     if result.modified_count != 1:
-        print(f'Error, {result.modified_count} users modified, {result.matched_count} users matched', flush=True)
+        print(f'Warning, {result.modified_count} users modified, {result.matched_count} users matched', flush=True)
 
 def get_db():
     """ Gets and returns pymongo database client """

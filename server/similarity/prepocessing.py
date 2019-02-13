@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import collections
 import re
+import math
 
 def prepocess(users):
     """ Fixes dataframe for use in distance function
@@ -21,6 +22,21 @@ def prepocess(users):
     users = clean_kids_column(users)
     return users
 
+def delete_nan_user_columns(user, users):
+    """ Removes columns that the given user does not have """
+    drop_columns = []
+    for col in user.columns:
+        val = user.iloc[0][col]
+        if val == None:
+            drop_columns.append(col)
+        if type(val) == float and math.isnan(val):
+            drop_columns.append(col)
+        if type(val) == str and val == '':
+            drop_columns.append(col)
+    users.drop(columns=drop_columns, inplace=True)
+    return users
+    
+    
 def clean_email(students): 
     """ Fix up email column in students, returning students """
     students = students.rename(columns={'Email': 'email'})
@@ -64,7 +80,8 @@ def drop_student_columns(users):
     #number of courses, credits are too dirty as many entered text instead of a number
     drop_columns = ["surveyCompletion", "Duration (in seconds)", "NumCourses", "transferCredits", "NumTranCredits",
                     "WhyProfile", "otherChannels", "otherEmploy", "NonUS", "otherIndusry", "KnownThroughProfile",
-                    "otherEth", "PPLinPerson", "otherEmail", "ActiveDuty", "OCEnabler"]
+                    "otherEth", "PPLinPerson", "otherEmail", "ActiveDuty", "OCEnabler", "similar_users", "similar_users_y", "_id", "_id_y", 
+                    "real_name", "email", "is_bot", "phone", "name", "last_name"]
     #only drop these columns if they actually exist in the data
     drop_columns = [col for col in drop_columns if col in users.columns]
     users.drop(columns=drop_columns, inplace=True)

@@ -12,6 +12,7 @@ const storeSimilarUsers = (uid) => {
         pythonProcess.stdout.on('data', (data) => {
             if(data.toString() === 'finished'){
                 resolve();
+                return;
             }
             console.log(data.toString());
         });
@@ -30,7 +31,7 @@ const storeSimilarUsers = (uid) => {
 const createCommand = (uid) => {
     const fileName = resolve(__dirname, 'similarity.py');
     const python = process.env.PYTHON_PATH;
-    return `${python} ${fileName} ${uid}`;
+    return `${python} -W ignore ${fileName} ${uid}`;
 }
 
 /**

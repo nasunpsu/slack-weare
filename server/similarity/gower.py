@@ -104,7 +104,7 @@ def gower_distances(X, Y=None, feature_weight=None, categorical_features=None):
     
     
     #if categorical_features.dtype == np.int32:
-    if np.issubdtype(categorical_features.dtype, np.int):
+    if np.issubdtype(categorical_features.dtype, np.int32):
         new_categorical_features = np.zeros(n_cols, dtype=bool)
         new_categorical_features[categorical_features] = True
         categorical_features = new_categorical_features
