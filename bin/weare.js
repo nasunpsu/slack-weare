@@ -543,11 +543,11 @@ app.use(checkSignIn);
 
 app.get('/home', async function (req, res) {
 	//you could do a combo of res.session.locals = res.locals() and res.locals(res.session.locals), but kinda hacky
-	// console.log(`session info is ${util.inspect(req.session, { depth: 3 })}, and the locals are ${util.inspect(res.locals, { depth: 2 })}`)
+	console.log(`session info is ${util.inspect(req.session, { depth: 3 })}, and the locals are ${util.inspect(res.locals, { depth: 2 })}`)
 	let to_be_rendered = {};
 	to_be_rendered.layout = 'default';
 	to_be_rendered.template = 'home-template';
-	to_be_rendered.members = await DB.collection('users').find({ team_id: req.session.team.team_id }).toArray().then((results, err) => {
+	to_be_rendered.members = await DB.collection('users').find({ team_id: req.session.team ? req.session.team.team_id : 'T0A286J8K' }).toArray().then((results, err) => {
 		if (err) console.error(err);
 		else if (results.length != 0) {
 			//categorize the users based on their tz_labels, sorted by tz_offset
@@ -571,7 +571,7 @@ app.get('/home', async function (req, res) {
 			// res.render('index', { layout: 'default', template: 'home-template', tz_members: members_by_tz });
 		}
 	});
-	to_be_rendered.channels_info = await DB.collection('channels').find({ team_id: req.session.team.team_id }).toArray().then((results, err) => {
+	to_be_rendered.channels_info = await DB.collection('channels').find({ team_id: req.session.team ? req.session.team.team_id : 'T0A286J8K' }).toArray().then((results, err) => {
 		if (err) console.error(err);
 		if (results.length != 0) { //this is current all the channels of the team, but perhaps it is good to differentiate which ones the logged user belongs to vs not
 			var TopSizeChannels = [], TopActiveChannels = [], msg_total = 0, limit = 3, c_list = []; //LIMIT is the number of Top X channels
@@ -583,8 +583,8 @@ app.get('/home', async function (req, res) {
 				msg_total += results[i].msgs.length;
 				TopSizeChannels.push(results[i]);
 			}
-			results.sort((a, b) => { //from active to inactive
-				return a.msgs.length - b.msgs.length;
+			results.sort((a, b) => { //from active to inactive, large to small
+				return b.msgs.length - a.msgs.length;
 			});
 			for (var i = 0; i < limit; i++) {
 				TopActiveChannels.push(results[i]);
@@ -609,7 +609,7 @@ app.get('/home', async function (req, res) {
 	res.render('index', to_be_rendered);
 });
 
-app.get('/tablelist', async function(req, res) {
+app.get('/tablelist', async function (req, res) {
 	// res.send('This is table list');
 	console.log('get table list from users');
 	// generate the basic table for the logged in user to check who is closet to him/her
@@ -623,42 +623,101 @@ app.get('/tablelist', async function(req, res) {
 	to_be_rendered.user = JSON.stringify(req.session.user);
 	res.render('table', to_be_rendered);
 });
-app.get('/network11', async function(req, res) {
+app.get('/network', async function (req, res) {
 	let to_be_rendered = {};
 	to_be_rendered.layout = 'default';
 	to_be_rendered.template = 'home-template';
-	to_be_rendered.data = await DB.collection('users').find({ team_id: req.session.team.team_id }).toArray().then((results, err) => {
+	to_be_rendered.data = await DB.collection('users').find({ team_id: req.session.team.team_id }).toArray().then(async (results, err) => {
 		if (err) console.error(err);
 		else if (results.length != 0) {
-			var nodes = results, links = [], c_node = req.session.user, channel_nodes = req.session.user.channels;
-			var m_channels = {}; //input to compute Jaccard similarity
+			var nodes = results, direct_nodes = [], simiL = [], links = [], c_node = req.session.user, self_channels = req.session.user.channels;
+			// var dist = await DB.collection('usersDistance').find({ "": c_node.uid });//.limit(10)
+			// console.log(`the dist are ${util.inspect(dist, {depth: null})}`);
+			console.log(`the self_channels are ${util.inspect(self_channels, { depth: null })}`);
 			nodes.forEach(n => {
-				if(n.uid == c_node.uid) {
-					n.center = true;
-					m_channels[n.uid] = n.channels;
+				if (n.uid == c_node.uid) {
+					// console.error("now this is the logged user in the nodes loop");
+					n.fixed = true;
+					n.x = 400;//half of the canvas width/height
+					n.y = 300;
+					n.similarIdx = 1;
+					// m_channels[n.uid] = n.channels;
 					return;
 				}
-				req.session.user.channels.forEach(c => {
-					if(n.channels.indexOf(c)!=-1) {
-						if(!m_channels[n.uid]) m_channels[n.uid] = n.channels;
-						n.shared_channels = c;
-						n.group = c;
+				n.similarIdx = similarIdx(n.channels, self_channels);
+				console.log(`similarity is ${util.inspect(n.similarIdx, { depth: null })}`);
+				simiL.push(n.similarIdx);
+
+				if (n.similarIdx >= 0.06) {
+					links.push({
+						source: n.uid,
+						target: c_node.uid,
+						value: n.similarIdx
+					});
+					direct_nodes.push(n);
+				}
+				// console.error("now this is NOT the logged user in the nodes loop");
+				// self_channels.forEach(c => {
+				// 	console.log(`c is ${util.inspect(c, {depth: null})} and n.channels are ${util.inspect(n.channels, {depth: 3})}`);
+
+				// 	if (n.channels.contains(c)) { //if the node share the channel c with the self node
+				// 		console.log(`there is shared channels; the shared c is ${util.inspect(c, {depth: null})}`);
+
+				// 		if (!n.shared_channels) n.shared_channels = c;
+				// 		else n.shared_channels.append(c);
+				// 		// n.group = c; //how do we group users?
+				// 		links.push({
+				// 			source: n.uid,
+				// 			target: c_node.cid,
+				// 			value: similarIdx()
+				// 		});
+				// 	}
+				// })
+			});
+			var i = direct_nodes.length;
+			while (i--) {
+				c_node = direct_nodes.splice(i, 1)[0];
+				if (c_node.uid == undefined) console.log(`c_node is ${util.inspect(c_node, { depth: null })}`);
+				nodes.forEach(n => {
+
+					if (n.uid == c_node.uid) {
+						// console.error("now this is the logged user in the nodes loop");
+						// n.fixed = true;
+						// n.x = 400;//half of the canvas width/height
+						// n.y = 300;
+						// n.similarIdx = 1;
+						// m_channels[n.uid] = n.channels;
+						return;
+					};
+					var simi = similarIdx(n.channels, c_node.channels)
+					simiL.push(simi);
+					if (simi >= 0.3) {
 						links.push({
 							source: n.uid,
-							target: c_node.cid,
-						})
+							target: c_node.uid,
+							value: simi
+						});
 					}
 				})
-			});
-			jac_links = similarIdx.JaccardIdx(m_channels);
-			console.log(`the jaclinks are ${util.inspect(jac_links, {depth: null})}`);
-			console.log(`the common channels links are ${util.inspect(links, {depth: null})}`);
+			}
+			console.log(`the third quantile similarity index is ${median(simiL)}; and the min is ${Math.min(...simiL)} and max is ${Math.max(...simiL)}`);
+			// jac_links = similarIdx.JaccardIdx(m_channels);
+			// console.log(`the jaclinks are ${util.inspect(jac_links, {depth: null})}`);
+			console.log(`the nodes are ${util.inspect(nodes[0], { depth: null })}`);
+			// console.log(`the total groups are ${Object.keys(link_ends)}`)
+			var obj = {
+				nodes: nodes,
+				links: links,
+				disL: [Math.min(...simiL), Math.max(...simiL)]
+			}
+			console.log(`links are ${util.inspect(links, { depth: 3 })}`);
+			return Promise.resolve(obj);
 		}
 	});
 	res.render('network', to_be_rendered);
 });
 
-app.get('/network', async function (req, res) {
+app.get('/network11', async function (req, res) {
 	let to_be_rendered = {};
 	to_be_rendered.layout = 'default';
 	to_be_rendered.template = 'home-template';
@@ -679,8 +738,8 @@ app.get('/network', async function (req, res) {
 					link_ends[obj.group] = [obj.id];
 				}
 				else {
-					console.log(`link_ends list is ${util.inspect(link_ends[obj.group], {depth: null})}`);
-					link_ends[obj.group].forEach( end => {//for (var end in link_ends[obj.group]) { loop through the index instead of array item
+					console.log(`link_ends list is ${util.inspect(link_ends[obj.group], { depth: null })}`);
+					link_ends[obj.group].forEach(end => {//for (var end in link_ends[obj.group]) { loop through the index instead of array item
 						console.log(`the pushed source end is ${end}`)
 						console.log(`the pushed target end is ${r.uid}`)
 						links.push({
@@ -697,7 +756,7 @@ app.get('/network', async function (req, res) {
 				nodes: nodes,
 				links: links
 			}
-			console.log(`links are ${util.inspect(links, {depth: 3})}`);
+			console.log(`links are ${util.inspect(links, { depth: 3 })}`);
 			return Promise.resolve(obj);
 			// res.render('index', { layout: 'default', template: 'home-template', tz_members: members_by_tz });
 		}
@@ -793,11 +852,12 @@ async function InitTeamMembers(team_id, token, limit = null) {
 						user: m.id,
 						limit: 200, //this should be c_limit for channel limit per member instead of the limit as the users list
 						// cursor: c_cursor this should also be initialized
-					}).then( res_channels => {
+					}).then(res_channels => {
 						res_channels.channels.forEach(c => {
-							// console.log(c.id);
-							user_channels.push({cid: m.team_id + '_' + c.id,
-							cname: c.cname});
+							user_channels.push({
+								cid: m.team_id + '_' + c.id,
+								cname: c.name
+							});
 						});
 					});
 					const onComplete = async () => {
@@ -862,10 +922,12 @@ async function InitTeamMembers(team_id, token, limit = null) {
 						user: m.id,
 						limit: 200, //this should be c_limit for channel limit per member instead of the limit as the users list
 						// cursor: c_cursor this should also be initialized
-					}).then( res_channels => {
+					}).then(res_channels => {
 						res_channels.channels.forEach(c => {
-							// console.log(c.id);
-							user_channels.push(m.team_id + '_' + c.id);
+							user_channels.push({
+								cid: m.team_id + '_' + c.id,
+								cname: c.name
+							});
 						});
 					});
 					if (!m.is_bot && m.id != 'USLACKBOT') DB.collection('users').updateOne(
@@ -1271,6 +1333,9 @@ function timeConverter(UNIX_timestamp) {
 }
 
 function checkSignIn(req, res, next) {
+	// res.locals.login = true;
+	// 	console.log(`req ip is ${req.ip}, if there is list, then ${req.ips}`)
+	// 	next(); 
 	if (req.session.user) {
 		// console.log(`user logged in: ${req.session.user}`);
 		// console.log(`locals are ${util.inspect(res.locals, { depth: 2 })}`)
@@ -1323,4 +1388,28 @@ function initDB() {
 	DB.createCollection('teamnames', function (err, collection) { });
 	DB.createCollection('oauthtokens', function (err, collection) { });
 	// DB.createCollection('tildaposts', function (err, collection) { });
+}
+
+
+Array.prototype.contains = Array.prototype.contains || function (obj) {
+	var i, l = this.length;
+	for (i = 0; i < l; i++) {
+		if (this[i] == obj) return true;
+	}
+	return false;
+};
+
+function median(values){
+    values.sort(function(a,b){
+    return a-b;
+  });
+
+  if(values.length ===0) return 0
+
+  var half = Math.floor(values.length *3/ 4);//third quantile
+
+  if (values.length % 2)
+    return values[half];
+  else
+    return (values[half - 1] + values[half]) / 2.0;
 }
