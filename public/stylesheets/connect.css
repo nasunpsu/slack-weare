@@ -16,7 +16,7 @@ nav{
 
 .nav-links > a{
     color: white;
-    font-family: 'Proxima Nova';
+    font-family: 'Proxima Nova', sans-serif;
     padding: 10px;
     margin: 10px;
     text-decoration: none;
@@ -62,6 +62,23 @@ nav{
     padding: 20px;
 }
 
+.filters p{
+    font-family: 'Proxima Nova', sans-serif;
+}
+
 .basic-info p{
     margin: 0;
+}
+
+.search-table, .sort-dropdown{
+    display: inline;
+    margin: 40px;
+}
+
+.search-table{
+    margin-left: 0px;
+}
+
+.filters .checkbox{
+    margin-left: 25px;
 }
