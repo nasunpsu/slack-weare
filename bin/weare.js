@@ -618,7 +618,7 @@ app.get('/tablelist', async function (req, res) {
 	to_be_rendered.data = "this is the data passed in to generate list";
 	res.render('table', to_be_rendered);
 });
-app.get('/network', async function (req, res) {
+app.get('/network_balloon', async function (req, res) {
 	let to_be_rendered = {};
 	to_be_rendered.layout = 'default';
 	to_be_rendered.template = 'home-template';
@@ -636,7 +636,6 @@ app.get('/network', async function (req, res) {
 					n.x = 400;//half of the canvas width/height
 					n.y = 300;
 					n.similarIdx = 1;
-					// m_channels[n.uid] = n.channels;
 					return;
 				}
 				n.similarIdx = similarIdx(n.channels, self_channels);
@@ -651,23 +650,6 @@ app.get('/network', async function (req, res) {
 					});
 					direct_nodes.push(n);
 				}
-				// console.error("now this is NOT the logged user in the nodes loop");
-				// self_channels.forEach(c => {
-				// 	console.log(`c is ${util.inspect(c, {depth: null})} and n.channels are ${util.inspect(n.channels, {depth: 3})}`);
-
-				// 	if (n.channels.contains(c)) { //if the node share the channel c with the self node
-				// 		console.log(`there is shared channels; the shared c is ${util.inspect(c, {depth: null})}`);
-
-				// 		if (!n.shared_channels) n.shared_channels = c;
-				// 		else n.shared_channels.append(c);
-				// 		// n.group = c; //how do we group users?
-				// 		links.push({
-				// 			source: n.uid,
-				// 			target: c_node.cid,
-				// 			value: similarIdx()
-				// 		});
-				// 	}
-				// })
 			});
 			var i = direct_nodes.length;
 			while (i--) {
@@ -676,12 +658,6 @@ app.get('/network', async function (req, res) {
 				nodes.forEach(n => {
 
 					if (n.uid == c_node.uid) {
-						// console.error("now this is the logged user in the nodes loop");
-						// n.fixed = true;
-						// n.x = 400;//half of the canvas width/height
-						// n.y = 300;
-						// n.similarIdx = 1;
-						// m_channels[n.uid] = n.channels;
 						return;
 					};
 					var simi = similarIdx(n.channels, c_node.channels)
@@ -711,6 +687,94 @@ app.get('/network', async function (req, res) {
 	});
 	res.render('network', to_be_rendered);
 });
+
+function similarTo(list, user) {
+	console.log(`the list in similarTo is ${util.inspect(list, { depth: 3 })}`);
+	var dist = 'impossible value';
+	list.some(el => {
+
+		if (el.user == user) {
+			console.log(`the distance index inside similarTo func is ${JSON.stringify(el)}`);
+			console.log(el.distance);
+			dist = el.distance;
+			return el.user === user;
+		}
+
+
+	});
+	return Promise.resolve(dist);
+}
+app.get('/network', async function (req, res) {
+	let to_be_rendered = {};
+	to_be_rendered.layout = 'default';
+	to_be_rendered.template = 'home-template';
+	to_be_rendered.data = await DB.collection('users_distance').find({ team_id: req.session.team.team_id }).toArray().then(async (results, err) => {
+		if (err) console.error(err);
+		else if (results.length != 0) {
+			var nodes = results, direct_nodes = [], distL = [], links = [], c_node = req.session.user, self_channels = req.session.user.channels;
+			// var dist = await DB.collection('usersDistance').find({ "": c_node.uid });//.limit(10)
+			// console.log(`the dist are ${util.inspect(dist, {depth: null})}`);
+			// console.log(`the self_channels are ${util.inspect(self_channels, { depth: null })}`);
+			(async () => {
+				nodes.forEach(async (n) => {
+				if (n.uid == c_node.uid) {
+					// console.error("now this is the logged user in the nodes loop");
+					n.fixed = true;
+					n.x = 400;//half of the canvas width/height
+					n.y = 300;
+					n.distIdx = 1;
+					return;
+				}
+				n.distIdx = await similarTo(n.similar_users, c_node.uid);
+				console.log(`distance is ${util.inspect(n.distIdx, { depth: null })}`);
+				distL.push(n.distIdx);
+
+				if (n.distIdx <= 0.4) {
+					links.push({
+						source: n.uid,
+						target: c_node.uid,
+						value: n.distIdx
+					});
+					direct_nodes.push(n);
+				}
+			});
+			var i = await direct_nodes.length;
+			console.log(`number of direct_nodes is ${direct_nodes.length}`)
+			while (i--) {
+				c_node = direct_nodes.splice(i, 1)[0];
+				console.log(`c_node is ${util.inspect(c_node, { depth: null })}`);
+				nodes.forEach(async (n) => {
+
+					if (n.uid == c_node.uid) {
+						return;
+					};
+					dis = await similarTo(n.similar_users, c_node.uid);
+					console.log(`dist is ${util.inspect(dis, { depth: null })}`);
+					distL.push(dis);
+					if (dis <= 0.4) {
+						links.push({
+							source: n.uid,
+							target: c_node.uid,
+							value: dis
+						});
+					}
+				})
+			}
+		})();
+			// console.log(`the third quantile similarity index is ${median(distL)}; and the min is ${Math.min(...distL)} and max is ${Math.max(...distL)}`);
+			// console.log(`the nodes are ${util.inspect(nodes[0], { depth: null })}`);
+			var obj = {
+				nodes: nodes,
+				links: links,
+				disL: [Math.min(...distL), Math.max(...distL)]
+			}
+			console.log(`links are ${util.inspect(links, { depth: 3 })}`);
+			return Promise.resolve(obj);
+		}
+	});
+	res.render('network', to_be_rendered);
+});
+
 
 app.get('/network11', async function (req, res) {
 	let to_be_rendered = {};
@@ -1358,14 +1422,14 @@ app.use((err, req, res, next) => {
 });
 
 // Set up express server here
-// const options = {
-//     cert: fs.readFileSync('/etc/letsencrypt/live/93b290fd.ngrok.io/fullchain.pem'),
-//     key: fs.readFileSync('/etc/letsencrypt/live/93b290fd.ngrok.io/privkey.pem')
-// };
+const options = {
+    cert: fs.readFileSync('/etc/pki/tls/certs/weconnect.crt'),
+    key: fs.readFileSync('/etc/pki/tls/private/weconnect.key')
+};
 app.listen(process.env.PORT, () => {
 	console.log(`WeAre! server is running on PORT ${process.env.PORT}`);
 });
-// https.createServer(options, app).listen(8443);
+https.createServer(options, app).listen(8443);
 
 function initDB() {
 	DB.createCollection('commands', function (err, collection) { });
@@ -1388,17 +1452,17 @@ Array.prototype.contains = Array.prototype.contains || function (obj) {
 	return false;
 };
 
-function median(values){
-    values.sort(function(a,b){
-    return a-b;
-  });
+function median(values) {
+	values.sort(function (a, b) {
+		return a - b;
+	});
 
-  if(values.length ===0) return 0
+	if (values.length === 0) return 0
 
-  var half = Math.floor(values.length *3/ 4);//third quantile
+	var half = Math.floor(values.length * 3 / 4);//third quantile
 
-  if (values.length % 2)
-    return values[half];
-  else
-    return (values[half - 1] + values[half]) / 2.0;
+	if (values.length % 2)
+		return values[half];
+	else
+		return (values[half - 1] + values[half]) / 2.0;
 }

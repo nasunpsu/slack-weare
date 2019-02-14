@@ -1,3 +1,4 @@
+
 <div class="ui main container">
     <div class="ui centered grid">
         <main class="dashboard-wrapper">
@@ -33,7 +34,7 @@
                     </div>
                 </div>
             </div>
-            <button class="ui button slack-btn">Open Slack</button>
+            <button class="ui button slack-btn"><a href="slack://open" class="btn" target="_blank">Open Slack</a></button>
             <p class="post-title">Most Reacted Posts on the World Campus Slack</p>
             <div class="post-wrapper">
                 <div class="reacted-post">
@@ -75,7 +76,7 @@
                     <tbody>
                          {{#each channels_info.TopActiveChannels as |channel|}}
                         <tr>
-                            <td><a href="#">#{{channel.cname}}</a></td>
+                            <td><a href="https://slack.com/app_redirect?channel={{channel.cname}}" target="_blank">#{{channel.cname}}</a></td>
                             <td>{{channel.num_members}}</td>
                             <td>{{channel.msgs.length}}</td>
                             <td>Today, 5:30pm</td>
