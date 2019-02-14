@@ -925,6 +925,7 @@ async function InitTeamMembers(team_id, token, limit = null) {
 						// cursor: c_cursor this should also be initialized
 					}).then(res_channels => {
 						res_channels.channels.forEach(c => {
+							console.log(c.id);
 							user_channels.push({
 								cid: m.team_id + '_' + c.id,
 								cname: c.name
