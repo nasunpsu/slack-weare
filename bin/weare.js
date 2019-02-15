@@ -1426,9 +1426,9 @@ const options = {
     cert: fs.readFileSync('/etc/pki/tls/certs/weconnect.crt'),
     key: fs.readFileSync('/etc/pki/tls/private/weconnect.key')
 };
-app.listen(process.env.PORT, () => {
-	console.log(`WeAre! server is running on PORT ${process.env.PORT}`);
-});
+//app.listen(process.env.PORT, () => {
+//	console.log(`WeAre! server is running on PORT ${process.env.PORT}`);
+//});
 https.createServer(options, app).listen(8443);
 
 function initDB() {
