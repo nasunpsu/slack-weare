@@ -919,6 +919,7 @@ async function InitTeamMembers(team_id, token, limit = null) {
 						// cursor: c_cursor this should also be initialized
 					}).then(res_channels => {
 						res_channels.channels.forEach(c => {
+							console.log(c.id);
 							user_channels.push({
 								cid: m.team_id + '_' + c.id,
 								cname: c.name
@@ -1474,8 +1475,8 @@ function median(values) {
 
 	var half = Math.floor(values.length * 3 / 4);//third quantile
 
-  if (values.length % 2)
-    return values[half];
-  else
-    return (values[half - 1] + values[half]) / 2.0;
+	if (values.length % 2)
+		return values[half];
+	else
+		return (values[half - 1] + values[half]) / 2.0;
 }
