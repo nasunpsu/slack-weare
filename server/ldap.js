@@ -1,0 +1,213 @@
+//File used to extract basic ldap data like major from psu's database
+
+const LDAP = require('ldap-client');
+
+/** ldap object that allows us to search psu's data */
+let ldap = null;
+
+/**
+ * Function to get ldap object used to query psu's ldap database (opens ldap connection if necessary)
+ * @returns promise containing ldap object connected and ready to use for psu's ldap database
+ */
+const getLdap = () => {
+    return new Promise((resolve, reject) => {
+        //if ldap defined, return it otherwise set it up
+        if (!!ldap) {
+            resolve(ldap);
+            return;
+        }
+        /** Function when ldap connection is established */
+        const onReady = (error) => {
+            // if there is an error reject the promise
+            if (error) {
+                reject(error);
+                return;
+            }
+            resolve(ldap);
+        };
+        ldap = new LDAP({
+            uri: 'ldap://ldap.psu.edu:389',
+            validatecert: false,
+            connecttimeout: -1,
+            base: 'dc=psu,dc=edu',
+            attrs: '*',
+            filter: '(objectClass=*)',
+            scope: LDAP.SUBTREE,
+        }, onReady);
+    });
+};
+
+/**
+ * Function that searches the ldap database for a given email
+ * @param {string} email Email of the user to search for
+ * @param {string} fullName Name of the user to search for like 'Matt Mancini' (must be an exact match in ldap directory)
+ * @returns {Promise<[User, Error]>} promise containing an array [full ldap data for the user found, error] (only 1 non null entry)
+ */
+const searchLdap = async (email, fullName) => {
+    let options = {
+        filter: `(mail=${email})`,
+        attrs: '*'
+    }
+    let [user, error] = await ldapSearchAsync(options);
+    if(!!user){
+        return [user, null];
+    }
+    console.warn(error);
+    options.filter = `(cn=${fullName})`;
+    return await ldapSearchAsync(options);
+}
+
+/**
+ * Searches the ldap data for a user with the given options
+ * @param {any} options Search options to pass to ldap to complete the search
+ * @returns {Promise<[User, Error]>} promise containing an array [full ldap data for the user found, error] (only 1 non null entry)
+ */
+const ldapSearchAsync = async (options) => {
+    const ldap = await getLdap();
+    return new Promise((resolve) => 
+        ldap.search(options, (err, data) => {
+            if (err) {
+                resolve([null, err]);
+                return;
+            }
+            if (!Array.isArray(data)) {
+                resolve([null, new Error('Result is an unexpected type')]);
+                return;
+            }
+            if (data.length === 0) {
+                resolve([null, new Error('No results found')]);
+                return;
+            }
+            if (data.length > 1) {
+                resolve([null, new Error('Multiple results found for ldap query')]);
+                return;
+            }
+            const user = new User(data[0]);
+            resolve([user, null]);
+        })
+    );
+}
+
+/** Closes ldap connection if it was opened (void) */
+const closeLdapConnection = () => {
+    if(!ldap){
+        return;
+    }
+    ldap.close();
+    ldap = null;
+}
+
+/**
+ * Uses ldap data to add fields for user in the database
+ * @param {email} email Email of user to update
+ */
+const updateUserWithLdapData = async (email, fullName, uid, DB) => {
+    const [ldapUser, error] = await searchLdap(email, fullName);
+    if(!!error){
+        console.warn(`Email ${email} not found in ldap`);
+        return;
+    }
+    const insertObj = removeUndefinedEntries({
+        affiliation: ldapUser.eduPrimaryAffiliation,
+        campus: ldapUser.psCampus,
+        major: ldapUser.psCurriculum
+    });
+    //If empty object do nothing
+    if(Object.keys(insertObj).length === 0){
+        return;
+    }
+    const query = {uid};
+    const options = {upsert: true}
+    const res = await DB.collection('users').updateOne(query, {$set: insertObj}, options);
+    if(!res.result.ok){
+        console.warn('Problematic ldap query');
+    }
+}
+
+/**
+ * Remove all entries in object that are undefined
+ * @param {any} obj 
+ * @return {any} Modified version of object
+ */ 
+const removeUndefinedEntries = (obj) => {
+    for(key in obj){
+        if(!obj[key]){
+            delete obj[key];
+        }
+    }
+    return obj;
+}
+
+/** Class containing all attributes the ldap provides */
+class User {
+    constructor(ldapUser) {
+        if(this.isValidField(ldapUser.eduPersonPrincipalName)){
+            /** Email address */
+            this.eduPersonPrincipalName = ldapUser.eduPersonPrincipalName[0];
+        }
+        /** Array of waht this person is a part of like 'eduPerson', 'person', 'eduMember' */
+        this.objectClass = ldapUser.objectClass;
+        /** Array of strings that may contain email lists or enrolled courses not sure */
+        this.psMemberOf = ldapUser.psMemberOf;
+        /** Array of all affiliations */
+        this.eduPersonalAffiliation = ldapUser.eduPersonalAffiliation;
+        /** Array of all emails and aliases */
+        this.psuMailID = ldapUser.psuMailID;
+        /** Search param */
+        this.dn = ldapUser.dn;
+
+        if(this.isValidField(ldapUser.mail)){
+            /** PSU email */
+            this.mail = ldapUser.mail[0];
+        }
+        if(this.isValidField(ldapUser.psCampus)){
+            /** Campus name that student attends */
+            this.psCampus = ldapUser.psCampus[0];
+        }
+        if(this.isValidField(ldapUser.title)){
+            /** Title like 'Undergrad Student' */
+            this.title = ldapUser.title[0];
+        }
+        if(!!ldapUser.eduPrimaryAffiliation){
+            /** Title like 'Student' */
+            this.eduPrimaryAffiliation = ldapUser.eduPrimaryAffiliation;
+        }
+        if(this.isValidField(ldapUser.cn)){
+            /** Full name */
+            this.cn = ldapUser.cn[0];
+        }
+        if(this.isValidField(ldapUser.psCurriculum)){
+            /** Major */
+            this.psCurriculum = ldapUser.psCurriculum[0];
+        }
+
+        //ommitted fields for simplicity
+        /** Full name */
+        // this.displayName = ldapUser.displayName[0];
+        /** PSU microsoft email */
+        // this.psMailbox = ldapUser.psMailbox[0];
+        // this.psMailHost = ldapUser.psMailHost[0];
+        /** First name */
+        // this.givenName = ldapUser.givenName[0];
+        // this.psFERPAExam = ldapUser.psFERPAExam[0];
+        //3 id numbers represented as strings
+        // this.uidNumber = ldapUser.uidNumber[0];
+        // this.psDirIDN = ldapUser.psDirIDN[0];
+        // this.gidNumber = ldapUser.gidNumber[0];
+
+        //3 directories for computs
+        // this.psMacLabHomeDir = ldapUser.psMacLabHomeDir[0];
+        // this.loginShell = ldapUser.loginShell[0];
+        // this.homeDirectory = ldapUser.homeDirectory[0];
+    }
+
+    /**
+     * Tests whether a field given from ldap is value
+     * @param {any} field field to test
+     */
+    isValidField(field){
+        return !!field && Array.isArray(field) && field.length > 0
+    }
+}
+
+module.exports = {updateUserWithLdapData, closeLdapConnection};

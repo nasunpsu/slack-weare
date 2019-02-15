@@ -1,0 +1,36 @@
+.profile-wrapper{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    grid-template-rows: auto;
+    grid-gap: 50px;
+    padding: 50px;
+}
+.basic-info{
+    margin-top: 50px;
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    grid-column: 1/-1;
+}
+.profile-img-lg{
+    width: 150px;
+    height: 150px;
+    display: inline;
+    border-radius: 100%;
+}
+
+.basic-info-text{
+    display: inline-block;
+    align-self: center;
+    margin-left: 45px;
+}
+
+.edit{
+    position: absolute;
+    bottom: 15px;
+    right: 25px;
+}
+
+.card-title{
+    flex-direction: column;
+}

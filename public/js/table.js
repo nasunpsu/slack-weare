@@ -1,0 +1,160 @@
+/**
+ * Binds all functions to always have 'this' to be the object itself
+ * @param {any} obj Object to bind all methods to
+ */
+function bindAll(obj){
+    for (const key in obj) {
+        if (typeof obj[key] === 'function') {
+            obj[key] = obj[key].bind(obj);
+        }
+    }
+}
+
+class UserTable {
+
+    constructor() {
+        bindAll(this);
+
+        this.maxResults = 10;
+        this.resultsLoaded = this.maxResults;
+        this.resultLoadIncrement = 5;
+        this.scrollThreshold = 10;
+        this.userElementName = 'element';
+        // Current signed in user must be passed from front end
+        if(!window.sessionUser){
+            throw Error('Session user not defined');
+        }
+        this.sessionUser = window.sessionUser;
+        delete window.sessionUser;
+
+        this.tableBody = document.getElementById('table-body');
+        this.tableHeading = document.getElementById('table-head');
+        this.search = document.getElementById('search');
+        this.dropdown = document.getElementById('dropdown');
+        this.locationCheck = document.getElementById('locationCheck');
+        this.majorCheck = document.getElementById('majorCheck');
+        this.headings = this.getHeadings(this.tableHeading);
+
+        this.setDropDownOptions(this.headings, this.dropdown);
+        this.originalUsers = this.getOriginalUsers(this.tableBody, this.headings, this.userElementName);
+        this.users = [...this.originalUsers];
+
+        const badChildren = Array.from(this.tableBody.children).slice(this.maxResults);
+        badChildren.forEach(child => this.tableBody.removeChild(child));
+
+        const onCheckOrSearch = () => {
+            const isLocation = this.locationCheck.checked; 
+            const isMajor = this.majorCheck.checked; 
+            const query = this.search.value;
+            this.searchAndFilter(isLocation, isMajor, this.sessionUser, query, this.originalUsers, this.dropdown, this.tableBody, this.userElementName);
+        };
+
+        this.locationCheck.addEventListener('change', onCheckOrSearch);
+        this.majorCheck.addEventListener('change', onCheckOrSearch);
+        this.search.addEventListener('keyup', onCheckOrSearch);
+
+        document.addEventListener('scroll', () => {
+            if(this.isDocumentAtBottom(this.scrollThreshold)){
+                this.loadMoreResults(this.resultLoadIncrement, this.tableBody, this.users);
+            }
+        });
+
+    }
+
+    loadMoreResults(numResults, tableBody, users){
+        const showUsers = users.slice(this.resultsLoaded, this.resultsLoaded + numResults);
+        showUsers.map(user => user.element).forEach(userElement => tableBody.appendChild(userElement));
+        this.resultsLoaded += numResults;
+    }
+
+    isDocumentAtBottom(threshold){
+        return document.documentElement.scrollTop + window.innerHeight >= document.documentElement.scrollHeight - threshold
+    }
+
+    filterUsers(isLocation, isMajor, users, sessionUser){
+        if(!sessionUser.local_area){
+            throw new Error('No local_area defined')
+        }
+        return users.filter(user => {
+            if(isLocation && sessionUser.local_area !== user.Location){
+                return false;
+            }
+            if(isMajor && sessionUser.major !== user.Major){
+                return false;
+            }
+            return true;
+        });
+    }
+
+    getOriginalUsers(tableBody, headings, userElementName){
+        const rows = Array.from(tableBody.children);
+        return rows.map(tableRow => {
+            const cells = Array.from(tableRow.children);
+            const user = cells.reduce((user, cell, index) => {
+                const cellHeading = headings[index];
+                user[cellHeading] = cell.innerText;
+                return user;
+            }, {});
+            user[userElementName] = tableRow;
+            return user;
+        });
+    }
+
+    setDropDownOptions(headings, dropdown){            
+        headings.forEach((heading, index) => {
+            const option = document.createElement("option");
+            option.innerText = heading;
+            option.value = index + 1;
+            dropdown.appendChild(option);
+        });
+    }
+
+    getHeadings(tableHeading){
+        const children = Array.from(tableHeading.children);
+        return children.map(child => child.innerText);
+    }
+
+    searchUsers(query, originalUsers, dropdown){
+        this.resetSorting();
+        if(query === ''){
+            return originalUsers
+        }
+        const searchIndex = dropdown.selectedIndex - 1;
+        let results = null;
+        if(searchIndex >= 0){
+            const key = this.headings[searchIndex];
+            results = fuzzysort.go(query, originalUsers, {key});
+        }
+        else{
+            const keys = this.headings;
+            results = fuzzysort.go(query, originalUsers, {keys});
+        }
+        return results.map(result => result.obj);
+    }
+
+    searchAndFilter(isLocation, isMajor, sessionUser, query, originalUsers, dropdown, tableBody, userElementName){
+        let users = this.searchUsers(query, originalUsers, dropdown);
+        users = this.filterUsers(isLocation, isMajor, users, sessionUser);
+        this.rerenderUsers(users, tableBody, userElementName);
+    }
+
+    resetSorting(){
+        $('.sorted').removeClass('sorted');
+    }
+
+    rerenderUsers(users, tableBody, userElementName){
+        this.users = users;
+        while (tableBody.firstChild) {
+            tableBody.removeChild(tableBody.firstChild);
+        }
+        const renderUsers = users.slice(0, this.maxResults);
+        renderUsers.map(user => user[userElementName]).forEach(userElement => tableBody.appendChild(userElement));
+        this.resultsLoaded = renderUsers.length;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    //Activate the sortable table using semantic UI
+    $('.sortable').tablesort();
+    new UserTable();
+});
