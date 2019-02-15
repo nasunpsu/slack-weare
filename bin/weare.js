@@ -8,6 +8,7 @@ const createError = require('http-errors')
 const util = require('util');
 const ticket = require('../ticket.js');
 const onboard = require('../server/onboard.js')
+const similarity = require('../server/similarity/similarity');
 // const app = http.createServer(server);
 // console.log(`this is the PORT: ${process.env.PORT}`)
 
@@ -22,6 +23,8 @@ const session = require('express-session');
 const MongoStore = require('connect-mongo')(session);
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan')
+const express = require('express');
+const ldap = require('../server/ldap');
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -36,6 +39,7 @@ const fs = require('fs');
 const async = require('async');
 var favicon = require('serve-favicon');
 app.use(favicon(path.join(__dirname, '/../public/favicon.ico')));
+app.use(express.static(path.join(__dirname, '/../public')));
 
 const mongoClient = require('mongodb').MongoClient;
 
@@ -106,6 +110,7 @@ app.get('/login', function (req, res) {
 });
 
 
+
 app.get('/api/oauth', function (req, res, next) {
 	var code = req.query.code;
 	console.log(`code is ${code}`);
@@ -119,6 +124,7 @@ app.get('/api/oauth', function (req, res, next) {
 	};
 	web.oauth.access(data.form, async function (err, result) {
 		if (err) console.error(err);
+        // await insertUser(result.user);
 		console.log(`enter the oauth access: ${util.inspect(result, { depth: 2 })}`)
 		if (!err) {
 			if (!result.bot) { //this is signed in with slack
@@ -136,7 +142,8 @@ app.get('/api/oauth', function (req, res, next) {
 								return res.redirect('/install');
 							}
 							console.log('before retrieving usr DB');
-							await DB.collection('users').find({ uid: result.team.id + '_' + result.user.id }).toArray()
+							await DB.collection('users').find({major : {$exists: true}}).toArray()
+							// await DB.collection('users').find({ uid: result.team.id + '_' + result.user.id }).toArray()
 								.then(async (users_docs, err) => {
 									console.log(`the user is read from MongoDB: ${util.inspect(users_docs[0], { depth: 2 })}`);
 									if (err) console.error(err);
@@ -194,11 +201,12 @@ app.get('/auth', (req, res) => {
 	res.sendFile(path.resolve(__dirname + '/../views/add_to_slack.html'));
 })
 
+// test adding channels here
 app.get('/test', (req, res) => {
 	res.send('haha');
 	res.status(200).end();
 	(async () => {									//TODO: MOVE this Block to the Init Module
-		await InitTeamMembers('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, null);
+		await InitTeamMembers('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200);
 	})();
 	(async () => {
 		await InitTeamChannels('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, null);;
@@ -609,13 +617,11 @@ app.get('/tablelist', async function (req, res) {
 	let to_be_rendered = {};
 	to_be_rendered.layout = 'default';
 	to_be_rendered.template = 'home-template';
-	// to_be_rendered.data = await DB.collection('users').find({ team_id: req.session.team.team_id }).toArray().then((results, err) => {
-	// 	if (err) console.error(err);
-	// 	else if (results.length != 0) {
-	// 		//do something with it
-	// 	};
-	// });
-	to_be_rendered.data = "this is the data passed in to generate list";
+	const numUsers = 80;
+	const fields = ['real_name', 'channels', 'major', 'local_area', 'affiliation', 'campus'];
+	let users = await similarity.getSimilarUsers(req.session.user.uid, DB, numUsers, fields);
+	to_be_rendered.users = similarity.createSimilarityField(req.session.user, users, fields);
+	to_be_rendered.user = JSON.stringify(req.session.user);
 	res.render('table', to_be_rendered);
 });
 app.get('/network', async function (req, res) {
@@ -825,13 +831,13 @@ app.get('/temporal', async function (req, res) {
 	res.render('temporal', to_be_rendered);
 });
 
+//calculate similar users here
 async function InitTeamMembers(team_id, token, limit = null) {
 	var first = true, cursor = "fake", counter = 0;
 	let local_slack = new SlackWebClient(token);
 	while (cursor) {
 		if (first || limit) {
 			console.log(`first while iteration in InitTeamMembers: round ${counter}`)
-
 			await local_slack.users.list({
 				include_locale: true,
 				limit: limit | 20
@@ -849,13 +855,19 @@ async function InitTeamMembers(team_id, token, limit = null) {
 						// cursor: c_cursor this should also be initialized
 					}).then(res_channels => {
 						res_channels.channels.forEach(c => {
-							console.log(c.id);
 							user_channels.push({
 								cid: m.team_id + '_' + c.id,
 								cname: c.name
 							});
 						});
 					});
+					const onComplete = async () => {
+						console.log('user updated succesfully');
+						const email = m.profile.email;
+						const fullName = m.profile.real_name;
+						await ldap.updateUserWithLdapData(email, fullName, uid, DB);
+						await similarity.storeSimilarUsers(uid);
+					}
 					if (!m.is_bot && m.id != 'USLACKBOT') DB.collection('users').updateOne(
 						{ uid: uid },
 						{
@@ -885,11 +897,7 @@ async function InitTeamMembers(team_id, token, limit = null) {
 							}
 						},
 						{ upsert: true },
-						function (err, res) {
-							if (err) console.error(err);
-							console.log('user updated succesfully');
-
-						});
+						onComplete);
 
 				})
 			});
@@ -1365,6 +1373,11 @@ app.use((err, req, res, next) => {
 app.listen(process.env.PORT, () => {
 	console.log(`WeAre! server is running on PORT ${process.env.PORT}`);
 });
+
+process.on('exit', () => {
+	ldap.closeLdapConnection();
+});
+
 // https.createServer(options, app).listen(8443);
 
 function initDB() {

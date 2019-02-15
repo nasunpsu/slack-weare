@@ -1,3 +1,13 @@
+#Node environment variables
+*.env
+node_modules/
+#Cached python scripts
+__pycache__/
+#Vscode settings
+.vscode/
+#Semantic UI elements
+semantic.json
+semantic/
 ##########################
 # Application specfic
 ##########################

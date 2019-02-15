@@ -1,0 +1,84 @@
+body{
+    margin: 0;
+}
+    
+nav{
+    background: #4A90E2;
+    width: 100%;
+    box-shadow: 0 2px 2px rgba(0,0,0,.3);
+}
+
+.nav-links{
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;  
+}
+
+.nav-links > a{
+    color: white;
+    font-family: 'Proxima Nova', sans-serif;
+    padding: 10px;
+    margin: 10px;
+    text-decoration: none;
+    font-size: 12px;
+}
+
+.connect-wrapper{
+    display: grid;
+    grid-template: auto/repeat(24,1fr);
+}
+
+.card-wrapper{
+    display: grid;
+    grid-template: auto/repeat(auto-fit,200px);
+    grid-gap: 25px;
+    grid-column: 4/23;
+    margin-top: 100px;
+}
+
+.card{
+    background: white;
+    box-shadow: 0 1px 1px rgba(0,0,0,.2);
+    padding: 20px;
+}
+
+.profile-img-sm{
+    width: 120px;
+}
+
+.list-table{
+    grid-column: 3 / 23;
+    margin-top: 50px;
+}
+
+.filter-wrapper{
+    grid-column: 3/23;
+    margin-top: 50px;
+}
+
+.filters{
+    margin-top: 20px;
+    border: 1px solid #e2efff;
+    padding: 20px;
+}
+
+.filters p{
+    font-family: 'Proxima Nova', sans-serif;
+}
+
+.basic-info p{
+    margin: 0;
+}
+
+.search-table, .sort-dropdown{
+    display: inline;
+    margin: 40px;
+}
+
+.search-table{
+    margin-left: 0px;
+}
+
+.filters .checkbox{
+    margin-left: 25px;
+}
