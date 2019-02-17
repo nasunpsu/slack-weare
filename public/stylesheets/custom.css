@@ -227,7 +227,8 @@ h1{
 .dashboard-wrapper{
   display: grid;
   grid-template: auto / repeat(24,1fr);
-  padding-top: 120px;
+  padding-top: 150px;
+  margin-bottom: 200px;
 }
 
 .we-are-message{
@@ -314,6 +315,10 @@ p{
   grid-template-rows: auto;
 }
 
+.post-wrapper .card{
+  margin: auto;
+}
+
 .channel-wrapper{
   grid-column: 2/23;
   display: inline-flex;
@@ -354,13 +359,6 @@ p{
   font-size: 120%;
 }
 
-.reacted-post{
-  background: white;
-  margin: 20px;
-  padding: 3%;
-  box-shadow: 2px 2px 2px rgba(0,0,0,.2);
-  border-radius: 4px;
-}
 
 .reacted-post img{
   width: 100%;
