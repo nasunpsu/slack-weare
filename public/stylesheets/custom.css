@@ -227,7 +227,7 @@ h1{
 .dashboard-wrapper{
   display: grid;
   grid-template: auto / repeat(24,1fr);
-  padding-top: 150px;
+  padding-top: 180px;
   margin-bottom: 200px;
 }
 
@@ -295,14 +295,14 @@ p{
   grid-column: 3/22;
   font-family: 'Proxima Nova';
   color: rgb(49, 120, 196);
-  margin-bottom: -20px;
+  margin-bottom: -20px;margin-top: 25px;
 }
 
 .channel-title{
   grid-column: 3/22;
   font-family: 'Proxima Nova';
   color: rgb(49, 120, 196);
-  margin-top: 75px;
+  margin-top: 85px;
 }
 
 .post-wrapper{
