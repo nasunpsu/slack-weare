@@ -15,11 +15,9 @@ class UserTable {
     constructor() {
         bindAll(this);
 
-        this.maxResults = 10;
-        this.resultsLoaded = this.maxResults;
-        this.resultLoadIncrement = 5;
-        this.scrollThreshold = 10;
+        this.resultsPerPage = 10;
         this.userElementName = 'element';
+
         // Current signed in user must be passed from front end
         if(!window.sessionUser){
             throw Error('Session user not defined');
@@ -27,54 +25,72 @@ class UserTable {
         this.sessionUser = window.sessionUser;
         delete window.sessionUser;
 
+        if(!window.tableUsers){
+            throw Error('Table users were not defined');
+        }
+        this.users = window.tableUsers;
+        delete window.tableUsers;
         this.tableBody = document.getElementById('table-body');
         this.tableHeading = document.getElementById('table-head');
         this.search = document.getElementById('search');
-        this.dropdown = document.getElementById('dropdown');
-        this.locationCheck = document.getElementById('locationCheck');
-        this.majorCheck = document.getElementById('majorCheck');
+        this.searchDropdown = document.getElementById('dropdown');
+        this.checkboxes = $('#checkboxes').find('input');
+        this.nextPage = document.getElementById('nextPage');
+        this.previousPage = document.getElementById('previousPage');
+        this.pageContainer = document.getElementById('page-container');
+
         this.headings = this.getHeadings(this.tableHeading);
+        this.users = this.getUserElements(this.tableBody, this.userElementName, this.users);
 
-        this.setDropDownOptions(this.headings, this.dropdown);
-        this.originalUsers = this.getOriginalUsers(this.tableBody, this.headings, this.userElementName);
-        this.users = [...this.originalUsers];
+        this.setDropDownOptions(this.headings, this.searchDropdown);
 
-        const badChildren = Array.from(this.tableBody.children).slice(this.maxResults);
-        badChildren.forEach(child => this.tableBody.removeChild(child));
-
-        const onCheckOrSearch = () => {
-            const isLocation = this.locationCheck.checked; 
-            const isMajor = this.majorCheck.checked; 
+        const updateResults = () => {
             const query = this.search.value;
-            this.searchAndFilter(isLocation, isMajor, this.sessionUser, query, this.originalUsers, this.dropdown, this.tableBody, this.userElementName);
-        };
+            const sortReverse = false;
+            const sortField = '';
+            const {checkboxes, sessionUser, users, tableBody, searchDropdown, userElementName, resultsPerPage} = this;
+            this.updateUsers(checkboxes, sessionUser, query, users, searchDropdown, tableBody, userElementName, sortField, sortReverse, resultsPerPage);
+            this.numPages = Math.ceil(this.userResults.length / this.resultsPerPage);
+            this.createPagination(this.numPages, this.previousPage, this.nextPage, this.pageContainer, this.userResults, this.resultsPerPage, this.tableBody, this.userElementName);
+            this.changePage(this.userResults, 1, this.resultsPerPage, this.tableBody, this.userElementName, this.numPages);
+        }
 
-        this.locationCheck.addEventListener('change', onCheckOrSearch);
-        this.majorCheck.addEventListener('change', onCheckOrSearch);
-        this.search.addEventListener('keyup', onCheckOrSearch);
+        this.checkboxes.change(updateResults);
+        this.search.addEventListener('keyup', updateResults);
+        this.searchDropdown.addEventListener('change', updateResults);
+        this.nextPage.addEventListener('click', () => this.changePage(this.userResults, this.currentPage + 1, this.resultsPerPage, this.tableBody, this.userElementName));
+        this.previousPage.addEventListener('click', () => this.changePage(this.userResults, this.currentPage - 1, this.resultsPerPage, this.tableBody, this.userElementName));
+        updateResults();
+    }
 
-        document.addEventListener('scroll', () => {
-            if(this.isDocumentAtBottom(this.scrollThreshold)){
-                this.loadMoreResults(this.resultLoadIncrement, this.tableBody, this.users);
-            }
+    createPagination(numPages, previousPage, nextPage, pageContainer, userResults, resultsPerPage, tableBody, userElementName){
+        $('.page-number').remove();
+        this.pages = Array(numPages).fill(0).map((_, index) => {;
+            const page = previousPage.cloneNode();
+            const num = index + 1
+            page.innerText = num;
+            page.className += ' page-number';
+            page.addEventListener('click', () => {
+                this.changePage(userResults, num, resultsPerPage, tableBody, userElementName, numPages);
+            });
+            pageContainer.insertBefore(page, nextPage);
+            return page;
         });
-
     }
 
-    loadMoreResults(numResults, tableBody, users){
-        const showUsers = users.slice(this.resultsLoaded, this.resultsLoaded + numResults);
-        showUsers.map(user => user.element).forEach(userElement => tableBody.appendChild(userElement));
-        this.resultsLoaded += numResults;
+    updateUsers(checkboxes, sessionUser, query, originalUsers, searchDropdown, tableBody, userElementName, sortField, sortReverse, resultsPerPage){
+        let users = this.sortUsers(originalUsers, sortField, sortReverse);
+        users = this.searchUsers(query, originalUsers, searchDropdown);
+        users = this.filterUsers(checkboxes, users, sessionUser);
+        this.userResults = users;
     }
 
-    isDocumentAtBottom(threshold){
-        return document.documentElement.scrollTop + window.innerHeight >= document.documentElement.scrollHeight - threshold
-    }
-
-    filterUsers(isLocation, isMajor, users, sessionUser){
+    filterUsers(checkboxes, users, sessionUser){
         if(!sessionUser.local_area){
             throw new Error('No local_area defined')
         }
+        const isLocation = false;
+        const isMajor = false;
         return users.filter(user => {
             if(isLocation && sessionUser.local_area !== user.Location){
                 return false;
@@ -86,15 +102,16 @@ class UserTable {
         });
     }
 
-    getOriginalUsers(tableBody, headings, userElementName){
+    getUserElements(tableBody, userElementName, users){
         const rows = Array.from(tableBody.children);
-        return rows.map(tableRow => {
+        return rows.map((tableRow, index) => {
+            let user = users[index];
             const cells = Array.from(tableRow.children);
-            const user = cells.reduce((user, cell, index) => {
-                const cellHeading = headings[index];
-                user[cellHeading] = cell.innerText;
-                return user;
-            }, {});
+            user = cells.reduce((obj, cell, index) => {
+                const heading = this.headings[index];
+                obj[heading] = cell.innerText;
+                return obj;
+            }, user);
             user[userElementName] = tableRow;
             return user;
         });
@@ -114,47 +131,59 @@ class UserTable {
         return children.map(child => child.innerText);
     }
 
-    searchUsers(query, originalUsers, dropdown){
-        this.resetSorting();
+    searchUsers(query, users, dropdown){
         if(query === ''){
-            return originalUsers
+            return users
         }
         const searchIndex = dropdown.selectedIndex - 1;
         let results = null;
         if(searchIndex >= 0){
             const key = this.headings[searchIndex];
-            results = fuzzysort.go(query, originalUsers, {key});
+            results = fuzzysort.go(query, users, {key});
         }
         else{
             const keys = this.headings;
-            results = fuzzysort.go(query, originalUsers, {keys});
+            results = fuzzysort.go(query, users, {keys});
         }
         return results.map(result => result.obj);
     }
 
-    searchAndFilter(isLocation, isMajor, sessionUser, query, originalUsers, dropdown, tableBody, userElementName){
-        let users = this.searchUsers(query, originalUsers, dropdown);
-        users = this.filterUsers(isLocation, isMajor, users, sessionUser);
-        this.rerenderUsers(users, tableBody, userElementName);
+    sortUsers(users, key, isReverse){
+        if(key === '' || !(key in users[0])){
+            return users;
+        }
+        return users.sort((user1, user2) => {
+            const multiplier = (isReverse | 0) * 2 - 1
+            return (user1[key] - user2[key]) * multiplier; 
+        });
     }
 
-    resetSorting(){
-        $('.sorted').removeClass('sorted');
-    }
-
-    rerenderUsers(users, tableBody, userElementName){
-        this.users = users;
+    renderUsers(users, tableBody, userElementName){
         while (tableBody.firstChild) {
             tableBody.removeChild(tableBody.firstChild);
         }
-        const renderUsers = users.slice(0, this.maxResults);
-        renderUsers.map(user => user[userElementName]).forEach(userElement => tableBody.appendChild(userElement));
-        this.resultsLoaded = renderUsers.length;
+        users.map(user => user[userElementName]).forEach(userElement => {
+            userElement.style.display = null;
+            tableBody.appendChild(userElement);
+        });
+    }
+
+    changePage(userResults, page, resultsPerPage, tableBody, userElementName, numPages){
+        if(page < 1 || page > numPages){
+            return;
+        }
+        $('.page-number').removeClass('active');
+        $('.page-number').get(page - 1).className += ' active';
+        const start = (page - 1) * resultsPerPage;
+        const end = page * resultsPerPage;
+        const renderUsers = userResults.slice(start, end);
+        this.renderUsers(renderUsers, tableBody, userElementName);
+        this.currentPage = page;
     }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     //Activate the sortable table using semantic UI
     $('.sortable').tablesort();
-    new UserTable();
+    window.table = new UserTable();
 });

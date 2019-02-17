@@ -622,6 +622,7 @@ app.get('/tablelist', async function (req, res) {
 	let users = await similarity.getSimilarUsers(req.session.user.uid, DB, numUsers, fields);
 	to_be_rendered.users = similarity.createSimilarityField(req.session.user, users, fields);
 	to_be_rendered.user = JSON.stringify(req.session.user);
+	to_be_rendered.usersString = JSON.stringify(to_be_rendered.users);
 	res.render('table', to_be_rendered);
 });
 app.get('/network_balloon', async function (req, res) {
