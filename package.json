@@ -31,7 +31,6 @@
     "node-json-db": "^0.9.2",
     "nodemon": "^1.18.9",
     "request": "^2.88.0",
-    "semantic-ui": "github:semantic-org/semantic-ui#next",
     "serve-favicon": "^2.5.0",
     "superagent": "^4.0.0"
   },

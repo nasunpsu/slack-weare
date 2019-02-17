@@ -23,25 +23,43 @@
             <div class="filters">
                 <p>View peers who share your</p>
                 <form>
-                    <div class="form-group form-check-inline">
-                        <input type="checkbox" class="form-check-input" id="locationCheck">
+                    <div class="ui checkbox">
+                        <input type="checkbox" id="locationCheck">
                         <label class="form-check-label" for="locationCheck">Location</label>
                     </div>
-                    <div class="form-group form-check-inline">
-                        <input type="checkbox" class="form-check-input" id="majorCheck">
-                        <label class="form-check-label" for="majorCheck">Major</label>
+                    <div class="ui checkbox">
+                        <input type="checkbox" id="majorCheck">
+                        <label for="majorCheck">Major</label>
                     </div>
-                    <div class="form-group form-check-inline">
-                        <input type="checkbox" class="form-check-input" id="industryCheck">
-                        <label class="form-check-label" for="industryCheck">Industry</label>
+                    <div class="ui checkbox">
+                        <input type="checkbox" id="industryCheck">
+                        <label for="industryCheck">Profession</label>
+                    </div>
+                    <div class="ui checkbox">
+                        <input type="checkbox" id="militaryCheck">
+                        <label for="militaryCheck">Military Background</label>
+                    </div>
+                    <div class="ui checkbox">
+                        <input type="checkbox" id="parentalCheck">
+                        <label for="parentalCheck">Parental Status</label>
+                    </div>
+                    <div class="ui checkbox">
+                        <input type="checkbox" id="industryCheck">
+                        <label for="pastClassCheck">Past Classes</label>
                     </div>
                 </form>
             </div>
+            <div class="ui category search search-table">
+                <div class="ui icon input">
+                    <input class="prompt" type="text" id="search" placeholder="Search peers...">
+                    <i class="search icon"></i>
+                </div>
+                <div class="results"></div>
+                <select id="dropdown" class="ui dropdown sort-dropdown">
+                    <option value="0">Sort By</option>
+                </select>
+            </div> 
         </div>
-        <select id="dropdown" class="ui dropdown">
-            <option value="0">All Fields</option>
-        </select>
-        <input id="search"></input>
         <table class="ui sortable table ascending celled list-table">
             <thead>
                 <tr id="table-head">
