@@ -38,16 +38,24 @@ class UserTable {
         this.nextPage = document.getElementById('nextPage');
         this.previousPage = document.getElementById('previousPage');
         this.pageContainer = document.getElementById('page-container');
+        this.sortDropdown = document.getElementById('sortDropdown');
 
         this.headings = this.getHeadings(this.tableHeading);
         this.users = this.getUserElements(this.tableBody, this.userElementName, this.users);
 
-        this.setDropDownOptions(this.headings, this.searchDropdown);
+        this.setDropDownOptions(this.headings, this.searchDropdown, this.sortDropdown);
 
         const updateResults = () => {
             const query = this.search.value;
             const sortReverse = false;
-            const sortField = '';
+            const sortIndex = this.sortDropdown.selectedIndex - 1;
+            let sortField;
+            if(sortIndex === -1){
+                sortField = '';
+            }
+            else{
+                sortField = this.headings[sortIndex];
+            }
             const {checkboxes, sessionUser, users, tableBody, searchDropdown, userElementName, resultsPerPage} = this;
             this.updateUsers(checkboxes, sessionUser, query, users, searchDropdown, tableBody, userElementName, sortField, sortReverse, resultsPerPage);
             this.numPages = Math.ceil(this.userResults.length / this.resultsPerPage);
@@ -58,8 +66,9 @@ class UserTable {
         this.checkboxes.change(updateResults);
         this.search.addEventListener('keyup', updateResults);
         this.searchDropdown.addEventListener('change', updateResults);
-        this.nextPage.addEventListener('click', () => this.changePage(this.userResults, this.currentPage + 1, this.resultsPerPage, this.tableBody, this.userElementName));
-        this.previousPage.addEventListener('click', () => this.changePage(this.userResults, this.currentPage - 1, this.resultsPerPage, this.tableBody, this.userElementName));
+        this.sortDropdown.addEventListener('change', updateResults);
+        this.nextPage.addEventListener('click', () => this.changePage(this.userResults, this.currentPage + 1, this.resultsPerPage, this.tableBody, this.userElementName, this.numPages));
+        this.previousPage.addEventListener('click', () => this.changePage(this.userResults, this.currentPage - 1, this.resultsPerPage, this.tableBody, this.userElementName, this.numPages));
         updateResults();
     }
 
@@ -82,7 +91,7 @@ class UserTable {
         let users = this.sortUsers(originalUsers, sortField, sortReverse);
         users = this.searchUsers(query, originalUsers, searchDropdown);
         users = this.filterUsers(checkboxes, users, sessionUser);
-        this.userResults = users;
+        this.userResults = [...users];
     }
 
     filterUsers(checkboxes, users, sessionUser){
@@ -117,12 +126,16 @@ class UserTable {
         });
     }
 
-    setDropDownOptions(headings, dropdown){            
+    setDropDownOptions(headings, searchDropdown, sortDropdown){            
         headings.forEach((heading, index) => {
             const option = document.createElement("option");
             option.innerText = heading;
             option.value = index + 1;
-            dropdown.appendChild(option);
+            searchDropdown.appendChild(option);
+            const option2 = document.createElement("option");
+            option2.innerText = heading;
+            option2.value = index + 1;
+            sortDropdown.appendChild(option2);
         });
     }
 
@@ -150,10 +163,14 @@ class UserTable {
 
     sortUsers(users, key, isReverse){
         if(key === '' || !(key in users[0])){
-            return users;
+            key = 'distance';
+            isReverse = true;
         }
         return users.sort((user1, user2) => {
             const multiplier = (isReverse | 0) * 2 - 1
+            if(typeof user1[key] === 'string'){
+                return user2[key].localeCompare(user1[key]) * multiplier; 
+            }
             return (user1[key] - user2[key]) * multiplier; 
         });
     }
