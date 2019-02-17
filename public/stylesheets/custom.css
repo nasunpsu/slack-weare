@@ -292,42 +292,39 @@ p{
 }
 
 .post-title{
-  grid-column: 2/23;
+  grid-column: 3/22;
   font-family: 'Proxima Nova';
   color: rgb(49, 120, 196);
-  margin-bottom: 0;
-  margin-left: 20px;  
+  margin-bottom: -20px;
 }
 
 .channel-title{
-  grid-column: 2/23;
+  grid-column: 3/22;
   font-family: 'Proxima Nova';
   color: rgb(49, 120, 196);
-  margin-bottom: 0;
-  margin-left: 20px;
-  margin-top: 50px;
+  margin-top: 75px;
 }
 
 .post-wrapper{
-  grid-column: 2/23;
+  grid-column: 3/22;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   grid-template-rows: auto;
 }
 
-.post-wrapper .card{
-  margin: auto;
+.post-wrapper .card, .post-wrapper .card:first-child {
+  margin-top: 30px;
+  margin-bottom: 0em;
 }
 
 .channel-wrapper{
-  grid-column: 2/23;
+  grid-column: 3/22;
   display: inline-flex;
   justify-content: space-between;
 }
 
 .channel-table{
   margin-left: 20px;
-  background: rgb(62, 17, 63);
   margin-top: 20px;
   border-radius: 4px;
   box-shadow: 2px 2px 2px rgba(0,0,0,.2);
@@ -335,10 +332,7 @@ p{
 
 .channel-table thead{
   text-align: center;
-  font-size: 60%;
-  background: rgb(52, 15, 53);
-  border-bottom: 3px solid rgba(100,100,100,.4);
-  
+  font-size: 60%;  
 }
 
 .channel-table th{
@@ -346,16 +340,12 @@ p{
 }
 
 .channel-table td{
-  /* color: white; */
   font-weight: 100;
   font-size: 80%;
   text-align: center;
-  border-bottom: 1px solid rgba(100,100,100,.4);
-  border-top: 1px solid rgba(100,100,100,.4);
 }
 
 .channel-table a{
-  /* color: white; */
   font-size: 120%;
 }
 
