@@ -169,6 +169,9 @@ class UserTable {
     }
 
     changePage(userResults, page, resultsPerPage, tableBody, userElementName, numPages){
+        if(page === 1 && userResults.length === 0){
+            this.renderUsers([], tableBody, userElementName);
+        }
         if(page < 1 || page > numPages){
             return;
         }
