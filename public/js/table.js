@@ -17,6 +17,7 @@ class UserTable {
 
         this.resultsPerPage = 10;
         this.userElementName = 'element';
+        this.checkBoxValues = ['local_area', 'major', 'profession', 'military', 'parental', 'past_classes'];
 
         // Current signed in user must be passed from front end
         if(!window.sessionUser){
@@ -95,19 +96,24 @@ class UserTable {
     }
 
     filterUsers(checkboxes, users, sessionUser){
-        if(!sessionUser.local_area){
-            throw new Error('No local_area defined')
-        }
-        const isLocation = false;
-        const isMajor = false;
+        const checked = Array.from(checkboxes).map(check => check.checked);
         return users.filter(user => {
-            if(isLocation && sessionUser.local_area !== user.Location){
-                return false;
-            }
-            if(isMajor && sessionUser.major !== user.Major){
-                return false;
-            }
-            return true;
+            return checked.every((value, index) => {
+                const key = this.checkBoxValues[index];
+                //if the user doesnt have it, continue
+                if(sessionUser[key] === undefined){
+                    return true;
+                }
+                //if there is no filter set, continue
+                if(!value){
+                    return true;
+                }
+                //if the filter is set but the two differ
+                if(value && sessionUser[key] !== user[key]){
+                    return false;
+                }
+                return true;
+            });
         });
     }
 
