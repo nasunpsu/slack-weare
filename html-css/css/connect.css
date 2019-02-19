@@ -31,6 +31,7 @@ nav{
     display: grid;
     grid-template: auto/repeat(24,1fr);
     position: relative;
+    padding-bottom: 100px;
 }
 
 .sidebar{
@@ -98,6 +99,14 @@ nav{
 
 .filters form div{
     margin-top: 15px;
+}
+
+.ui.checkbox label, .checkbox .circular.label{
+    display: inline-block;
+}
+
+.checkbox .circular.label{
+    margin-right: 10px;
 }
 
 .basic-info p{
