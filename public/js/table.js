@@ -152,8 +152,10 @@ class UserTable {
 
     searchUsers(query, users, dropdown){
         if(query === ''){
+            $(this.sortDropdown).parent().removeClass('disabled');
             return users
         }
+        $(this.sortDropdown).parent().addClass('disabled');
         const searchIndex = dropdown.selectedIndex - 1;
         let results = null;
         if(searchIndex >= 0){
