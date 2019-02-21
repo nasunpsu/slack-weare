@@ -65,6 +65,23 @@ const createSimilarityField = (user, users, fields) => {
     });
 }
 
+/**
+ * Adds fields to users indicating whether they share each attribute
+ * @param {User} user User to see what they have in common with users
+ * @param {User[]} users Users to compare to user
+ * @param {string[]} fields Fields to look for in a comparison to the user
+ * @returns {User[]} Modified users with new fields named 'is<fieldName>Shared'
+ */
+const createIsSharedField = (user, users, fields) => {
+    return users.map(otherUser => {
+        fields.forEach(field => {
+            const isShared = user[field] === otherUser[field];
+            otherUser[`is${field}Shared`] = isShared;
+        });
+        return otherUser;
+    });
+}
+
 const toSimilarityString = (similarities) => {
     let string = similarities.join(', ');
     string = string.replace('_', ' ');
@@ -159,4 +176,4 @@ const projectAndGroup = (objectKeys) => {
     ]
 }
 
-module.exports = {createSimilarityField, storeSimilarUsers,getSimilarUsers}
+module.exports = {createIsSharedField, createSimilarityField, storeSimilarUsers,getSimilarUsers}

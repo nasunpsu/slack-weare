@@ -79,8 +79,8 @@
                 {{#each users}}
                     <tr style="display: none">
                         <td><a href="#" data-toggle="modal" data-target=".profile-modal">{{this.real_name}}</a></td>
-                        <td>{{this.major}}</td>
-                        <td>{{this.local_area}}</td>
+                        <td {{#if this.ismajorShared}}class="shared"{{/if}}>{{this.major}}</td>
+                        <td {{#if this.islocal_areaShared}}class="shared"{{/if}}>{{this.local_area}}</td>
                         <td>{{this.similarities}}</td>
                     </tr>
                 {{/each}}
