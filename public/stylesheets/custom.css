@@ -6,6 +6,11 @@
       text-align: center;
 }
 
+/* Class for shared attribute's cells in the table list view */
+.shared {
+  color:blue;
+}
+
   .container.main{
     margin-top: 7.0em;
 }
