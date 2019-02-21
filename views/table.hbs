@@ -93,7 +93,19 @@
                         </td>
                         <td {{#if this.ismajorShared}}class="shared"{{/if}}>{{this.major}}</td>
                         <td {{#if this.islocal_areaShared}}class="shared"{{/if}}>{{this.local_area}}</td>
-                        <td>{{this.displayChannels}}</td>
+                        <td>{{this.displayChannels}}
+                            {{#if this.extraChannels}}
+                                <div class="ui accordion">
+                                    <div class="title">
+                                        <i class="dropdown icon"></i>
+                                        Show More
+                                    </div>
+                                    <div class="content">
+                                        <p class="transition hidden">{{this.extraChannels}}</p>
+                                    </div>
+                                </div>
+                            {{/if}}
+                        </td>
                         <td>{{this.similarities}}</td>
                     </tr>
                 {{/each}}

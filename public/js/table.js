@@ -211,7 +211,7 @@ class UserTable {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    //Activate the sortable table using semantic UI
-    $('.sortable').tablesort();
+    //Activate accordions using semantic UI
+    $('.ui.accordion').accordion();
     window.table = new UserTable();
 });
