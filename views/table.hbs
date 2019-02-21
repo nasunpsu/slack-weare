@@ -78,7 +78,18 @@
             <tbody id="table-body">
                 {{#each users}}
                     <tr style="display: none">
-                        <td><a href="#" data-toggle="modal" data-target=".profile-modal">{{this.real_name}}</a></td>
+                        <td>
+                            {{#if this.ismajorShared}}
+                                <a class="ui red empty circular label mini"></a>
+                            {{/if}}
+                            {{#if this.islocal_areaShared}}
+                                <a class="ui orange empty circular label mini"></a>
+                            {{/if}}
+                            {{#if this.iscampusShared}}
+                                <a class="ui blue empty circular label mini"></a>
+                            {{/if}}
+                            <a href="#" data-toggle="modal" data-target=".profile-modal">{{this.real_name}}</a>
+                        </td>
                         <td {{#if this.ismajorShared}}class="shared"{{/if}}>{{this.major}}</td>
                         <td {{#if this.islocal_areaShared}}class="shared"{{/if}}>{{this.local_area}}</td>
                         <td>{{this.similarities}}</td>
