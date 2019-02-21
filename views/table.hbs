@@ -72,6 +72,7 @@
                     <th scope="col">Name</th>
                     <th scope="col">Major</th>
                     <th scope="col">Location</th>
+                    <th scope="col">Channels</th>
                     <th scope="col">Similarities</th>
                 </tr>
             </thead>
@@ -92,6 +93,7 @@
                         </td>
                         <td {{#if this.ismajorShared}}class="shared"{{/if}}>{{this.major}}</td>
                         <td {{#if this.islocal_areaShared}}class="shared"{{/if}}>{{this.local_area}}</td>
+                        <td>{{this.displayChannels}}</td>
                         <td>{{this.similarities}}</td>
                     </tr>
                 {{/each}}
