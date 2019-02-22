@@ -58,7 +58,8 @@
   .btn-wrapper a{
     display: flex;
     width: 100%;
-    height: 100vh;
+    padding: 50px;
+
   }
 
   .btn-wrapper a img{
@@ -66,7 +67,6 @@
     margin: auto;
     z-index: 100;
   }
-
 
   .login-wrapper {
     /* The image used */
@@ -93,6 +93,21 @@
     background: #00438c;
     z-index: 0;
   }
+
+  .we-are-message{
+    position: absolute;
+    top: 80px;
+    width: 100%;
+    padding: 80px;
+    margin: auto;
+    color: white;
+    text-align: center;
+  }
+
+  .disclosure, .disclosure h5{
+    text-align: center!important;
+  }
+
 
   #timezone-main {
     font-family: 'Open Sans', sans-serif;
@@ -249,7 +264,6 @@ nav{
 
 h2, h3, h4, h5, p {
   font-family: 'Proxima Nova';
-  color: darkcyan;
 }
 
 h1{
@@ -265,16 +279,9 @@ h1{
   margin-bottom: 200px;
 }
 
-.we-are-message{
-  grid-column: 5/21;
-  text-align: center;
-  margin-bottom: 70px;
-}
-
 p{
   font-size: 12px;
   font-weight: 200;
-  text-align: left;
 }
 
 .slack-stats{
@@ -388,19 +395,6 @@ p{
   width: 100%;
 }
 
-.signin-wrapper{
-  padding-top: 100px;
-  display: grid;
-  grid-template: auto / repeat(24,1fr);
-}
-
-.instructions{
-  margin-bottom: 60px;
-}
-
-.disclosure{
-  grid-column:  7/20;
-}
 
 
 
