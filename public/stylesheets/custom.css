@@ -278,6 +278,10 @@ h1{
   padding-top: 180px;
   margin-bottom: 200px;
 }
+.dashboard-title{
+  text-align: center;
+  grid-column: 2/23;
+}
 
 p{
   font-size: 12px;
