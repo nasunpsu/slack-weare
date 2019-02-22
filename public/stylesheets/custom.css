@@ -198,6 +198,19 @@ nav{
   box-shadow: 0 2px 2px rgba(0,0,0,.3);
 }
 
+.header.item .nav-logo{
+  width: 100px!important;
+}
+
+.navbar{
+  background: #00438c!important; 
+  padding: 5px;
+}
+
+.footer{
+  background: white!important; 
+}
+
 .nav-links{
   display: flex;
   justify-content: flex-end;
@@ -211,6 +224,10 @@ nav{
   margin: 10px;
   text-decoration: none;
   font-size: 12px;
+}
+
+.nav-logo{
+  width: 500px;
 }
 
 h2, h3, h4, h5, p {
