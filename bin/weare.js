@@ -34,6 +34,11 @@ app.use(bodyParser.urlencoded({ extended: true }));
 const urlencodedParser = bodyParser.urlencoded({ extended: false });
 const jsonParser = bodyParser.json();
 app.use(cookieParser());
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
 
 const SlackRTMClient = require('@slack/client').RTMClient;
 const SlackWebClient = require('@slack/client').WebClient;
@@ -108,12 +113,13 @@ app.post('/log', async (req, res) => {
 		res.send(e.toString());
 		return;
 	}
-	body.ip = req.session.ip;
 	body.sessionID = req.sessionID;
 	if(!!req.session.user){
 		body.uid = req.session.user.uid;
 	}
-	body.ipInfo = req.ipInfo;
+	if(!('error' in req.ipInfo)){
+		body.ipInfo = req.ipInfo;
+	}
 	const dbResult = await DB.collection('logging').insertOne(req.body);
 	if(dbResult.result.n === 1 && dbResult.result.ok === 1){
 		res.status(200);
