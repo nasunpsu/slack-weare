@@ -622,16 +622,22 @@ app.get('/tablelist', async function (req, res) {
 	let users = await similarity.getSimilarUsers(req.session.user.uid, DB, numUsers, fields);
 	to_be_rendered.users = similarity.createSimilarityField(req.session.user, users, fields);
 	to_be_rendered.users = similarity.createIsSharedField(req.session.user, users, fields);
+	const channelNames = req.session.user.channels.map(channel => channel.cname);
 	to_be_rendered.users = to_be_rendered.users.map(user => {
-		const names = user.channels.map(channel => channel.cname)
-			.filter(channel => channel != 'general');
-		if(names.length > 4){
-			user.displayChannels = names.slice(0, 4).join(', ');
-			user.extraChannels = names.slice(4).join(', ');
+		const channels = user.channels.map(channel => channel.cname)
+			.filter(channel => channel != 'general')
+			.map(name => ({
+				name,
+				isShared: channelNames.includes(name),
+				className: `channel${channelNames.indexOf(name)}` 
+			}));
+		if(channels.length > 4){
+			user.displayChannels = channels.slice(0, 4);
+			user.extraChannels = channels.slice(4);
 			return user;
 		}
-		user.displayChannels = names.join(', ');
-		user.extraChannels = '';
+		user.displayChannels = channels;
+		user.extraChannels = [];
 		return user;
 	});
 	to_be_rendered.user = JSON.stringify(req.session.user);

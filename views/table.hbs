@@ -81,17 +81,24 @@
                         <td>
                             <a href="#" data-toggle="modal" data-target=".profile-modal">{{this.real_name}}</a>
                         </td>
-                        <td {{#if this.ismajorShared}}class="shared"{{/if}}>{{this.major}}</td>
-                        <td {{#if this.islocal_areaShared}}class="shared"{{/if}}>{{this.local_area}}</td>
-                        <td>{{this.displayChannels}}
-                            {{#if this.extraChannels}}
+                        <td {{#if this.ismajorShared}}style="color: red"{{/if}}>{{this.major}}</td>
+                        <td {{#if this.islocal_areaShared}}style="color: blue"{{/if}}>{{this.local_area}}</td>
+                        <td>
+                            {{#each this.displayChannels}}
+                                <span {{#if this.isShared}}class="{{this.className}}"{{/if}}>{{this.name}}</span>
+                            {{/each}}
+                            {{#if this.extraChannels.length }}
                                 <div class="ui accordion">
                                     <div class="title">
                                         <i class="dropdown icon"></i>
                                         Show More
                                     </div>
                                     <div class="content">
-                                        <p class="transition hidden">{{this.extraChannels}}</p>
+                                        <p class="transition hidden">
+                                            {{#each this.extraChannels}}
+                                                <span {{#if this.isShared}}class="{{this.className}}"{{/if}}>{{this.name}}</span>
+                                            {{/each}}
+                                        </p>
                                     </div>
                                 </div>
                             {{/if}}
