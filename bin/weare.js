@@ -4,6 +4,7 @@ const similarIdx = require('../server/calculators.js');
 //const SlackRTMClient = require('../server/SlackRTMClient');
 const path = require('path');
 const https = require('https');
+const expressIp = require('express-ip');
 const createError = require('http-errors')
 const util = require('util');
 const ticket = require('../ticket.js');
@@ -25,7 +26,9 @@ const cookieParser = require('cookie-parser');
 const morgan = require('morgan')
 const express = require('express');
 const ldap = require('../server/ldap');
+const assert = require('assert');
 
+app.use(expressIp().getIpInfoMiddleware);
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 const urlencodedParser = bodyParser.urlencoded({ extended: false });
@@ -93,6 +96,33 @@ app.engine('hbs', hbs({
 }));
 
 // app.engine('handlebars', exphbs({ helpers: { json: function (context) { return JSON.stringify(context); } } }));
+app.post('/log', async (req, res) => {
+	const {body} = req;
+	try{
+		assert('type' in body, `'type' must be present in body`);
+		assert('time' in body, `'time' must be present in body`);
+		assert('content' in body, `'content' must be present in body`);
+	}
+	catch(e){
+		res.status(400);
+		res.send(e.toString());
+		return;
+	}
+	body.ip = req.session.ip;
+	body.sessionID = req.sessionID;
+	if(!!req.session.user){
+		body.uid = req.session.user.uid;
+	}
+	body.ipInfo = req.ipInfo;
+	const dbResult = await DB.collection('logging').insertOne(req.body);
+	if(dbResult.result.n === 1 && dbResult.result.ok === 1){
+		res.status(200);
+		res.send('Inserted');
+		return;
+	}
+	res.status(500);
+	res.send('Server error');
+});
 
 app.get('/install', (req, res) => {
 	let to_be_rendered = {
@@ -610,9 +640,8 @@ app.get('/home', async function (req, res) {
 	res.render('index', to_be_rendered);
 });
 
+
 app.get('/tablelist', async function (req, res) {
-	// res.send('This is table list');
-	console.log('get table list from users');
 	// generate the basic table for the logged in user to check who is closet to him/her
 	let to_be_rendered = {};
 	to_be_rendered.layout = 'default';

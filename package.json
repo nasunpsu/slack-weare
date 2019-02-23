@@ -21,6 +21,7 @@
     "ejs": "^2.6.1",
     "express": "^4.16.4",
     "express-handlebars": "^3.0.0",
+    "express-ip": "^1.0.3",
     "express-session": "^1.15.6",
     "handlebars": "^4.0.12",
     "http-errors": "^1.7.1",
