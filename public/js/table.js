@@ -1,8 +1,3 @@
-// type, time, username, sessionid, uid, content (if they switch the topic from one to another what is the new topic, old topic)
-// record login, logout, click events, navigation between pages
-// if idling for too long, send event
-// edit profile
-
 /**
  * Binds all functions to always have 'this' to be the object itself
  * @param {any} obj Object to bind all methods to

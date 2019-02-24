@@ -40,16 +40,6 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use((req, res, next) => {
-	const {method, body, params, query, path} = req;
-	const log = {
-		type: `${method} Request`,
-		time: new Date().toString(),
-		content: `${path} accessed with body ${JSON.stringify(body)}, query ${JSON.stringify(query)}, and params ${JSON.stringify(params)}`
-	}
-	logEvent(log, req);
-	next();
-});
 
 const SlackRTMClient = require('@slack/client').RTMClient;
 const SlackWebClient = require('@slack/client').WebClient;
@@ -92,6 +82,21 @@ if (app.get('env') === 'production') {
 }
 app.use(morgan('dev'));//combined				        
 app.use(session(sess));
+app.use((req, res, next) => {
+	const {method, body, params, query, path} = req;
+	const log = {
+		type: `${method} Request`,
+		time: new Date().toString(),
+		content: {
+			body,
+			query,
+			params,
+		},
+		path
+	}
+	logEvent(log, req);
+	next();
+});
 
 const web = new SlackWebClient(process.env.BOT_USER_OAUTH_ACCESS_TOKEN);
 const web_slack = new SlackWebClient(process.env.SLACK_OAUTH_ACCESS_TOKEN);
@@ -112,7 +117,9 @@ app.engine('hbs', hbs({
 }));
 
 const logEvent = (body, req) => {
-	body.sessionID = req.sessionID;
+	if(!!req.sessionID){
+		body.sessionID = req.sessionID;
+	}
 	if(!!req.session && !!req.session.user){
 		body.uid = req.session.user.uid;
 	}
@@ -129,20 +136,21 @@ app.post('/log', async (req, res) => {
 		assert('type' in body, `'type' must be present in body`);
 		assert('time' in body, `'time' must be present in body`);
 		assert('content' in body, `'content' must be present in body`);
+		assert('path' in body, `'path' must be present in body`);
 	}
 	catch(e){
 		res.status(400);
-		res.send(e.toString());
+		res.send({response: e.toString()});
 		return;
 	}
 	const dbResult = await logEvent(body, req);
 	if(dbResult.result.n === 1 && dbResult.result.ok === 1){
 		res.status(200);
-		res.send('Inserted');
+		res.send({response: 'Inserted'});
 		return;
 	}
 	res.status(500);
-	res.send('Server error');
+	res.send({response: 'Server error'});
 });
 
 app.get('/install', (req, res) => {

