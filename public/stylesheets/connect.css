@@ -26,6 +26,7 @@ nav{
 .connect-wrapper{
     display: grid;
     grid-template: auto/repeat(24,1fr);
+    padding-bottom: 100px;
 }
 
 .card-wrapper{
@@ -82,3 +83,11 @@ nav{
 .filters .checkbox{
     margin-left: 25px;
 }
+
+#page-container{
+    grid-column: 3/23;
+    width: 295px;
+    margin: auto;
+    margin-top: 40px;
+}
+  
