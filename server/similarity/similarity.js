@@ -176,8 +176,4 @@ const projectAndGroup = (objectKeys) => {
     ]
 }
 
-<<<<<<< HEAD
-module.exports = {createSimilarityField, storeSimilarUsers,getSimilarUsers}
-=======
 module.exports = {createIsSharedField, createSimilarityField, storeSimilarUsers,getSimilarUsers}
->>>>>>> 8675909796249bcb8aa49c1b75928290d5a26ce1
