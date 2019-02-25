@@ -8,11 +8,14 @@
 <script src="https://rawgit.com/farzher/fuzzysort/master/fuzzysort.js"></script>
 <script src="https://semantic-ui.com/javascript/library/tablesort.js"></script>
 <script>
-    window.sessionUser = (() => {
-        const userString = `{{user}}`;
+    [window.sessionUser, window.tableUsers] = (() => {
+        const [userString, tableString] = [`{{user}}`, `{{usersString}}`];
         const text = document.createElement('textarea');
         text.innerHTML = userString;
-        return JSON.parse(text.value);
+        const user = JSON.parse(text.value);
+        text.innerHTML = tableString;
+        const table = JSON.parse(text.value);
+        return [user, table];
     })();
 </script>
 <script src="/js/table.js"></script>
@@ -22,7 +25,7 @@
             <h3>Connect with Peers Like You</h3>
             <div class="filters">
                 <p>View peers who share your</p>
-                <form>
+                <form id="checkboxes">
                     <div class="ui checkbox">
                         <input type="checkbox" id="locationCheck">
                         <label class="form-check-label" for="locationCheck">Location</label>
@@ -56,7 +59,10 @@
                 </div>
                 <div class="results"></div>
                 <select id="dropdown" class="ui dropdown sort-dropdown">
-                    <option value="0">Sort By</option>
+                    <option value="0">All Fields</option>
+                </select>
+                <select id="sortDropdown" class="ui dropdown sort-dropdown">
+                    <option value="0">Similarity</option>
                 </select>
             </div> 
         </div>
@@ -66,20 +72,48 @@
                     <th scope="col">Name</th>
                     <th scope="col">Major</th>
                     <th scope="col">Location</th>
-                    <th scope="col">Similarities</th>
+                    <th scope="col">Channels</th>
                 </tr>
             </thead>
             <tbody id="table-body">
                 {{#each users}}
-                    <tr>
-                        <td><a href="#" data-toggle="modal" data-target=".profile-modal">{{this.real_name}}</a></td>
-                        <td>{{this.major}}</td>
-                        <td>{{this.local_area}}</td>
-                        <td>{{this.similarities}}</td>
+                    <tr style="display: none">
+                        <td>
+                            <a href="#" data-toggle="modal" data-target=".profile-modal">{{this.real_name}}</a>
+                        </td>
+                        <td {{#if this.ismajorShared}}style="color: red"{{/if}}>{{this.major}}</td>
+                        <td {{#if this.islocal_areaShared}}style="color: blue"{{/if}}>{{this.local_area}}</td>
+                        <td>
+                            {{#each this.displayChannels}}
+                                <span {{#if this.isShared}}class="{{this.className}}"{{/if}}>{{this.name}}</span>
+                            {{/each}}
+                            {{#if this.extraChannels.length }}
+                                <div class="ui accordion">
+                                    <div class="title">
+                                        <i class="dropdown icon"></i>
+                                        Show More
+                                    </div>
+                                    <div class="content">
+                                        <p class="transition hidden">
+                                            {{#each this.extraChannels}}
+                                                <span {{#if this.isShared}}class="{{this.className}}"{{/if}}>{{this.name}}</span>
+                                            {{/each}}
+                                        </p>
+                                    </div>
+                                </div>
+                            {{/if}}
+                        </td>
                     </tr>
                 {{/each}}
             </tbody>
         </table>
+        <div aria-label="Pagination Navigation" id="page-container" role="navigation" class="ui pagination menu">
+            <a aria-current="false" id="previousPage" aria-disabled="false" tabindex="0" value="1" aria-label="Previous item" type="prevItem" class="item">⟨</a>
+            <a aria-current="true" aria-disabled="false" tabindex="0" value="1" type="pageItem" class="page-number active item">1</a>
+            <a aria-current="false" aria-disabled="false" tabindex="0" value="2" type="pageItem" class="page-number item">2</a>
+            <a aria-current="false" aria-disabled="false" tabindex="0" value="3" type="pageItem" class="page-number item">3</a>
+            <a aria-current="false" aria-disabled="false" id="nextPage" tabindex="0" value="2" aria-label="Next item" type="nextItem" class="item">⟩</a>
+        </div>
         <div class="modal fade profile-modal" tabindex="-1" role="dialog" aria-labelledby="profile-modal" aria-hidden="true">
             <div class="modal-dialog modal-xl">
                 <div class="modal-content">

@@ -6,6 +6,23 @@
       text-align: center;
 }
 
+/* Class for shared attribute's cells in the table list view */
+.shared {
+  color:blue;
+}
+
+/* Class for each shared channel for the table list view (only to show if the channel is shared between the user in the table and the signed in user) */
+.channel1 { color: #00C49B; }
+.channel2 { color: #4A90E2; }
+.channel3 { color: #999999; }
+.channel4 { color: #222222; }
+.channel5 { color: #280043; }
+.channel6 { color: #293821; }
+.channel7 { color: #238032; }
+.channel8 { color: #283023; }
+.channel9 { color: #837284; }
+.channel10 { color: #623439; }
+
   .container.main{
     margin-top: 7.0em;
 }

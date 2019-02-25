@@ -4,6 +4,7 @@ const similarIdx = require('../server/calculators.js');
 //const SlackRTMClient = require('../server/SlackRTMClient');
 const path = require('path');
 const https = require('https');
+const expressIp = require('express-ip');
 const createError = require('http-errors')
 const util = require('util');
 const ticket = require('../ticket.js');
@@ -18,19 +19,27 @@ const request = require('request');
 const apiUrl = 'https://slack.com/api';
 // const methodUril = 'https://slack.com/api/';
 const qs = require('querystring');
-const hbs = require('express-handlebars');
+const hbs = require('express-handlebars'); 	
 const session = require('express-session');
 const MongoStore = require('connect-mongo')(session);
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan')
 const express = require('express');
 const ldap = require('../server/ldap');
+const assert = require('assert');
 
+app.use(expressIp().getIpInfoMiddleware);
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 const urlencodedParser = bodyParser.urlencoded({ extended: false });
 const jsonParser = bodyParser.json();
 app.use(cookieParser());
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
+
 
 const SlackRTMClient = require('@slack/client').RTMClient;
 const SlackWebClient = require('@slack/client').WebClient;
@@ -73,6 +82,21 @@ if (app.get('env') === 'production') {
 }
 app.use(morgan('dev'));//combined				        
 app.use(session(sess));
+app.use((req, res, next) => {
+	const {method, body, params, query, path} = req;
+	const log = {
+		type: `${method} Request`,
+		time: new Date().toString(),
+		content: {
+			body,
+			query,
+			params,
+		},
+		path
+	}
+	logEvent(log, req);
+	next();
+});
 
 const web = new SlackWebClient(process.env.BOT_USER_OAUTH_ACCESS_TOKEN);
 const web_slack = new SlackWebClient(process.env.SLACK_OAUTH_ACCESS_TOKEN);
@@ -92,7 +116,42 @@ app.engine('hbs', hbs({
 	helpers: { json: function (context) { return JSON.stringify(context); } }
 }));
 
+const logEvent = (body, req) => {
+	if(!!req.sessionID){
+		body.sessionID = req.sessionID;
+	}
+	if(!!req.session && !!req.session.user){
+		body.uid = req.session.user.uid;
+	}
+	if(!('error' in req.ipInfo)){
+		body.ipInfo = req.ipInfo;
+	}
+	return DB.collection('logging').insertOne(body);
+}
+
 // app.engine('handlebars', exphbs({ helpers: { json: function (context) { return JSON.stringify(context); } } }));
+app.post('/log', async (req, res) => {
+	const {body} = req;
+	try{
+		assert('type' in body, `'type' must be present in body`);
+		assert('time' in body, `'time' must be present in body`);
+		assert('content' in body, `'content' must be present in body`);
+		assert('path' in body, `'path' must be present in body`);
+	}
+	catch(e){
+		res.status(400);
+		res.send({response: e.toString()});
+		return;
+	}
+	const dbResult = await logEvent(body, req);
+	if(dbResult.result.n === 1 && dbResult.result.ok === 1){
+		res.status(200);
+		res.send({response: 'Inserted'});
+		return;
+	}
+	res.status(500);
+	res.send({response: 'Server error'});
+});
 
 app.get('/install', (req, res) => {
 	let to_be_rendered = {
@@ -610,9 +669,8 @@ app.get('/home', async function (req, res) {
 	res.render('index', to_be_rendered);
 });
 
+
 app.get('/tablelist', async function (req, res) {
-	// res.send('This is table list');
-	console.log('get table list from users');
 	// generate the basic table for the logged in user to check who is closet to him/her
 	let to_be_rendered = {};
 	to_be_rendered.layout = 'default';
@@ -621,7 +679,27 @@ app.get('/tablelist', async function (req, res) {
 	const fields = ['real_name', 'channels', 'major', 'local_area', 'affiliation', 'campus'];
 	let users = await similarity.getSimilarUsers(req.session.user.uid, DB, numUsers, fields);
 	to_be_rendered.users = similarity.createSimilarityField(req.session.user, users, fields);
+	to_be_rendered.users = similarity.createIsSharedField(req.session.user, users, fields);
+	const channelNames = req.session.user.channels.map(channel => channel.cname);
+	to_be_rendered.users = to_be_rendered.users.map(user => {
+		const channels = user.channels.map(channel => channel.cname)
+			.filter(channel => channel != 'general')
+			.map(name => ({
+				name,
+				isShared: channelNames.includes(name),
+				className: `channel${channelNames.indexOf(name)}` 
+			}));
+		if(channels.length > 4){
+			user.displayChannels = channels.slice(0, 4);
+			user.extraChannels = channels.slice(4);
+			return user;
+		}
+		user.displayChannels = channels;
+		user.extraChannels = [];
+		return user;
+	});
 	to_be_rendered.user = JSON.stringify(req.session.user);
+	to_be_rendered.usersString = JSON.stringify(to_be_rendered.users);
 	res.render('table', to_be_rendered);
 });
 app.get('/network_balloon', async function (req, res) {
