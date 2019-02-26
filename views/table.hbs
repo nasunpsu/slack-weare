@@ -1,3 +1,4 @@
+
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS"
     crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut"
@@ -55,18 +56,19 @@
                 </form>
             </div>
             <div class="ui category search search-table">
-                <div class="ui icon right labeled input">
-                    <input class="prompt" type="text" id="search" placeholder="search...">
-                    <i class="search icon"></i>
+                <div class="ui icon right labeled input search-box">
+                    <input class="prompt" type="text" id="search" placeholder="search">
+                    <select id="dropdown" class="ui dropdown sort-dropdown label">
+                        <option value="0">All Fields</option>
+                    </select>
                 </div>
                 <div class="results"></div>
-                <select id="dropdown" class="ui dropdown sort-dropdown">
-                    <option value="0">All Fields</option>
-                </select>
+                
                 <select id="sortDropdown" class="ui dropdown sort-dropdown">
                     <option value="0">Similarity</option>
                 </select>
             </div> 
+            <p style="padding-top: 20px">Note: Colored text indicates that you share the item in color.</p>
         </div>
         <table class="ui sortable table ascending celled list-table">
             <thead>
