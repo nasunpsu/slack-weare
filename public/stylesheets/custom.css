@@ -247,13 +247,8 @@ nav{
   box-shadow: 0 2px 2px rgba(0,0,0,.3);
 }
 
-.header.item .nav-logo{
-  width: 100px!important;
-}
-
 .navbar{
-  background: #00438c!important; 
-  padding: 5px;
+  background: #1c3a66!important; 
 }
 
 .footer{
@@ -276,16 +271,17 @@ nav{
 }
 
 .nav-logo{
-  width: 500px;
+  width: 130px!important;
 }
 
 h2, h3, h4, h5, p {
   font-family: 'Proxima Nova'!important;
+  color: #1c3a66!important;
 }
 
 h1{
   font-family: 'Proxima Nova'!important;
-  color: rgb(49, 120, 196);
+  color: #1c3a66;
   font-size: 40px;
 }
 
