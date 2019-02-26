@@ -72,11 +72,12 @@ nav{
 }
 
 .search-table, .sort-dropdown{
-    display: inline;
-    margin: 40px;
+    margin-top: 20px;
+    margin-right: 20px;
 }
 
 .search-table{
+    margin-top: 40px;
     margin-left: 0px;
 }
 
@@ -91,3 +92,4 @@ nav{
     margin-top: 40px;
 }
   
+

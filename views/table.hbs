@@ -28,12 +28,13 @@
                 <form id="checkboxes">
                     <div class="ui checkbox">
                         <input type="checkbox" id="locationCheck">
-                        <label class="form-check-label" for="locationCheck">Location</label>
+                        <label class="form-check-label" for="locationCheck"><a class="ui red empty circular label mini"></a> Location</label>
                     </div>
                     <div class="ui checkbox">
                         <input type="checkbox" id="majorCheck">
-                        <label for="majorCheck">Major</label>
+                        <label for="majorCheck"><a class="ui orange empty circular label mini"></a> Major</label>
                     </div>
+                    <!--
                     <div class="ui checkbox">
                         <input type="checkbox" id="industryCheck">
                         <label for="industryCheck">Profession</label>
@@ -50,11 +51,12 @@
                         <input type="checkbox" id="industryCheck">
                         <label for="pastClassCheck">Past Classes</label>
                     </div>
+                    -->
                 </form>
             </div>
             <div class="ui category search search-table">
-                <div class="ui icon input">
-                    <input class="prompt" type="text" id="search" placeholder="Search peers...">
+                <div class="ui icon right labeled input">
+                    <input class="prompt" type="text" id="search" placeholder="search...">
                     <i class="search icon"></i>
                 </div>
                 <div class="results"></div>
@@ -81,8 +83,8 @@
                         <td>
                             <a href="#" data-toggle="modal" data-target=".profile-modal">{{this.real_name}}</a>
                         </td>
-                        <td {{#if this.ismajorShared}}style="color: red"{{/if}}>{{this.major}}</td>
-                        <td {{#if this.islocal_areaShared}}style="color: blue"{{/if}}>{{this.local_area}}</td>
+                        <td {{#if this.ismajorShared}}style="color: #f2711c"{{/if}}>{{this.major}}</td>
+                        <td {{#if this.islocal_areaShared}}style="color: #db2828"{{/if}}>{{this.local_area}}</td>
                         <td>
                             {{#each this.displayChannels}}
                                 <span {{#if this.isShared}}class="{{this.className}}"{{/if}}>{{this.name}}</span>
