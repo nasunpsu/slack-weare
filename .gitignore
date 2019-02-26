@@ -1,16 +1,3 @@
-<<<<<<< HEAD
-=======
-#Node environment variables
-*.env
-node_modules/
-#Cached python scripts
-__pycache__/
-#Vscode settings
-.vscode/
-#Semantic UI elements
-semantic.json
-semantic/
->>>>>>> 23ba82d259ab4f3ada156779763a083ce2dec417
 ##########################
 # Application specfic
 ##########################
@@ -120,8 +107,4 @@ typings/
 
 
 #specifics
-<<<<<<< HEAD
 *.png
-=======
-*.png
->>>>>>> 23ba82d259ab4f3ada156779763a083ce2dec417
