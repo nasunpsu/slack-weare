@@ -268,7 +268,7 @@ nav{
 
 .nav-links > a{
   color: black;
-  font-family: 'Proxima Nova';
+  font-family: 'Proxima Nova'!important;
   padding: 10px;
   margin: 10px;
   text-decoration: none;
@@ -280,11 +280,11 @@ nav{
 }
 
 h2, h3, h4, h5, p {
-  font-family: 'Proxima Nova';
+  font-family: 'Proxima Nova'!important;
 }
 
 h1{
-  font-family: 'Proxima Nova';
+  font-family: 'Proxima Nova'!important;
   color: rgb(49, 120, 196);
   font-size: 40px;
 }
@@ -320,7 +320,7 @@ p{
 }
 
 .stat-group h3{
-  font-family: 'Proxima Nova';
+  font-family: 'Proxima Nova'!important;
   font-size: 30px;
   font-weight: 100;
 }
@@ -355,14 +355,14 @@ p{
 
 .post-title{
   grid-column: 3/22;
-  font-family: 'Proxima Nova';
+  font-family: 'Proxima Nova'!important;
   color: rgb(49, 120, 196);
   margin-bottom: -20px;margin-top: 25px;
 }
 
 .channel-title{
   grid-column: 3/22;
-  font-family: 'Proxima Nova';
+  font-family: 'Proxima Nova'!important;
   color: rgb(49, 120, 196);
   margin-top: 85px;
 }

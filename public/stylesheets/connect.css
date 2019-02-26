@@ -16,7 +16,7 @@ nav{
 
 .nav-links > a{
     color: white;
-    font-family: 'Proxima Nova', sans-serif;
+    font-family: 'Proxima Nova', sans-serif!important;
     padding: 10px;
     margin: 10px;
     text-decoration: none;
@@ -64,7 +64,7 @@ nav{
 }
 
 .filters p{
-    font-family: 'Proxima Nova', sans-serif;
+    font-family: 'Proxima Nova', sans-serif!important;
 }
 
 .basic-info p{
@@ -86,6 +86,17 @@ nav{
 
 .filters .checkbox{
     margin-left: 25px;
+}
+
+.list-table a{
+    color: lightslategray!important;
+    text-decoration: underline!important;
+    font-size: 15px;
+}
+
+.list-table a:hover{
+    color: darkslategray!important;
+    text-decoration: underline!important;
 }
 
 #page-container{

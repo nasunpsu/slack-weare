@@ -89,7 +89,7 @@
                         <td {{#if this.islocal_areaShared}}style="color: #db2828"{{/if}}>{{this.local_area}}</td>
                         <td>
                             {{#each this.displayChannels}}
-                                <span {{#if this.isShared}}class="{{this.className}}"{{/if}}>{{this.name}}</span>
+                                <span {{#if this.isShared}}class="{{this.className}}"{{/if}}>{{this.name}}  |  </span>
                             {{/each}}
                             {{#if this.extraChannels.length }}
                                 <div class="ui accordion">
@@ -100,7 +100,7 @@
                                     <div class="content">
                                         <p class="transition hidden">
                                             {{#each this.extraChannels}}
-                                                <span {{#if this.isShared}}class="{{this.className}}"{{/if}}>{{this.name}}</span>
+                                                <span {{#if this.isShared}}class="{{this.className}}"{{/if}}>{{this.name}}  |  </span>
                                             {{/each}}
                                         </p>
                                     </div>
