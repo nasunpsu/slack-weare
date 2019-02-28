@@ -1423,7 +1423,7 @@ app.use((err, req, res, next) => {
 
 // Set up express server here
 const options = {
-    cert: fs.readFileSync('/etc/pki/tls/certs/weconnect.crt'),
+    cert: fs.readFileSync('/etc/pki/tls/certs/weconnect.pem'),
     key: fs.readFileSync('/etc/pki/tls/private/weconnect.key')
 };
 //app.listen(process.env.PORT, () => {
