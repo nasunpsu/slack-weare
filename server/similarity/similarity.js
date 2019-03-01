@@ -75,8 +75,8 @@ const toSimilarityString = (similarities) => {
 
 /* Given 2 lists of channel objects, returns the number of channels the 2 lists have in common*/
 const numChannelsInCommon = (channels1, channels2) => {
-    cids1 = channels1.map(channel => channel.cid);
-    cids2 = channels2.map(channel => channel.cid);
+    const cids1 = channels1.map(channel => channel.cid);
+    const cids2 = channels2.map(channel => channel.cid);
     return cids1.reduce((numInCommon, cid, index) => {
         const addition = cid === cids2[index] ? 1: 0;
         return numInCommon + addition;
@@ -91,9 +91,11 @@ const numChannelsInCommon = (channels1, channels2) => {
  * @returns {user[]} array of similar users
  */
 const getSimilarUsers = async (uid, DB, numUsers, objectKeys) => {
+    console.log(`uid and number users are ${uid} and ${numUsers}`);
     const query = [...selectAndProject(uid, numUsers), ...join(), ...projectAndGroup(objectKeys)]; 
-    const res = await DB.collection('users').aggregate(query);
+    const res = await DB.collection('users_distance').aggregate(query);
     const doc = await res.toArray();
+    console.log(doc.length);
     return doc[0].similar_users;
 }
 
