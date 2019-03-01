@@ -1,4 +1,5 @@
 import traceback
+import statistics
 from pymongo import MongoClient
 from random import randint
 import pandas as pd
@@ -43,13 +44,34 @@ def update_db(uid, matrix):
         uid {str} -- uid of user to update
         matrix {dict[]} -- Array of dicts with entries distance(num) and user(str)
     """
-    similar_users = [{'distance':entry[0],'user': entry[1]} for entry in matrix]
-    new_value = {'$set': {'similar_users': similar_users}}
+    similar_users = create_similar_users(matrix)
+    similar_users_dict = create_similar_users_dict(matrix)
+    new_value = {'$set': {'similar_users': similar_users, 'similar_users_dict': similar_users_dict}}
     db = get_db()
     query = {'uid': uid}
     result = db.users.update_many(query, new_value)
     if result.modified_count != 1:
         print(f'Warning, {result.modified_count} users modified, {result.matched_count} users matched', flush=True)
+
+def create_similar_users(matrix):
+    """ Given matrix formatted like [[distance, uid]], produce dict with keys 'distance' and 'user' """
+    return [{'distance':entry[0],'user': entry[1]} for entry in matrix]
+
+def create_similar_users_dict(matrix):
+    """ Generates similar users dict to put in database
+    
+    Arguments:
+        matrix {List<[float, str]>} -- List of lists containing distance and uid like [[distance, uid]]
+    
+    Returns:
+        [type] -- [description]
+    """
+    distances = [entry[0] for entry in matrix]
+    description = pd.Series(distances).describe()
+    similar_users_dict = {entry[1]:entry[0] for entry in matrix}
+    similar_users_dict['mean_distance'], similar_users_dict['median_distance'] = description['mean'], description['50%']
+    similar_users_dict['first_quartile'], similar_users_dict['third_quartile'] = description['75%'], description['25%']
+    return similar_users_dict
 
 def get_db():
     """ Gets and returns pymongo database client """

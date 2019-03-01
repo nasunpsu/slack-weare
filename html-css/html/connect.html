@@ -5,12 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     
     <title>WeConnect | Connect</title>
+
+    <!-- Semantic UI -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.css">
+   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/components/icon.min.css">
+    <script
+      src="https://code.jquery.com/jquery-3.1.1.min.js"
+      integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+      crossorigin="anonymous"></script>
     
-    <!-- Bootstrap -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
         
     <!-- CSS -->
     <link rel="stylesheet" type="text/css" href="../css/connect.css">
@@ -22,44 +25,143 @@
     <link rel="stylesheet" href="https://use.typekit.net/ufx2dge.css">    
     </head>
     <body>
-        <nav>
-            <span class="nav-links">
-                <a href="#">Home</a>
-                <a href="#">Connect</a>
-                <a href="#">Student&nbsp;Name</a>
-                <a href="#">Settings</a>
-            </span>
-        </nav>
-        <div class="sidebar"></div>
-        <main class="connect-wrapper">
-            <div class="view-controller btn-group">
-                <button class="btn btn-primary view-btn">List</button>
-                <button class="btn btn-primary view-btn">Cards</button>
-                <button class="btn btn-primary view-btn">Map</button>
-                <button class="btn btn-primary view-btn">Network</button>
+        
+        <main class="connect-wrapper"> 
+            <div class="sidebar">
+            <h3>Filter</h3>
+            <div class="filters">
+                <p>View peers who share your:</p>
+                <form>
+                    <div class="ui checkbox">
+                        <input type="checkbox" id="locationCheck">
+                        <label class="form-check-label" for="locationCheck"><a class="ui red empty circular label mini"></a>Location</label>
+                    </div>
+                    <div class="ui checkbox">
+                        <input type="checkbox" id="majorCheck">
+                        <label for="majorCheck"><a class="ui orange empty circular label mini"></a>Major</label>
+                    </div>
+                    <!--
+                    <div class="ui checkbox">
+                        <input type="checkbox" id="industryCheck">
+                        <label for="industryCheck"><a class="ui yellow empty circular label mini"></a>Profession</label>
+                    </div>
+                    <div class="ui checkbox">
+                        <input type="checkbox" id="militaryCheck">
+                        <label for="militaryCheck"><a class="ui teal empty circular label mini"></a>Military Background</label>
+                    </div>
+                    <div class="ui checkbox">
+                        <input type="checkbox" id="parentalCheck">
+                        <label for="parentalCheck"><a class="ui blue empty circular label mini"></a>Parental Status</label>
+                    </div>
+                    <div class="ui checkbox">
+                        <input type="checkbox" id="industryCheck">
+                        <label for="pastClassCheck"><a class="ui purple empty circular label mini"></a>Past Classes</label>
+                    </div>
+                    -->
+                </form>
+            </div>
+        </div>
+            <div class="ui buttons view-controller">
+              <button class="ui grey basic button">Table</button>
+              <button class="ui grey basic button">Cards</button>
+              <button class="ui grey basic button">Map</button>
+              <button class="ui grey basic button">Network</button>
+              <button class="ui grey basic button">Time Zone</button>
             </div>
             <div class="similarities"></div>
-            <div class="card-wrapper">
-                <div class="card">
-                    <img src="../images/placeholder-img.png" class="profile-img-sm">
-                    <p>Student Name</p>
-                    <p>Student Major</p>
+            <div class="ui link cards card-wrapper">
+              <div class="card">
+                <div class="image">
+                  <img src="../images/placeholder-img.png">
                 </div>
-                <div class="card">
-                    <img src="../images/placeholder-img.png" class="profile-img-sm">
-                    <p>Student Name</p>
-                    <p>Student Major</p>
+                <div class="content">
+                  <div class="header">Matt Giampietro</div>
+                    <div class="meta">
+                        <span class="date">Student Major</span>
+                    </div>
                 </div>
-                <div class="card">
-                    <img src="../images/placeholder-img.png" class="profile-img-sm">
-                    <p>Student Name</p>
-                    <p>Student Major</p>
+                <div class="extra content">
+                  <span>
+                    <span>
+                    <a class="ui red empty circular label mini"></a>
+                      <a class="ui orange empty circular label mini"></a>
+                      <a class="ui yellow empty circular label mini"></a>
+                  </span>
+                  </span>
                 </div>
-                <div class="card">
-                    <img src="../images/placeholder-img.png" class="profile-img-sm">
-                    <p>Student Name</p>
-                    <p>Student Major</p>
+              </div>
+              <div class="card">
+                <div class="image">
+                  <img src="../images/placeholder-img.png">
                 </div>
+                <div class="content">
+                  <div class="header">Molly </div>
+                    <div class="meta">
+                        <span class="date">Student Major</span>
+                    </div>
+                </div>
+                <div class="extra content">
+                  <span>
+                    <a class="ui red empty circular label mini"></a>
+                      <a class="ui orange empty circular label mini"></a>
+                      <a class="ui yellow empty circular label mini"></a>
+                  </span>
+                </div>
+              </div>
+            <div class="card">
+                <div class="image">
+                  <img src="../images/placeholder-img.png">
+                </div>
+                <div class="content">
+                  <div class="header">Molly </div>
+                    <div class="meta">
+                        <span class="date">Student Major</span>
+                    </div>
+                </div>
+                <div class="extra content">
+                  <span>
+                    <a class="ui red empty circular label mini"></a>
+                      <a class="ui orange empty circular label mini"></a>
+                      <a class="ui yellow empty circular label mini"></a>
+                  </span>
+                </div>
+              </div>
+                <div class="card">
+                <div class="image">
+                  <img src="../images/placeholder-img.png">
+                </div>
+                <div class="content">
+                  <div class="header">Molly </div>
+                    <div class="meta">
+                        <span class="date">Student Major</span>
+                    </div>
+                </div>
+                <div class="extra content">
+                  <span>
+                    <a class="ui red empty circular label mini"></a>
+                      <a class="ui orange empty circular label mini"></a>
+                      <a class="ui yellow empty circular label mini"></a>
+                  </span>
+                </div>
+              </div>
+            <div class="card">
+                <div class="image">
+                  <img src="../images/placeholder-img.png">
+                </div>
+                <div class="content">
+                  <div class="header">Molly </div>
+                    <div class="meta">
+                        <span class="date">Student Major</span>
+                    </div>
+                </div>
+                <div class="extra content">
+                  <span>
+                    <a class="ui red empty circular label mini"></a>
+                      <a class="ui orange empty circular label mini"></a>
+                      <a class="ui yellow empty circular label mini"></a>
+                  </span>
+                </div>
+              </div>
             </div>
         </main>
     </body>

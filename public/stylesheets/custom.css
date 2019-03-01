@@ -6,6 +6,23 @@
       text-align: center;
 }
 
+/* Class for shared attribute's cells in the table list view */
+.shared {
+  color:blue;
+}
+
+/* Class for each shared channel for the table list view (only to show if the channel is shared between the user in the table and the signed in user) */
+.channel1 { color: #6435c9; }
+.channel2 { color: #6435c9; }
+.channel3 { color: #6435c9; }
+.channel4 { color: #6435c9; }
+.channel5 { color: #6435c9; }
+.channel6 { color: #6435c9; }
+.channel7 { color: #6435c9; }
+.channel8 { color: #6435c9; }
+.channel9 { color: #6435c9; }
+.channel10 { color: #6435c9; }
+
   .container.main{
     margin-top: 7.0em;
 }
@@ -46,36 +63,68 @@
     color:    #23527c;
   }
 
-  #background {
-    width: 100%; 
-    height: 100%; 
-    position: absolute; 
-    left: 0px; 
-    top: 0px; 
-    z-index: 0;
+  .login-wrapper{
+    width: 100%;
+    height: 100vh;
+  }
+
+  .btn-wrapper{
+    z-index: 100;
+  }
+
+  .btn-wrapper a{
     display: flex;
-    align-items: center;
-    justify-content: center;
-}
+    width: 100%;
+    padding: 50px;
 
-#background .button {
-  position: center;
-  z-index: 5;
-}
+  }
 
-  .bg-img, .bg {
+  .btn-wrapper a img{
+    align-self: center;
+    margin: auto;
+    z-index: 100;
+  }
+
+  .login-wrapper {
     /* The image used */
-    background-image: url("../old_main.jpg");
+    background-image: url("../images/weare.jpg");
   
     /* Full height */
-    height: 100%; 
-    width: 100%;
-  
+    
+
     /* Center and scale the image nicely */
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
+    
   }
+
+  .bg::after{
+    content: '';
+    opacity: .7;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #00438c;
+    z-index: 0;
+  }
+
+  .we-are-message{
+    position: absolute;
+    top: 80px;
+    width: 100%;
+    padding: 80px;
+    margin: auto;
+    color: white;
+    text-align: center;
+  }
+
+  .disclosure, .disclosure h5{
+    text-align: center!important;
+  }
+
 
   #timezone-main {
     font-family: 'Open Sans', sans-serif;
@@ -198,6 +247,14 @@ nav{
   box-shadow: 0 2px 2px rgba(0,0,0,.3);
 }
 
+.navbar{
+  background: #1c3a66!important; 
+}
+
+.footer{
+  background: white!important; 
+}
+
 .nav-links{
   display: flex;
   justify-content: flex-end;
@@ -206,39 +263,41 @@ nav{
 
 .nav-links > a{
   color: black;
-  font-family: 'Proxima Nova';
+  font-family: 'Proxima Nova'!important;
   padding: 10px;
   margin: 10px;
   text-decoration: none;
   font-size: 12px;
 }
 
+.nav-logo{
+  width: 130px!important;
+}
+
 h2, h3, h4, h5, p {
-  font-family: 'Proxima Nova';
-  color: darkcyan;
+  font-family: 'Proxima Nova'!important;
 }
 
 h1{
-  font-family: 'Proxima Nova';
-  color: darkblue;
+  font-family: 'Proxima Nova'!important;
+  color: #1c3a66;
   font-size: 40px;
 }
 
 .dashboard-wrapper{
   display: grid;
   grid-template: auto / repeat(24,1fr);
-  padding-top: 120px;
+  padding-top: 180px;
+  margin-bottom: 200px;
 }
-
-.we-are-message{
-  grid-column: 5/21;
+.dashboard-title{
   text-align: center;
+  grid-column: 2/23;
 }
 
 p{
   font-size: 12px;
   font-weight: 200;
-  text-align: left;
 }
 
 .slack-stats{
@@ -256,13 +315,13 @@ p{
 }
 
 .stat-group h3{
-  font-family: 'Proxima Nova';
+  font-family: 'Proxima Nova'!important;
   font-size: 30px;
   font-weight: 100;
 }
 
-.stat, .stat-group i{
-  color: white;
+.stat{
+  color: rgb(49, 120, 196);
   display: flex;
 }
 
@@ -285,39 +344,44 @@ p{
   margin-bottom: 80px!important;
 }
 
+.slack-btn a{
+  color: white;
+}
+
 .post-title{
-  grid-column: 2/23;
-  font-family: 'Proxima Nova';
-  color: darkblue;
-  margin-bottom: 0;
-  margin-left: 20px;  
+  grid-column: 3/22;
+  font-family: 'Proxima Nova'!important;
+  color: rgb(49, 120, 196);
+  margin-bottom: -20px;margin-top: 25px;
 }
 
 .channel-title{
-  grid-column: 2/23;
-  font-family: 'Proxima Nova';
-  color: darkblue;
-  margin-bottom: 0;
-  margin-left: 20px;
-  margin-top: 50px;
+  grid-column: 3/22;
+  font-family: 'Proxima Nova'!important;
+  color: rgb(49, 120, 196);
+  margin-top: 85px;
 }
 
 .post-wrapper{
-  grid-column: 2/23;
+  grid-column: 3/22;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   grid-template-rows: auto;
 }
 
+.post-wrapper .card, .post-wrapper .card:first-child {
+  margin-top: 30px;
+  margin-bottom: 0em;
+}
+
 .channel-wrapper{
-  grid-column: 2/23;
+  grid-column: 3/22;
   display: inline-flex;
   justify-content: space-between;
 }
 
 .channel-table{
   margin-left: 20px;
-  background: rgb(62, 17, 63);
   margin-top: 20px;
   border-radius: 4px;
   box-shadow: 2px 2px 2px rgba(0,0,0,.2);
@@ -325,10 +389,7 @@ p{
 
 .channel-table thead{
   text-align: center;
-  font-size: 60%;
-  background: rgb(52, 15, 53);
-  border-bottom: 3px solid rgba(100,100,100,.4);
-  
+  font-size: 60%;  
 }
 
 .channel-table th{
@@ -336,43 +397,18 @@ p{
 }
 
 .channel-table td{
-  /* color: white; */
   font-weight: 100;
   font-size: 80%;
   text-align: center;
-  border-bottom: 1px solid rgba(100,100,100,.4);
-  border-top: 1px solid rgba(100,100,100,.4);
 }
 
 .channel-table a{
-  /* color: white; */
   font-size: 120%;
 }
 
-.reacted-post{
-  background: white;
-  margin: 20px;
-  padding: 3%;
-  box-shadow: 2px 2px 2px rgba(0,0,0,.2);
-  border-radius: 4px;
-}
 
 .reacted-post img{
   width: 100%;
-}
-
-.signin-wrapper{
-  padding-top: 100px;
-  display: grid;
-  grid-template: auto / repeat(24,1fr);
-}
-
-.instructions{
-  margin-bottom: 60px;
-}
-
-.disclosure{
-  grid-column:  7/20;
 }
 
 

@@ -1,7 +1,10 @@
 body{
     margin: 0;
 }
-    
+
+p{
+}
+
 nav{
     background: #4A90E2;
     width: 100%;
@@ -26,22 +29,43 @@ nav{
 .connect-wrapper{
     display: grid;
     grid-template: auto/repeat(24,1fr);
+    position: relative;
+    padding-bottom: 100px;
+}
+
+.sidebar{
+    grid-column: 2 / 7;
+    border: 1px solid #ddd;
+    margin-top: 110px;
+    border-radius: 6px;
+    padding: 20px;
+    padding-top: 30px;
+    height: 350px;
 }
 
 .card-wrapper{
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     grid-template-rows: auto;
     grid-gap: 25px;
-    grid-column: 4/23;
-    margin-top: 100px;
+    grid-column: 8/23;
+    margin-top: 100px !important;
 }
 
 .view-controller{
-    grid-column: 1/-1;
-    width: 250px;
-    margin: auto;
-    margin-top: 50px;
+    position: absolute;
+    top: 50px;
+    right: 20px;
+    
+}
+
+.view-controller .button{
+    font-size: 12px !important;
+}
+
+.view-controller .button{
+    color: white !important;
+    background: red !important;
 }
 
 .card{
@@ -51,9 +75,8 @@ nav{
     border-radius: 4px;
 }
 
-.profile-img-sm{
-    width: 60%;
-    border-radius: 100%;
+.card .image{
+    width: 100%;
     align-self: center;
 }
 
@@ -62,17 +85,63 @@ nav{
     margin-top: 50px;
 }
 
-.filter-wrapper{
-    grid-column: 3/23;
-    margin-top: 50px;
+.filters form{
+    display: flex;
+    flex-direction: column;
 }
 
-.filters{
-    margin-top: 20px;
-    border: 1px solid #e2efff;
-    padding: 20px;
+.filters p{
+    margin-bottom: auto;
+    font-size: 80%;
+    opacity: .5;
+}
+
+.filters form div{
+    margin-top: 15px;
+}
+
+.ui.checkbox label, .checkbox .circular.label{
+    display: inline-block;
+}
+
+.checkbox .circular.label{
+    margin-right: 10px;
 }
 
 .basic-info p{
     margin: 0;
+}
+
+@media only screen and (max-width: 810px){
+    .sidebar{
+    grid-column: 3 / 23;
+    border: 1px solid #ddd;
+    margin-top: 110px;
+    border-radius: 6px;
+    padding: 20px;
+    padding-top: 30px;
+    height: auto;
+}
+    
+    .filters form{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding-bottom: 5px
+}
+    .filters form div{
+    margin-left: 25px;
+}
+
+
+.card-wrapper{
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    grid-template-rows: auto;
+    grid-gap: 25px;
+    grid-column: 3/23;
+    margin-top: 50px !important;
+}
+
+    
 }
