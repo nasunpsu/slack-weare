@@ -19,7 +19,7 @@ const request = require('request');
 const apiUrl = 'https://slack.com/api';
 // const methodUril = 'https://slack.com/api/';
 const qs = require('querystring');
-const hbs = require('express-handlebars'); 	
+const hbs = require('express-handlebars');
 const session = require('express-session');
 const MongoStore = require('connect-mongo')(session);
 const cookieParser = require('cookie-parser');
@@ -35,9 +35,9 @@ const urlencodedParser = bodyParser.urlencoded({ extended: false });
 const jsonParser = bodyParser.json();
 app.use(cookieParser());
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  next();
+	res.header("Access-Control-Allow-Origin", "*");
+	res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+	next();
 });
 
 
@@ -83,7 +83,7 @@ if (app.get('env') === 'production') {
 app.use(morgan('dev'));//combined				        
 app.use(session(sess));
 app.use((req, res, next) => {
-	const {method, body, params, query, path} = req;
+	const { method, body, params, query, path } = req;
 	const log = {
 		type: `${method} Request`,
 		time: new Date().toString(),
@@ -117,13 +117,13 @@ app.engine('hbs', hbs({
 }));
 
 const logEvent = (body, req) => {
-	if(!!req.sessionID){
+	if (!!req.sessionID) {
 		body.sessionID = req.sessionID;
 	}
-	if(!!req.session && !!req.session.user){
+	if (!!req.session && !!req.session.user) {
 		body.uid = req.session.user.uid;
 	}
-	if(!('error' in req.ipInfo)){
+	if (!('error' in req.ipInfo)) {
 		body.ipInfo = req.ipInfo;
 	}
 	return DB.collection('logging').insertOne(body);
@@ -131,26 +131,26 @@ const logEvent = (body, req) => {
 
 // app.engine('handlebars', exphbs({ helpers: { json: function (context) { return JSON.stringify(context); } } }));
 app.post('/log', async (req, res) => {
-	const {body} = req;
-	try{
+	const { body } = req;
+	try {
 		assert('type' in body, `'type' must be present in body`);
 		assert('time' in body, `'time' must be present in body`);
 		assert('content' in body, `'content' must be present in body`);
 		assert('path' in body, `'path' must be present in body`);
 	}
-	catch(e){
+	catch (e) {
 		res.status(400);
-		res.send({response: e.toString()});
+		res.send({ response: e.toString() });
 		return;
 	}
 	const dbResult = await logEvent(body, req);
-	if(dbResult.result.n === 1 && dbResult.result.ok === 1){
+	if (dbResult.result.n === 1 && dbResult.result.ok === 1) {
 		res.status(200);
-		res.send({response: 'Inserted'});
+		res.send({ response: 'Inserted' });
 		return;
 	}
 	res.status(500);
-	res.send({response: 'Server error'});
+	res.send({ response: 'Server error' });
 });
 
 app.get('/install', (req, res) => {
@@ -168,6 +168,19 @@ app.get('/login', function (req, res) {
 	res.render('login', to_be_rendered);
 });
 
+// GET /logout
+app.get('/logout', function (req, res, next) {
+	if (req.session) {
+		// delete session object
+		req.session.destroy(function (err) {
+			if (err) {
+				return next(err);
+			} else {
+				return res.redirect('/');
+			}
+		});
+	}
+});
 
 
 app.get('/api/oauth', function (req, res, next) {
@@ -183,7 +196,7 @@ app.get('/api/oauth', function (req, res, next) {
 	};
 	web.oauth.access(data.form, async function (err, result) {
 		if (err) console.error(err);
-        // await insertUser(result.user);
+		// await insertUser(result.user);
 		console.log(`enter the oauth access: ${util.inspect(result, { depth: 2 })}`)
 		if (!err) {
 			if (!result.bot) { //this is signed in with slack
@@ -311,8 +324,8 @@ app.post('/slack/events', (req, res, next) => {
 
 });
 
-app.post('/slack/commands/study', urlencodedParser, (req, res) => {
-	console.log(`within study`);
+app.post('/slack/commands/discuss', urlencodedParser, (req, res) => {
+	console.log(`within discuss`);
 	res.status(200).end(); // best practice to respond with empty 200 status code
 	var reqBody = req.body
 	var responseURL = reqBody.response_url
@@ -321,7 +334,6 @@ app.post('/slack/commands/study', urlencodedParser, (req, res) => {
 		"text": "Would you like to study with others Now or Later?",
 		"attachments": [
 			{
-				// "text": "Check who is online or schedule a meeting.",
 				"fallback": "Shame... buttons aren't supported in this land",
 				"callback_id": "schedule_0",
 				"color": "#3AA3E3",
@@ -360,6 +372,58 @@ app.post('/slack/commands/WhoIsOnline', urlencodedParser, (req, res) => {
 	OnlineNow(req.body.channel_id, req.body.user_id, req.body.response_url);
 });
 
+app.post('/slack/commands/intro', urlencodedParser, (req, res) => {
+	console.log(`within intro`);
+	res.status(200).end(); // best practice to respond with empty 200 status code
+	var reqBody = req.body;
+	var msg = {
+		title: 'I am, We Are!',
+		callback_id: 'self_intro',
+		submit_label: 'Hello!',
+		elements: [
+			{
+				label: 'Fun fact',
+				type: 'text',
+				name: 'fun',
+				text: 'existing content blah blah',
+				hint: 'Tell them something fun!'
+			},
+			{
+				label: 'I live in',
+				type: 'text',
+				name: 'city',
+				optional: true,
+				hint: 'Separate places with ";"! (e.g. Pittsburgh, PA; Victoria, BC'
+			},
+			{
+				label: 'Current profession',
+				type: 'select',
+				name: 'topic',
+				options: [
+					{ label: 'Veteran/military', value: 'military' },
+					{ label: 'Industry sector', value: 'industry' },
+					{ label: 'Education sector', value: 'education' },
+					{ label: 'No job yet', value: 'unemployed' },
+				],
+			},
+			{
+				label: 'I also identify with',
+				type: 'text',
+				name: 'unique',
+				optional: true,
+				hint: 'e.g. language, value systems, hobbies, minority roles, ethnicity'
+			},
+		],
+	};
+	console.log('before dialog web method');
+	console.log(util.inspect(msg, { depth: 3 }));
+	web.dialog.open({
+		trigger_id: reqBody.trigger_id,
+		dialog: msg
+	}).then(res => console.log(`successfully opened intro dialog`)).catch(err => { console.error(err); console.log(util.inspect(err, { depth: 3 })) });
+
+});
+
 app.post('/slack/actions', urlencodedParser, (req, res) => {
 	res.status(200).end(); // best practice to respond with 200 status
 	var body = JSON.parse(req.body.payload); // parse URL-encoded payload JSON string
@@ -375,7 +439,37 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 					as_user: false,
 					channel: body.channel.id,
 					user: body.user.id,
-					text: `Thanks for accepting the conduct of behaviors in the group. Remember to introduce yourself :point_up_2:`
+					text: `Thanks for participating our research project We Are! an online community for World Campus students. Remember to introduce yourself :point_down:`,
+					attachments: JSON.stringify([
+						{
+							title: 'Welcome to the World Campus Students Community! We Are!',
+							text: 'Penn State is where learning gains and your career takes off. If this is your first time using Slack, take some time to read the help docs at get.slack.help and our internal <https://docs.google.com/document/d/1-nCasqUcPrLYbhDuAm9SmuvY0S5ZOevPLbp52-PpZLM/edit?usp=sharing|wiki>. If you have any questions, jump into #help-slack and we\'ll help you out',
+							callback_id: 'intro',
+							color: '#74c8ed',
+							actions: [{
+								name: 'introduce',
+								text: 'Introduce myself',
+								type: 'button',
+								value: 'intro',
+								style: 'primary'
+							},
+							{
+								name: 'later',
+								text: 'Perhaps later',
+								type: 'button',
+								value: 'not-intro',
+								style: 'default'
+							},
+								// {
+								// 	name: 'neverIntro',
+								// 	text: 'Don\'t show this again',
+								// 	type: 'button',
+								// 	value: 'never-intro',
+								// 	style: 'default'
+								// }
+							],
+						},]
+					)
 				}).catch(err => console.error(err));
 				break;
 			case 'now': console.log('now selected');
@@ -398,7 +492,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 								type: 'text',
 								name: 'purpose',
 								value: text, //TODO: support command paramters later
-								hint: '30 second summary of meeting purpose',
+								hint: '150 characters summary of meeting purpose',
 							},
 							{
 								label: 'Description',
@@ -440,8 +534,6 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 									// 	"value": "email-channel"
 									// },
 									{ label: 'All the channel members', value: 'all' },
-									{ label: 'Channel members of the near time zone with me', value: 'schedule-tz' },
-									{ label: 'Channel members similar to myself', value: 'schedule-similar' },
 									{ label: 'Specify a subgroup', value: 'custom' }, //TODO
 								],
 							}
@@ -501,14 +593,14 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 							hint: 'Tell them something fun!'
 						},
 						{
-							label: 'I have lived in',
+							label: 'I live in',
 							type: 'text',
 							name: 'city',
 							optional: true,
-							hint: 'Separate places with "," !'
+							hint: 'Separate places with ";"! (e.g. Pittsburgh, PA; Victoria, BC'
 						},
 						{
-							label: 'Career',
+							label: 'Current profession',
 							type: 'select',
 							name: 'topic',
 							options: [
@@ -518,15 +610,11 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 							],
 						},
 						{
-							label: 'Something unique',
-							type: 'select',
+							label: 'I also identify with',
+							type: 'text',
 							name: 'unique',
-							options: [
-								{ label: 'First-generation college student', value: 'first-gen' },
-								{ label: 'Parent', value: 'parent' },
-								{ label: 'Early bird', value: 'early' },
-							],
-							hint: 'What else do you identify with most'
+							optional: true,
+							hint: 'e.g. language, value systems, hobbies, minority roles, ethnicity'
 						},
 					],
 				};
@@ -535,8 +623,10 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 				web.dialog.open({
 					trigger_id: trigger_id,
 					dialog: msg
-				}).then(res => console.log(`successfully opened welcome dialog`)).catch(err => { console.error(err); console.log(util.inspect(err, { depth: 3 })) });
+				}).then(res => console.log(`successfully opened intro dialog`)).catch(err => { console.error(err); console.log(util.inspect(err, { depth: 3 })) });
 				break;
+			//case 'invite':
+			//break;
 			default: console.log('nothing cased'); break;
 		}
 
@@ -687,9 +777,9 @@ app.get('/tablelist', async function (req, res) {
 			.map(name => ({
 				name,
 				isShared: channelNames.includes(name),
-				className: `channel${channelNames.indexOf(name)}` 
+				className: `channel${channelNames.indexOf(name)}`
 			}));
-		if(channels.length > 4){
+		if (channels.length > 4) {
 			user.displayChannels = channels.slice(0, 4);
 			user.extraChannels = channels.slice(4);
 			return user;
@@ -772,6 +862,29 @@ app.get('/network_balloon', async function (req, res) {
 	res.render('network', to_be_rendered);
 });
 
+app.get('/editProfile', async function (req, res) {
+	let to_be_rendered = {};
+	to_be_rendered.layout = 'default';
+	to_be_rendered.template = 'home-template';
+	to_be_rendered.userInfo = req.session.user;
+	res.render('profile', to_be_rendered);
+});
+
+app.post('/editProfile', async function (req, res) {
+	let to_be_rendered = {};
+	to_be_rendered.layout = 'default';
+	to_be_rendered.template = 'home-template';
+	to_be_rendered.userInfo = await DB.collection('users').find({ uid: req.session.user.uid }).toArray().then(async (results, err) => {
+		if (err) console.error(err);
+		else if (results.length != 0) {
+
+		};
+
+	});
+	res.render('profile', to_be_rendered);
+});
+
+
 function similarTo(list, user) {
 	console.log(`the list in similarTo is ${util.inspect(list, { depth: 3 })}`);
 	var dist = 'impossible value';
@@ -801,50 +914,50 @@ app.get('/network', async function (req, res) {
 			// console.log(`the self_channels are ${util.inspect(self_channels, { depth: null })}`);
 			(async () => {
 				nodes.forEach(async (n) => {
-				if (n.uid == c_node.uid) {
-					// console.error("now this is the logged user in the nodes loop");
-					n.fixed = true;
-					n.x = 400;//half of the canvas width/height
-					n.y = 300;
-					n.distIdx = 1;
-					return;
-				}
-				n.distIdx = await similarTo(n.similar_users, c_node.uid);
-				console.log(`distance is ${util.inspect(n.distIdx, { depth: null })}`);
-				distL.push(n.distIdx);
-
-				if (n.distIdx <= 0.4) {
-					links.push({
-						source: n.uid,
-						target: c_node.uid,
-						value: n.distIdx
-					});
-					direct_nodes.push(n);
-				}
-			});
-			var i = await direct_nodes.length;
-			console.log(`number of direct_nodes is ${direct_nodes.length}`)
-			while (i--) {
-				c_node = direct_nodes.splice(i, 1)[0];
-				console.log(`c_node is ${util.inspect(c_node, { depth: null })}`);
-				nodes.forEach(async (n) => {
-
 					if (n.uid == c_node.uid) {
+						// console.error("now this is the logged user in the nodes loop");
+						n.fixed = true;
+						n.x = 400;//half of the canvas width/height
+						n.y = 300;
+						n.distIdx = 1;
 						return;
-					};
-					dis = await similarTo(n.similar_users, c_node.uid);
-					console.log(`dist is ${util.inspect(dis, { depth: null })}`);
-					distL.push(dis);
-					if (dis <= 0.4) {
+					}
+					n.distIdx = await similarTo(n.similar_users, c_node.uid);
+					console.log(`distance is ${util.inspect(n.distIdx, { depth: null })}`);
+					distL.push(n.distIdx);
+
+					if (n.distIdx <= 0.4) {
 						links.push({
 							source: n.uid,
 							target: c_node.uid,
-							value: dis
+							value: n.distIdx
 						});
+						direct_nodes.push(n);
 					}
-				})
-			}
-		})();
+				});
+				var i = await direct_nodes.length;
+				console.log(`number of direct_nodes is ${direct_nodes.length}`)
+				while (i--) {
+					c_node = direct_nodes.splice(i, 1)[0];
+					console.log(`c_node is ${util.inspect(c_node, { depth: null })}`);
+					nodes.forEach(async (n) => {
+
+						if (n.uid == c_node.uid) {
+							return;
+						};
+						dis = await similarTo(n.similar_users, c_node.uid);
+						console.log(`dist is ${util.inspect(dis, { depth: null })}`);
+						distL.push(dis);
+						if (dis <= 0.4) {
+							links.push({
+								source: n.uid,
+								target: c_node.uid,
+								value: dis
+							});
+						}
+					})
+				}
+			})();
 			// console.log(`the third quantile similarity index is ${median(distL)}; and the min is ${Math.min(...distL)} and max is ${Math.max(...distL)}`);
 			// console.log(`the nodes are ${util.inspect(nodes[0], { depth: null })}`);
 			var obj = {
@@ -1031,6 +1144,7 @@ async function InitTeamMembers(team_id, token, limit = null) {
 								first_name: m.profile.first_name ? m.profile.first_name : m.profile.real_name.split(' ')[0],
 								last_name: m.profile.last_name,
 								image_48: m.profile.image_48,
+								image_512: m.profile.image_512,
 								is_custom_image: m.profile.is_custom_image,
 								is_bot: m.is_bot,
 								last_updated: m.updated,
@@ -1095,6 +1209,7 @@ async function InitTeamMembers(team_id, token, limit = null) {
 								first_name: m.profile.first_name ? m.profile.first_name : m.profile.real_name.split(' ')[0],
 								last_name: m.profile.last_name,
 								image_48: m.profile.image_48,
+								image_512: m.profile.image_512,
 								is_custom_image: m.profile.is_custom_image,
 								is_bot: m.is_bot,
 								last_updated: m.updated,
@@ -1299,7 +1414,7 @@ function OnlineNow(channel_id, user_id, responseURL) {
 		const active = await ActiveWho(channel_id, user_id);
 		console.log(`who is online with ActiveWho func: ${util.inspect(active, { depth: 2 })}`);
 		var message = active.length ? {
-			"text": `There are ${active.length} students of this channel online except you`,
+			"text": `There are ${active.length} other students in this channel online`,
 			"attachments": [
 				{
 					"text": "Would you like to invite them for video call or a Slack group chat",
@@ -1552,8 +1667,8 @@ function median(values) {
 
 	var half = Math.floor(values.length * 3 / 4);//third quantile
 
-  if (values.length % 2)
-    return values[half];
-  else
-    return (values[half - 1] + values[half]) / 2.0;
+	if (values.length % 2)
+		return values[half];
+	else
+		return (values[half - 1] + values[half]) / 2.0;
 }

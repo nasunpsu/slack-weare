@@ -110,7 +110,7 @@ const numChannelsInCommon = (channels1, channels2) => {
 const getSimilarUsers = async (uid, DB, numUsers, objectKeys) => {
     console.log(`uid and number users are ${uid} and ${numUsers}`);
     const query = [...selectAndProject(uid, numUsers), ...join(), ...projectAndGroup(objectKeys)]; 
-    const res = await DB.collection('users_distance').aggregate(query);
+    const res = await DB.collection('users').aggregate(query);
     const doc = await res.toArray();
     console.log(doc.length);
     return doc[0].similar_users;
