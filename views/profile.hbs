@@ -38,7 +38,7 @@
         <a class="item">
           <div class="ui blue basic mini horizontal label">Current Timezone</div>
           <br>
-          <select>
+          <select name='tz-selection' class="ui fluid normal dropdown">
             <option timeZoneId="1" gmtAdjustment="GMT-12:00" useDaylightTime="0" value="-12">(GMT-12:00) International
               Date Line West</option>
             <option timeZoneId="2" gmtAdjustment="GMT-11:00" useDaylightTime="0" value="-11">(GMT-11:00) Midway Island,
@@ -229,7 +229,7 @@
         <a class="item">
           <div class="ui teal basic mini horizontal label">Major</div>
           <br>
-          <p>{{userInfo.major}} {{userInfo.title}} (B.S.)</p>
+          <p>{{userInfo.major}} {{userInfo.title}} </p>
           <div class="right floated content">
             <button class="ui tiny basic teal icon button">
               <i class="teal pencil icon"></i>
@@ -251,7 +251,7 @@
       </div>
       <div class="ui divided selection list">
         <a class="item">
-          <div class="ui teal basic mini horizontal label">Past Courses</div>
+          <div class="ui teal basic mini horizontal label">Current Courses</div>
           <br>
           <p>
             IST110 | IST220 | GD 100 | GD101 | GD200 | GD201 | GD203, PHOTO202</p>
@@ -264,7 +264,7 @@
       </div>
       <div class="ui divided selection list">
         <a class="item">
-          <div class="ui teal basic mini horizontal label">Classes I Recommend</div>
+          <div class="ui teal basic mini horizontal label">Courses I Recommend</div>
           <br>
           <p>IST110 | IST220 | GD 100</p>
           <div class="right floated content">
@@ -276,7 +276,7 @@
       </div>
       <div class="ui divided selection list">
         <a class="item">
-          <div class="ui teal basic mini horizontal label">Favorite Instructors</div>
+          <div class="ui teal basic mini horizontal label">Instructors I recommend</div>
           <br>
           <p>Instructors</p>
           <div class="right floated content">
@@ -288,7 +288,7 @@
       </div>
       <div class="ui divided selection list">
         <a class="item">
-          <div class="ui teal basic mini horizontal label">Academic Goals</div>
+          <div class="ui teal basic mini horizontal label">What do you want to gain most from World Campus activities?</div>
           <br>
           <p>Straight A's<br>Gaining knowledge<br>Learning skills to apply in the industry</p>
           <div class="right floated content">
@@ -309,20 +309,9 @@
     <div class="basic-info-text">
       <div class="ui divided selection list">
         <a class="item">
-          <div class="ui green basic mini horizontal label">Places I've Lived In</div>
+          <div class="ui green basic mini horizontal label">Places I want to visit</div>
           <br>
           <p>State College, PA | Miami, FL | Collegeville, PA</p>
-          <div class="right floated content">
-            <button class="ui tiny basic green icon button">
-              <i class="green pencil icon"></i>
-            </button>
-          </div>
-        </a>
-      </div>
-      <div class="ui divided selection list">
-        <a class="item">
-          <div class="ui green basic mini horizontal label">Personal Goals</div>
-          <p><br>Growth as a student<br>Meeting new people</p>
           <div class="right floated content">
             <button class="ui tiny basic green icon button">
               <i class="green pencil icon"></i>

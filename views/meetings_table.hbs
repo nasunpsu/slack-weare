@@ -1,0 +1,30 @@
+<div class="meetings-wrapper">
+    <div>
+        <h2>You have created or been invited to the following meetings.</h2> 
+    </div>
+    <table class="ui sortable table ascending celled list-table">
+        <thead>
+            <tr id="table-head">
+                <th scope="col">Meeting Purpose</th>
+                <th scope="col">Date & Time</th>
+                <th scope="col">Topic</th>
+                <th scope="col">Attendees</th>
+            </tr>
+        </thead>
+        <tbody id="table-body">
+            {{#each meetings as |meeting|}}
+            <tr>
+                <td>
+                    <a href="/meeting/{{this.mid}}"  data-toggle="modal"
+                        data-target=".profile-modal">{{this.purpose}}</a>
+                </td>
+                <td> {{meeting.attendees}}</td> 
+                <td> {{meeting.topic}}</td> 
+                <td>
+                    {{meeting.start_time}}
+                </td>
+            </tr>
+            {{/each}}
+        </tbody>
+    </table>
+</div>

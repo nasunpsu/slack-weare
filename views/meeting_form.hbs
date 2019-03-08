@@ -1,0 +1,50 @@
+<div class="meeting-wrapper">
+    <div class="ui form meeting-form">
+        <h3>Meeting Agenda</h3>
+        <div class="fields memeting agenda">
+            <div class="ten wide field">
+                <label>Purpose</label>
+                <input type="text" placeholder="Purpose of the meeting" value="{{meeting.purpose}}">
+            </div>
+            <div class="six wide field">
+                <label>Topic</label>
+                <input type="text" placeholder="Topic" value="{{meeting.topic}}">
+            </div>
+        </div>
+        
+        <div class="fields">
+            <div class="sixteen wide field">
+                <label>Description</label>
+                <input type="text" placeholder="Description"  value="{{meeting.description}}">
+            </div>
+        </div>
+        <h3>When</h3>
+        <div class="fields when meeting">
+            <div class="four wide field">
+                <label>Date</label>
+                <input type="text" placeholder="YY:MM:DD">
+            </div>
+            <div class="four wide field">
+                <label>What time</label>
+                <input type="text" placeholder="hh:mm">
+            </div>
+            <div class="four wide field">
+                <label>Duration</label>
+                <input type="text" placeholder="E.g. 1 hour">
+            </div>
+            <div class="four wide field">
+                <label>Timezone</label>
+                <input type="text" placeholder="timezone">
+            </div>
+        </div>
+        <h3>Attendees</h3>
+        <div class="fields attendees meeting">
+            <div class="twelve wide field">
+                <input type="text" placeholder="separated by; E.g. Jenny Hollan; Joe Doe;" value={{#each member.attendees}}
+                                                {{this.name}}; {{/each}}>
+            </div>
+        </div>
+        <div class="ui submit meeting right floated teal button">Save</div>
+        <div class="ui invite meeting right floated yellow button">Save and Invite</div>
+    </div>
+</div>
