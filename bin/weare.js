@@ -114,7 +114,15 @@ app.engine('hbs', hbs({
 		path.join(__dirname, '/../views/partials/'),
 		path.join(__dirname, '/../semantic/dist/')
 	],
-	helpers: { json: function (context) { return JSON.stringify(context); } }
+	helpers: {
+		json: function (context) { return JSON.stringify(context); },
+		eq: function () {
+			const args = Array.prototype.slice.call(arguments, 0, -1);
+			return args.every(function (expression) {
+				return args[0] === expression;
+			});
+		}
+	}
 }));
 
 const logEvent = (body, req) => {
@@ -769,6 +777,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 				console.log(`action type is ${type} and body content is ${util.inspect(body, { depth: null })}`);
 				(async () => {
 					let meeting_id = makeid();
+					const members = await ChannelMembers(body.team.id + '_' + body.channel.id, body.channel.name);
 					await DB.collection('meetings').updateOne(
 						{ mid: meeting_id },
 						{
@@ -780,7 +789,8 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 								topic: body.submission.topic,
 								description: body.submission.description,
 								who: body.submission.who,
-								attendees: [],
+								attendees: body.submission.who == "all" ? members : [],
+								cmembers: members,
 								start_time: '',
 								end_time: '',
 								duration: 60 //minutes
@@ -1050,16 +1060,16 @@ app.post('/editProfile', async function (req, res) {
 	res.render('profile', to_be_rendered);
 });
 
-app.get('/meetings', async function(req, res) {
+app.get('/meetings', async function (req, res) {
 	let to_be_rendered = {};
 	// console.log(`the req.params to be show is ${util.inspect(req.params, {depth: null})}`);
 	to_be_rendered.layout = 'default';
 	to_be_rendered.template = 'home-template';
 	to_be_rendered.userInfo = req.session.user;
-	to_be_rendered.meetings = await DB.collection('meetings').find({ creator_uid: req.session.user.uid}).toArray().then(async (results, err) => {
+	to_be_rendered.meetings = await DB.collection('meetings').find({ creator_uid: req.session.user.uid }).toArray().then(async (results, err) => {
 		if (err) console.error(err);
-		else if (results.length!=0) {
-			console.log(`the meetings info to be show is ${util.inspect(results, {depth: null})}`);
+		else if (results.length != 0) {
+			console.log(`the meetings info to be show is ${util.inspect(results, { depth: null })}`);
 			// var obj = {
 			// 	purpose: results[0].submission.purpose,
 			// 	description: results[0].submission.description,
@@ -1075,31 +1085,41 @@ app.get('/meetings', async function(req, res) {
 	res.render('meetings_table', to_be_rendered);
 });
 
-app.get('/meeting/:mid', async function(req, res) {
+app.get('/meeting/:mid', async function (req, res) {
 	let to_be_rendered = {};
 	to_be_rendered.layout = 'default';
 	// to_be_rendered.template = 'home-template';
 	to_be_rendered.userInfo = req.session.user;
 	to_be_rendered.meeting = await DB.collection('meetings').find({ mid: req.params.mid }).toArray().then(async (results, err) => {
 		if (err) console.error(err);
-		else if (results.length!=0) {
-			console.log(`the meeting info to be show is ${util.inspect(results, {depth: null})}`);
+		else if (results.length != 0) {
+			console.log(`the meeting info to be show is ${util.inspect(results, { depth: null })}`);
 			var obj = {
+				exist: true,
 				purpose: results[0].purpose,
 				description: results[0].description,
 				topic: results[0].topic,
 				who: results[0].who,
 				start_time: results[0].start_time,
 				duration: results[0].duration,
-				creator: results[0].creator_uid
+				creator: results[0].creator_uid,
+				cmembers: results[0].cmembers,
+				cname: results[0].cname,
+				attendees: results[0].attendees
 			}
 			return Promise.resolve(obj);
+		}
+		else {
+			console.log(`the meeting url ${req.params.mid} does not exist!`);
+			return Promise.resolve({
+				exist: false
+			});
 		}
 	});
 	res.render('meeting_form', to_be_rendered);
 });
 
-app.get('/meetings', async function(req, res) {
+app.get('/meetings', async function (req, res) {
 	let to_be_rendered = {};
 	to_be_rendered.layout = 'default';
 	to_be_rendered.template = 'home-template';
@@ -1384,7 +1404,7 @@ async function InitTeamMembers(team_id, token, limit = null) {
 			await local_slack.users.list({
 				cursor: cursor,
 				include_locale: true,
-				limit: limit | 20
+				limit: limit | 200
 			}).then(res => {
 				// console.log(`members in the team include ${util.inspect(res.members, { depth: null })}`);
 				cursor = res.response_metadata.next_cursor;
@@ -1628,15 +1648,33 @@ async function ActiveWho(channel_id, user_id) {
 	return activeMembers;
 }
 
-async function ChannelMembers(channel_id) {
-	const q_result = await web.conversations.members({
-		channel: channel_id,
-		limit: 200 //TODO: change this number 
-	});
-	// .then(async (res) => {
-	// });
-	console.log(`Members in Channel ${channel_id}: ${util.inspect(q_result.members, { depth: 2 })}`);
-	return q_result.members;
+async function ChannelMembers(channel_id, channel_name) {
+	const members = await DB.collection('users')
+		.find({
+			"channels": {
+				cid: channel_id,
+				cname: channel_name
+			}
+		}).toArray()
+		.then(async (docs, err) => {
+			if (err) console.error(err);
+			if (docs.length != 0) {
+				// console.log(`Members in Channel ${channel_id}: ${util.inspect(docs, { depth: 2 })}`);
+				const members = docs.map(x => {
+					return {
+						real_name: x.real_name,
+						first_name: x.first_name,
+						last_name: x.last_name,
+						uid: x.uid,
+						email: x.email
+					}
+				})
+				return Promise.resolve(members);
+			}
+			else console.error(`Members in Channel ${channel_id} are none`);
+		});
+	// console.log(`Members in Channel ${channel_id}: ${util.inspect(members, { depth: 2 })}`);
+	return members;
 }
 function OnlineNow(channel_id, user_id, responseURL) {
 

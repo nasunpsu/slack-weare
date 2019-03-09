@@ -10,6 +10,16 @@ $('.sort-dropdown.ui.dropdown')
     placeholder: 'Sort By'
   });
 
-$('.profile.ui.dropdown, .connect.ui.dropdown')
+$('.ui.dropdown')
   .dropdown({
   });
+
+var attendees = document.getElementById("attendees").value.split(';').map(function (item) {
+  return item.trim();
+});
+attendees.splice(-1, 1);
+console.log(`attendees are ${attendees}`);
+$('.select-attendee.ui.fluid.dropdown')
+  .dropdown('set selected', attendees);
+
+$('#example1').calendar();
