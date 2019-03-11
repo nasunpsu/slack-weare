@@ -84,6 +84,10 @@ app.use(morgan('dev'));//combined
 app.use(session(sess));
 app.use((req, res, next) => {
 	const {method, body, params, query, path} = req;
+	if(path === '/log'){
+		next();
+		return;
+	}
 	const log = {
 		type: `${method} Request`,
 		time: new Date().toString(),

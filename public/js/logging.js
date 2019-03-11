@@ -1,3 +1,5 @@
+const serverUrl = 'http://baad3a9c.ngrok.io/log';
+
 (function setUpPostRequests() {
     $.ajaxSetup({
         type: 'POST',
@@ -10,7 +12,20 @@
     });
 })();
 
+const triggerScrollEvent = () => {
+    const doc = document.documentElement;
+    const yStart = (window.pageYOffset || doc.scrollTop)  - (doc.clientTop || 0);
+    const yEnd = (window.innerHeight || doc.clientHeight) + yStart;
+    const content = {
+        yStart,
+        yEnd
+    }
+    logEvent('Scroll', content);
+}
+
+
 document.addEventListener('click', (event) => {
+    actionPerformed();
     const { x, y, target } = event;
     const {id, nodeName, classList, innerText} = target;
     const targetObj = {
@@ -29,6 +44,7 @@ document.addEventListener('click', (event) => {
 });
 
 document.addEventListener('keyup', (event) => {
+    actionPerformed();
     const {key, target} = event;
     const {id, nodeName, classList, value, innerText} = target;
     const targetObj = {
@@ -49,13 +65,13 @@ document.addEventListener('keyup', (event) => {
     logEvent('Keyup', content);
 });
 
-const serverUrl = 'http://b34f23ca.ngrok.io/log';
+
+
 
 /**
  * Logs an event to the logging database
  * @param {string} eventName Name describing the event to log
- * @param {string} eventContent Description of what happened in the event
- * @param {Object} extraParams Extra parameters to send to the server
+ * @param {Object} content Extra parameters to send to the server
  */
 const logEvent = async (eventName, content) => {
     const sendObj = {
@@ -73,3 +89,51 @@ const logEvent = async (eventName, content) => {
             })
     })
 }
+
+/** Time in milliseconds without the use doing anything to trigger an inactive event */
+const inactiveThreshold = 10000; 
+/** Time that the last action was performed */
+let lastActionTime = new Date();
+/** If the user is currently not doing anythign  */
+let isIdle = false;
+
+const actionPerformed = () => {
+    lastActionTime = new Date();
+    if(isIdle){
+        logEvent('Activity', {type: 'Active'});
+        isIdle = false;
+    }
+}
+
+setInterval(() => {
+    const currentTime = new Date();
+    if(!isIdle && currentTime - lastActionTime > inactiveThreshold){
+        logEvent('Activity', {type: 'Inactive'});
+        isIdle = true;
+    }
+});
+
+/** Time in milliseconds without scroll to trigger a scroll event*/
+const scrollThreshold = 2000;
+/** Last time the document scroll event was triggered */
+let lastScroll = null;
+let isScrolling = false;
+
+setInterval(() => {
+    const currentTime = new Date();
+    if(!isScrolling){
+        return;
+    }
+    if(currentTime - lastScroll > scrollThreshold){
+        isScrolling = false;
+        triggerScrollEvent();
+    }
+}, 100);
+
+document.addEventListener('scroll', () => {
+    actionPerformed();
+    lastScroll = new Date();
+    isScrolling = true;
+});
+
+document.addEventListener('mousemove', actionPerformed);
