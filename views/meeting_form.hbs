@@ -1,288 +1,414 @@
 <div class="meeting-wrapper">
     {{#if meeting.exist}}
-    <div class="ui form meeting-form">
-        <h3>Meeting Agenda</h3>
-        <div class="fields memeting agenda">
-            <div class="ten wide field">
-                <label>Purpose</label>
-                <input type="text" placeholder="Purpose of the meeting" value="{{meeting.purpose}}">
+    {{!-- <h5>{{{json userInfo.uid}}}</h5>
+    <h5>{{{json meeting.creator_uid}}}</h5> --}}
+    {{#unless (eq meeting.creator_uid userInfo.uid)}}
+    <div class="ui info attached message">
+        <i class="close icon"></i>
+        <div class="header">
+            You have been invited to this meeting.
+        </div>
+        <ul class="list">
+            <li>Contact the creator of the meeting for questions or revision suggestions.</li>
+            <li>Respond with Accept or Reject to show your attendence.</li>
+        </ul>
+    </div>
+    {{/unless}}
+    <form
+        class="ui form attached fluid {{#unless (eq meeting.creator_uid userInfo.uid)}}segment{{/unless}} meeting-form"
+        id="meeting-form" method="POST">
+        {{#unless (eq meeting.creator_uid userInfo.uid)}}<fieldset disabled="disabled">{{/unless}}
+            {{!-- action="/meeting/{{meeting.mid}}" --}}
+            <div class="ui error message"></div>
+            <div class="ui success message">
+                <i class="close icon"></i>
+                <div class="header">
+                    Update success.
+                </div>
+                {{!-- <p>Check your <a href="/meetings" target="_blank" rel="noopener noreferrer">meeting list</a>.</p> --}}
             </div>
-            <div class="six wide field">
-                <label>Topic</label>
-                <input type="text" placeholder="Topic" value="{{meeting.topic}}">
+            <h3>Meeting Agenda</h3>
+            <div class="fields memeting agenda">
+                <div class="ten wide field">
+                    <label>Purpose</label>
+                    <input type="text" name="purpose" id="purpose" placeholder="e.g. Talk about group project (due 2.1)"
+                        value="{{meeting.purpose}}">
+                </div>
+                <div class="six wide field">
+                    <label>Topic</label>
+                    <select class="ui fluid dropdown select-topic" name="topic" id="topic">
+                        <option value="materials">Course materials</option>
+                        <option value="homework">Homework discussion (Q&A)</option>
+                        <option value="sync">Group sync</option>
+                        <option value="other">Other</option>
+                    </select>
+                    <input type="text" id="hidden-topic" placeholder="Topic" value="{{meeting.topic}}"
+                        style="display: None">
+                </div>
+            </div>
+
+            <div class="fields">
+                <div class="sixteen wide field">
+                    <label>Description</label>
+                    <textarea id="description" name="description" cols="40" rows="5"
+                        placeholder="e.g. We will set up a plan and timeline for individuals' share of work, available time to work together and also talk about one another's situation for possible unavailable meetings.">{{meeting.description}}</textarea>
+                </div>
+            </div>
+            <h3>When</h3>
+            <div class="fields when meeting">
+                <div class="four wide field">
+                    <label><i class="calendar alternate outline icon"></i>Date</label>
+                    {{!-- <input type="text" placeholder="YY:MM:DD"> --}}
+                    <div class="ui calendar" id="pop-date">
+                        <div class="ui input left icon">
+                            <i class="calendar icon"></i>
+                            <input type="text" id="date" name="date" placeholder="Date" value="{{meeting.date}}">
+                        </div>
+                    </div>
+                </div>
+                <div class="two wide field">
+                    <label><i class="clock outline icon"></i>Time</label>
+                    <div class="ui calendar" id="pop-time">
+                        <div class="ui input left icon">
+                            <i class="time icon"></i>
+                            <input type="text" id="time" name="time" placeholder="Time" value="{{meeting.time}}">
+                        </div>
+                    </div>
+                </div>
+                <div class="two wide field">
+                    <label><i class="hourglass icon"></i>Duration</label>
+                    <label
+                        style="display:flex; flex-direction: row; justify-content: center; align-items: center"><input
+                            type="text" id="duration" name="duration" value="{{meeting.duration}}"> <span>minutes</span>
+                    </label>
+                </div>
+                <div class="five wide field">
+                    <label><i class="globe icon"></i>Timezone</label>
+                    <select name='tz-selection' class="ui fluid normal search dropdown">
+                        <option timeZoneId="1" gmtAdjustment="GMT-12:00" useDaylightTime="0" value="-12">(GMT-12:00)
+                            International
+                            Date Line West</option>
+                        <option timeZoneId="2" gmtAdjustment="GMT-11:00" useDaylightTime="0" value="-11">(GMT-11:00)
+                            Midway
+                            Island,
+                            Samoa</option>
+                        <option timeZoneId="3" gmtAdjustment="GMT-10:00" useDaylightTime="0" value="-10">(GMT-10:00)
+                            Hawaii
+                        </option>
+                        <option timeZoneId="4" gmtAdjustment="GMT-09:00" useDaylightTime="1" value="-9">(GMT-09:00)
+                            Alaska
+                        </option>
+                        <option timeZoneId="5" gmtAdjustment="GMT-08:00" useDaylightTime="1" value="-8">(GMT-08:00)
+                            Pacific
+                            Time (US
+                            & Canada)</option>
+                        <option timeZoneId="6" gmtAdjustment="GMT-08:00" useDaylightTime="1" value="-8">(GMT-08:00)
+                            Tijuana,
+                            Baja
+                            California</option>
+                        <option timeZoneId="7" gmtAdjustment="GMT-07:00" useDaylightTime="0" value="-7">(GMT-07:00)
+                            Arizona
+                        </option>
+                        <option timeZoneId="8" gmtAdjustment="GMT-07:00" useDaylightTime="1" value="-7">(GMT-07:00)
+                            Chihuahua, La
+                            Paz, Mazatlan</option>
+                        <option timeZoneId="9" gmtAdjustment="GMT-07:00" useDaylightTime="1" value="-7">(GMT-07:00)
+                            Mountain
+                            Time
+                            (US & Canada)</option>
+                        <option timeZoneId="10" gmtAdjustment="GMT-06:00" useDaylightTime="0" value="-6">(GMT-06:00)
+                            Central
+                            America
+                        </option>
+                        <option timeZoneId="11" gmtAdjustment="GMT-06:00" useDaylightTime="1" value="-6">(GMT-06:00)
+                            Central
+                            Time
+                            (US & Canada)</option>
+                        <option timeZoneId="12" gmtAdjustment="GMT-06:00" useDaylightTime="1" value="-6">(GMT-06:00)
+                            Guadalajara,
+                            Mexico City, Monterrey</option>
+                        <option timeZoneId="13" gmtAdjustment="GMT-06:00" useDaylightTime="0" value="-6">(GMT-06:00)
+                            Saskatchewan
+                        </option>
+                        <option timeZoneId="14" gmtAdjustment="GMT-05:00" useDaylightTime="0" value="-5">(GMT-05:00)
+                            Bogota,
+                            Lima,
+                            Quito, Rio Branco</option>
+                        <option timeZoneId="15" gmtAdjustment="GMT-05:00" useDaylightTime="1" value="-5">(GMT-05:00)
+                            Eastern
+                            Time
+                            (US & Canada)</option>
+                        <option timeZoneId="16" gmtAdjustment="GMT-05:00" useDaylightTime="1" value="-5">(GMT-05:00)
+                            Indiana
+                            (East)
+                        </option>
+                        <option timeZoneId="17" gmtAdjustment="GMT-04:00" useDaylightTime="1" value="-4">(GMT-04:00)
+                            Atlantic Time
+                            (Canada)</option>
+                        <option timeZoneId="18" gmtAdjustment="GMT-04:00" useDaylightTime="0" value="-4">(GMT-04:00)
+                            Caracas, La Paz
+                        </option>
+                        <option timeZoneId="19" gmtAdjustment="GMT-04:00" useDaylightTime="0" value="-4">(GMT-04:00)
+                            Manaus
+                        </option>
+                        <option timeZoneId="20" gmtAdjustment="GMT-04:00" useDaylightTime="1" value="-4">(GMT-04:00)
+                            Santiago
+                        </option>
+                        <option timeZoneId="21" gmtAdjustment="GMT-03:30" useDaylightTime="1" value="-3.5">(GMT-03:30)
+                            Newfoundland
+                        </option>
+                        <option timeZoneId="22" gmtAdjustment="GMT-03:00" useDaylightTime="1" value="-3">(GMT-03:00)
+                            Brasilia
+                        </option>
+                        <option timeZoneId="23" gmtAdjustment="GMT-03:00" useDaylightTime="0" value="-3">(GMT-03:00)
+                            Buenos
+                            Aires,
+                            Georgetown</option>
+                        <option timeZoneId="24" gmtAdjustment="GMT-03:00" useDaylightTime="1" value="-3">(GMT-03:00)
+                            Greenland
+                        </option>
+                        <option timeZoneId="25" gmtAdjustment="GMT-03:00" useDaylightTime="1" value="-3">(GMT-03:00)
+                            Montevideo
+                        </option>
+                        <option timeZoneId="26" gmtAdjustment="GMT-02:00" useDaylightTime="1" value="-2">(GMT-02:00)
+                            Mid-Atlantic
+                        </option>
+                        <option timeZoneId="27" gmtAdjustment="GMT-01:00" useDaylightTime="0" value="-1">(GMT-01:00)
+                            Cape
+                            Verde Is.
+                        </option>
+                        <option timeZoneId="28" gmtAdjustment="GMT-01:00" useDaylightTime="1" value="-1">(GMT-01:00)
+                            Azores
+                        </option>
+                        <option timeZoneId="29" gmtAdjustment="GMT+00:00" useDaylightTime="0" value="0">(GMT+00:00)
+                            Casablanca,
+                            Monrovia, Reykjavik</option>
+                        <option timeZoneId="30" gmtAdjustment="GMT+00:00" useDaylightTime="1" value="0">(GMT+00:00)
+                            Greenwich Mean
+                            Time : Dublin, Edinburgh, Lisbon, London</option>
+                        <option timeZoneId="31" gmtAdjustment="GMT+01:00" useDaylightTime="1" value="1">(GMT+01:00)
+                            Amsterdam,
+                            Berlin, Bern, Rome, Stockholm, Vienna</option>
+                        <option timeZoneId="32" gmtAdjustment="GMT+01:00" useDaylightTime="1" value="1">(GMT+01:00)
+                            Belgrade,
+                            Bratislava, Budapest, Ljubljana, Prague</option>
+                        <option timeZoneId="33" gmtAdjustment="GMT+01:00" useDaylightTime="1" value="1">(GMT+01:00)
+                            Brussels,
+                            Copenhagen, Madrid, Paris</option>
+                        <option timeZoneId="34" gmtAdjustment="GMT+01:00" useDaylightTime="1" value="1">(GMT+01:00)
+                            Sarajevo,
+                            Skopje, Warsaw, Zagreb</option>
+                        <option timeZoneId="35" gmtAdjustment="GMT+01:00" useDaylightTime="1" value="1">(GMT+01:00) West
+                            Central
+                            Africa</option>
+                        <option timeZoneId="36" gmtAdjustment="GMT+02:00" useDaylightTime="1" value="2">(GMT+02:00)
+                            Amman
+                        </option>
+                        <option timeZoneId="37" gmtAdjustment="GMT+02:00" useDaylightTime="1" value="2">(GMT+02:00)
+                            Athens,
+                            Bucharest, Istanbul</option>
+                        <option timeZoneId="38" gmtAdjustment="GMT+02:00" useDaylightTime="1" value="2">(GMT+02:00)
+                            Beirut
+                        </option>
+                        <option timeZoneId="39" gmtAdjustment="GMT+02:00" useDaylightTime="1" value="2">(GMT+02:00)
+                            Cairo
+                        </option>
+                        <option timeZoneId="40" gmtAdjustment="GMT+02:00" useDaylightTime="0" value="2">(GMT+02:00)
+                            Harare,
+                            Pretoria
+                        </option>
+                        <option timeZoneId="41" gmtAdjustment="GMT+02:00" useDaylightTime="1" value="2">(GMT+02:00)
+                            Helsinki, Kyiv,
+                            Riga, Sofia, Tallinn, Vilnius</option>
+                        <option timeZoneId="42" gmtAdjustment="GMT+02:00" useDaylightTime="1" value="2">(GMT+02:00)
+                            Jerusalem
+                        </option>
+                        <option timeZoneId="43" gmtAdjustment="GMT+02:00" useDaylightTime="1" value="2">(GMT+02:00)
+                            Minsk
+                        </option>
+                        <option timeZoneId="44" gmtAdjustment="GMT+02:00" useDaylightTime="1" value="2">(GMT+02:00)
+                            Windhoek
+                        </option>
+                        <option timeZoneId="45" gmtAdjustment="GMT+03:00" useDaylightTime="0" value="3">(GMT+03:00)
+                            Kuwait,
+                            Riyadh,
+                            Baghdad</option>
+                        <option timeZoneId="46" gmtAdjustment="GMT+03:00" useDaylightTime="1" value="3">(GMT+03:00)
+                            Moscow,
+                            St.
+                            Petersburg, Volgograd</option>
+                        <option timeZoneId="47" gmtAdjustment="GMT+03:00" useDaylightTime="0" value="3">(GMT+03:00)
+                            Nairobi
+                        </option>
+                        <option timeZoneId="48" gmtAdjustment="GMT+03:00" useDaylightTime="0" value="3">(GMT+03:00)
+                            Tbilisi
+                        </option>
+                        <option timeZoneId="49" gmtAdjustment="GMT+03:30" useDaylightTime="1" value="3.5">(GMT+03:30)
+                            Tehran
+                        </option>
+                        <option timeZoneId="50" gmtAdjustment="GMT+04:00" useDaylightTime="0" value="4">(GMT+04:00) Abu
+                            Dhabi,
+                            Muscat</option>
+                        <option timeZoneId="51" gmtAdjustment="GMT+04:00" useDaylightTime="1" value="4">(GMT+04:00) Baku
+                        </option>
+                        <option timeZoneId="52" gmtAdjustment="GMT+04:00" useDaylightTime="1" value="4">(GMT+04:00)
+                            Yerevan
+                        </option>
+                        <option timeZoneId="53" gmtAdjustment="GMT+04:30" useDaylightTime="0" value="4.5">(GMT+04:30)
+                            Kabul
+                        </option>
+                        <option timeZoneId="54" gmtAdjustment="GMT+05:00" useDaylightTime="1" value="5">(GMT+05:00)
+                            Yekaterinburg
+                        </option>
+                        <option timeZoneId="55" gmtAdjustment="GMT+05:00" useDaylightTime="0" value="5">(GMT+05:00)
+                            Islamabad,
+                            Karachi, Tashkent</option>
+                        <option timeZoneId="56" gmtAdjustment="GMT+05:30" useDaylightTime="0" value="5.5">(GMT+05:30)
+                            Sri
+                            Jayawardenapura</option>
+                        <option timeZoneId="57" gmtAdjustment="GMT+05:30" useDaylightTime="0" value="5.5">(GMT+05:30)
+                            Chennai,
+                            Kolkata, Mumbai, New Delhi</option>
+                        <option timeZoneId="58" gmtAdjustment="GMT+05:45" useDaylightTime="0" value="5.75">(GMT+05:45)
+                            Kathmandu
+                        </option>
+                        <option timeZoneId="59" gmtAdjustment="GMT+06:00" useDaylightTime="1" value="6">(GMT+06:00)
+                            Almaty,
+                            Novosibirsk</option>
+                        <option timeZoneId="60" gmtAdjustment="GMT+06:00" useDaylightTime="0" value="6">(GMT+06:00)
+                            Astana,
+                            Dhaka
+                        </option>
+                        <option timeZoneId="61" gmtAdjustment="GMT+06:30" useDaylightTime="0" value="6.5">(GMT+06:30)
+                            Yangon
+                            (Rangoon)</option>
+                        <option timeZoneId="62" gmtAdjustment="GMT+07:00" useDaylightTime="0" value="7">(GMT+07:00)
+                            Bangkok,
+                            Hanoi,
+                            Jakarta</option>
+                        <option timeZoneId="63" gmtAdjustment="GMT+07:00" useDaylightTime="1" value="7">(GMT+07:00)
+                            Krasnoyarsk
+                        </option>
+                        <option timeZoneId="64" gmtAdjustment="GMT+08:00" useDaylightTime="0" value="8">(GMT+08:00)
+                            Beijing,
+                            Chongqing, Hong Kong, Urumqi</option>
+                        <option timeZoneId="65" gmtAdjustment="GMT+08:00" useDaylightTime="0" value="8">(GMT+08:00)
+                            Kuala
+                            Lumpur,
+                            Singapore</option>
+                        <option timeZoneId="66" gmtAdjustment="GMT+08:00" useDaylightTime="0" value="8">(GMT+08:00)
+                            Irkutsk,
+                            Ulaan
+                            Bataar</option>
+                        <option timeZoneId="67" gmtAdjustment="GMT+08:00" useDaylightTime="0" value="8">(GMT+08:00)
+                            Perth
+                        </option>
+                        <option timeZoneId="68" gmtAdjustment="GMT+08:00" useDaylightTime="0" value="8">(GMT+08:00)
+                            Taipei
+                        </option>
+                        <option timeZoneId="69" gmtAdjustment="GMT+09:00" useDaylightTime="0" value="9">(GMT+09:00)
+                            Osaka,
+                            Sapporo,
+                            Tokyo</option>
+                        <option timeZoneId="70" gmtAdjustment="GMT+09:00" useDaylightTime="0" value="9">(GMT+09:00)
+                            Seoul
+                        </option>
+                        <option timeZoneId="71" gmtAdjustment="GMT+09:00" useDaylightTime="1" value="9">(GMT+09:00)
+                            Yakutsk
+                        </option>
+                        <option timeZoneId="72" gmtAdjustment="GMT+09:30" useDaylightTime="0" value="9.5">(GMT+09:30)
+                            Adelaide
+                        </option>
+                        <option timeZoneId="73" gmtAdjustment="GMT+09:30" useDaylightTime="0" value="9.5">(GMT+09:30)
+                            Darwin
+                        </option>
+                        <option timeZoneId="74" gmtAdjustment="GMT+10:00" useDaylightTime="0" value="10">(GMT+10:00)
+                            Brisbane
+                        </option>
+                        <option timeZoneId="75" gmtAdjustment="GMT+10:00" useDaylightTime="1" value="10">(GMT+10:00)
+                            Canberra,
+                            Melbourne, Sydney</option>
+                        <option timeZoneId="76" gmtAdjustment="GMT+10:00" useDaylightTime="1" value="10">(GMT+10:00)
+                            Hobart
+                        </option>
+                        <option timeZoneId="77" gmtAdjustment="GMT+10:00" useDaylightTime="0" value="10">(GMT+10:00)
+                            Guam,
+                            Port
+                            Moresby</option>
+                        <option timeZoneId="78" gmtAdjustment="GMT+10:00" useDaylightTime="1" value="10">(GMT+10:00)
+                            Vladivostok
+                        </option>
+                        <option timeZoneId="79" gmtAdjustment="GMT+11:00" useDaylightTime="1" value="11">(GMT+11:00)
+                            Magadan,
+                            Solomon Is., New Caledonia</option>
+                        <option timeZoneId="80" gmtAdjustment="GMT+12:00" useDaylightTime="1" value="12">(GMT+12:00)
+                            Auckland,
+                            Wellington</option>
+                        <option timeZoneId="81" gmtAdjustment="GMT+12:00" useDaylightTime="0" value="12">(GMT+12:00)
+                            Fiji,
+                            Kamchatka, Marshall Is.</option>
+                        <option timeZoneId="82" gmtAdjustment="GMT+13:00" useDaylightTime="0" value="13">(GMT+13:00)
+                            Nuku'alofa
+                        </option>
+                    </select>
+                </div>
+            </div>
+            <h3>Attendees</h3>
+            {{!-- <p>{{{json meeting}}}</p> --}}
+            <div class="fields attendees meeting">
+                <div class="four wide field">
+                    <label>Scope</label>
+                    <select class="ui fluid dropdown select-scope" id="who" name="who">
+                        <option value="all">All members of the channel</option>
+                        <option value="custom">Specify individuals</option>
+                    </select>
+                </div>
+                <div class="twelve wide field">
+                    <label>Specify</label>
+                    <select class="ui fluid search dropdown select-attendee" id="select-attendees" name="attendees"
+                        multiple="">
+                        {{!-- {{#unless (eq meeting.who "all")}}<option value="all">All members from #{{meeting.cname}}</option> --}}
+                        {{!-- {{/unless}} --}}
+                        {{#each meeting.cmembers}}<option value="{{this.uid}}">{{this.real_name}}</option> {{/each}}
+                    </select>
+                    {{!-- <input type="text" id="attendees" placeholder="separated by; E.g. Jenny Hollan; Joe Doe;"
+                    value="{{#each meeting.attendees}} {{this.uid}}; {{/each}}" style="display: none"> --}}
+                </div>
+            </div>
+            <h4>*Note that you can only choose attendees from the same channel #{{meeting.cname}}.</h4>
+            <div id="save"
+                class="ui submit meeting right floated teal button {{#unless (eq meeting.creator_uid userInfo.uid)}}invisible{{/unless}}">
+                Save</div>
+            <div id="invite"
+                class="ui invite meeting right floated yellow button {{#unless (eq meeting.creator_uid userInfo.uid)}}invisible{{/unless}}">
+                Save and Invite</div>
+
+
+
+            <input type="text" id="invite_label" name="invite" value="false" style="display: None">
+
+
+            {{#unless (eq meeting.creator_uid userInfo.uid)}}
+        </fieldset>
+        {{/unless}}
+        <div class="ui buttons meeting-form {{#if (eq meeting.creator_uid userInfo.uid)}}invisible{{/if}}">
+            <div id="reject" class="ui basic meeting red button reject">
+                <i class="times icon"></i>Reject
+                {{!-- <a class="reject" href="#"></a> --}}
+            </div>
+            <div class="or"></div>
+            <div id="accept" class="ui basic meeting teal button accept">
+                <i class="check icon"></i><a class="accept" href="#">Accept</a>
             </div>
         </div>
 
-        <div class="fields">
-            <div class="sixteen wide field">
-                <label>Description</label>
-                <input type="text" placeholder="Description" value="{{meeting.description}}">
-            </div>
-        </div>
-        <h3>When</h3>
-        <div class="fields when meeting">
-            <div class="four wide field">
-                <label><i class="calendar alternate outline icon"></i>Date</label>
-                {{!-- <input type="text" placeholder="YY:MM:DD"> --}}
-                <div class="ui calendar" id="start">
-                    <div class="ui input left icon">
-                        <i class="calendar icon"></i>
-                        <input type="text" placeholder="Date/Time">
-                    </div>
-                </div>
-            </div>
-            <div class="four wide field">
-                <label><i class="clock outline icon"></i>What time</label>
-                <input type="text" placeholder="hh:mm">
-            </div>
-            <div class="four wide field">
-                <label><i class="hourglass icon"></i>Duration</label>
-                <input type="text" placeholder="E.g. 1 hour">
-            </div>
-            <div class="four wide field">
-                <label><i class="globe icon"></i>Timezone</label>
-                <select name='tz-selection' class="ui fluid normal search dropdown">
-                    <option timeZoneId="1" gmtAdjustment="GMT-12:00" useDaylightTime="0" value="-12">(GMT-12:00)
-                        International
-                        Date Line West</option>
-                    <option timeZoneId="2" gmtAdjustment="GMT-11:00" useDaylightTime="0" value="-11">(GMT-11:00) Midway
-                        Island,
-                        Samoa</option>
-                    <option timeZoneId="3" gmtAdjustment="GMT-10:00" useDaylightTime="0" value="-10">(GMT-10:00) Hawaii
-                    </option>
-                    <option timeZoneId="4" gmtAdjustment="GMT-09:00" useDaylightTime="1" value="-9">(GMT-09:00) Alaska
-                    </option>
-                    <option timeZoneId="5" gmtAdjustment="GMT-08:00" useDaylightTime="1" value="-8">(GMT-08:00) Pacific
-                        Time (US
-                        & Canada)</option>
-                    <option timeZoneId="6" gmtAdjustment="GMT-08:00" useDaylightTime="1" value="-8">(GMT-08:00) Tijuana,
-                        Baja
-                        California</option>
-                    <option timeZoneId="7" gmtAdjustment="GMT-07:00" useDaylightTime="0" value="-7">(GMT-07:00) Arizona
-                    </option>
-                    <option timeZoneId="8" gmtAdjustment="GMT-07:00" useDaylightTime="1" value="-7">(GMT-07:00)
-                        Chihuahua, La
-                        Paz, Mazatlan</option>
-                    <option timeZoneId="9" gmtAdjustment="GMT-07:00" useDaylightTime="1" value="-7">(GMT-07:00) Mountain
-                        Time
-                        (US & Canada)</option>
-                    <option timeZoneId="10" gmtAdjustment="GMT-06:00" useDaylightTime="0" value="-6">(GMT-06:00) Central
-                        America
-                    </option>
-                    <option timeZoneId="11" gmtAdjustment="GMT-06:00" useDaylightTime="1" value="-6">(GMT-06:00) Central
-                        Time
-                        (US & Canada)</option>
-                    <option timeZoneId="12" gmtAdjustment="GMT-06:00" useDaylightTime="1" value="-6">(GMT-06:00)
-                        Guadalajara,
-                        Mexico City, Monterrey</option>
-                    <option timeZoneId="13" gmtAdjustment="GMT-06:00" useDaylightTime="0" value="-6">(GMT-06:00)
-                        Saskatchewan
-                    </option>
-                    <option timeZoneId="14" gmtAdjustment="GMT-05:00" useDaylightTime="0" value="-5">(GMT-05:00) Bogota,
-                        Lima,
-                        Quito, Rio Branco</option>
-                    <option timeZoneId="15" gmtAdjustment="GMT-05:00" useDaylightTime="1" value="-5">(GMT-05:00) Eastern
-                        Time
-                        (US & Canada)</option>
-                    <option timeZoneId="16" gmtAdjustment="GMT-05:00" useDaylightTime="1" value="-5">(GMT-05:00) Indiana
-                        (East)
-                    </option>
-                    <option timeZoneId="17" gmtAdjustment="GMT-04:00" useDaylightTime="1" value="-4">(GMT-04:00)
-                        Atlantic Time
-                        (Canada)</option>
-                    <option timeZoneId="18" gmtAdjustment="GMT-04:00" useDaylightTime="0" value="-4">(GMT-04:00)
-                        Caracas, La Paz
-                    </option>
-                    <option timeZoneId="19" gmtAdjustment="GMT-04:00" useDaylightTime="0" value="-4">(GMT-04:00) Manaus
-                    </option>
-                    <option timeZoneId="20" gmtAdjustment="GMT-04:00" useDaylightTime="1" value="-4">(GMT-04:00)
-                        Santiago
-                    </option>
-                    <option timeZoneId="21" gmtAdjustment="GMT-03:30" useDaylightTime="1" value="-3.5">(GMT-03:30)
-                        Newfoundland
-                    </option>
-                    <option timeZoneId="22" gmtAdjustment="GMT-03:00" useDaylightTime="1" value="-3">(GMT-03:00)
-                        Brasilia
-                    </option>
-                    <option timeZoneId="23" gmtAdjustment="GMT-03:00" useDaylightTime="0" value="-3">(GMT-03:00) Buenos
-                        Aires,
-                        Georgetown</option>
-                    <option timeZoneId="24" gmtAdjustment="GMT-03:00" useDaylightTime="1" value="-3">(GMT-03:00)
-                        Greenland
-                    </option>
-                    <option timeZoneId="25" gmtAdjustment="GMT-03:00" useDaylightTime="1" value="-3">(GMT-03:00)
-                        Montevideo
-                    </option>
-                    <option timeZoneId="26" gmtAdjustment="GMT-02:00" useDaylightTime="1" value="-2">(GMT-02:00)
-                        Mid-Atlantic
-                    </option>
-                    <option timeZoneId="27" gmtAdjustment="GMT-01:00" useDaylightTime="0" value="-1">(GMT-01:00) Cape
-                        Verde Is.
-                    </option>
-                    <option timeZoneId="28" gmtAdjustment="GMT-01:00" useDaylightTime="1" value="-1">(GMT-01:00) Azores
-                    </option>
-                    <option timeZoneId="29" gmtAdjustment="GMT+00:00" useDaylightTime="0" value="0">(GMT+00:00)
-                        Casablanca,
-                        Monrovia, Reykjavik</option>
-                    <option timeZoneId="30" gmtAdjustment="GMT+00:00" useDaylightTime="1" value="0">(GMT+00:00)
-                        Greenwich Mean
-                        Time : Dublin, Edinburgh, Lisbon, London</option>
-                    <option timeZoneId="31" gmtAdjustment="GMT+01:00" useDaylightTime="1" value="1">(GMT+01:00)
-                        Amsterdam,
-                        Berlin, Bern, Rome, Stockholm, Vienna</option>
-                    <option timeZoneId="32" gmtAdjustment="GMT+01:00" useDaylightTime="1" value="1">(GMT+01:00)
-                        Belgrade,
-                        Bratislava, Budapest, Ljubljana, Prague</option>
-                    <option timeZoneId="33" gmtAdjustment="GMT+01:00" useDaylightTime="1" value="1">(GMT+01:00)
-                        Brussels,
-                        Copenhagen, Madrid, Paris</option>
-                    <option timeZoneId="34" gmtAdjustment="GMT+01:00" useDaylightTime="1" value="1">(GMT+01:00)
-                        Sarajevo,
-                        Skopje, Warsaw, Zagreb</option>
-                    <option timeZoneId="35" gmtAdjustment="GMT+01:00" useDaylightTime="1" value="1">(GMT+01:00) West
-                        Central
-                        Africa</option>
-                    <option timeZoneId="36" gmtAdjustment="GMT+02:00" useDaylightTime="1" value="2">(GMT+02:00) Amman
-                    </option>
-                    <option timeZoneId="37" gmtAdjustment="GMT+02:00" useDaylightTime="1" value="2">(GMT+02:00) Athens,
-                        Bucharest, Istanbul</option>
-                    <option timeZoneId="38" gmtAdjustment="GMT+02:00" useDaylightTime="1" value="2">(GMT+02:00) Beirut
-                    </option>
-                    <option timeZoneId="39" gmtAdjustment="GMT+02:00" useDaylightTime="1" value="2">(GMT+02:00) Cairo
-                    </option>
-                    <option timeZoneId="40" gmtAdjustment="GMT+02:00" useDaylightTime="0" value="2">(GMT+02:00) Harare,
-                        Pretoria
-                    </option>
-                    <option timeZoneId="41" gmtAdjustment="GMT+02:00" useDaylightTime="1" value="2">(GMT+02:00)
-                        Helsinki, Kyiv,
-                        Riga, Sofia, Tallinn, Vilnius</option>
-                    <option timeZoneId="42" gmtAdjustment="GMT+02:00" useDaylightTime="1" value="2">(GMT+02:00)
-                        Jerusalem
-                    </option>
-                    <option timeZoneId="43" gmtAdjustment="GMT+02:00" useDaylightTime="1" value="2">(GMT+02:00) Minsk
-                    </option>
-                    <option timeZoneId="44" gmtAdjustment="GMT+02:00" useDaylightTime="1" value="2">(GMT+02:00) Windhoek
-                    </option>
-                    <option timeZoneId="45" gmtAdjustment="GMT+03:00" useDaylightTime="0" value="3">(GMT+03:00) Kuwait,
-                        Riyadh,
-                        Baghdad</option>
-                    <option timeZoneId="46" gmtAdjustment="GMT+03:00" useDaylightTime="1" value="3">(GMT+03:00) Moscow,
-                        St.
-                        Petersburg, Volgograd</option>
-                    <option timeZoneId="47" gmtAdjustment="GMT+03:00" useDaylightTime="0" value="3">(GMT+03:00) Nairobi
-                    </option>
-                    <option timeZoneId="48" gmtAdjustment="GMT+03:00" useDaylightTime="0" value="3">(GMT+03:00) Tbilisi
-                    </option>
-                    <option timeZoneId="49" gmtAdjustment="GMT+03:30" useDaylightTime="1" value="3.5">(GMT+03:30) Tehran
-                    </option>
-                    <option timeZoneId="50" gmtAdjustment="GMT+04:00" useDaylightTime="0" value="4">(GMT+04:00) Abu
-                        Dhabi,
-                        Muscat</option>
-                    <option timeZoneId="51" gmtAdjustment="GMT+04:00" useDaylightTime="1" value="4">(GMT+04:00) Baku
-                    </option>
-                    <option timeZoneId="52" gmtAdjustment="GMT+04:00" useDaylightTime="1" value="4">(GMT+04:00) Yerevan
-                    </option>
-                    <option timeZoneId="53" gmtAdjustment="GMT+04:30" useDaylightTime="0" value="4.5">(GMT+04:30) Kabul
-                    </option>
-                    <option timeZoneId="54" gmtAdjustment="GMT+05:00" useDaylightTime="1" value="5">(GMT+05:00)
-                        Yekaterinburg
-                    </option>
-                    <option timeZoneId="55" gmtAdjustment="GMT+05:00" useDaylightTime="0" value="5">(GMT+05:00)
-                        Islamabad,
-                        Karachi, Tashkent</option>
-                    <option timeZoneId="56" gmtAdjustment="GMT+05:30" useDaylightTime="0" value="5.5">(GMT+05:30) Sri
-                        Jayawardenapura</option>
-                    <option timeZoneId="57" gmtAdjustment="GMT+05:30" useDaylightTime="0" value="5.5">(GMT+05:30)
-                        Chennai,
-                        Kolkata, Mumbai, New Delhi</option>
-                    <option timeZoneId="58" gmtAdjustment="GMT+05:45" useDaylightTime="0" value="5.75">(GMT+05:45)
-                        Kathmandu
-                    </option>
-                    <option timeZoneId="59" gmtAdjustment="GMT+06:00" useDaylightTime="1" value="6">(GMT+06:00) Almaty,
-                        Novosibirsk</option>
-                    <option timeZoneId="60" gmtAdjustment="GMT+06:00" useDaylightTime="0" value="6">(GMT+06:00) Astana,
-                        Dhaka
-                    </option>
-                    <option timeZoneId="61" gmtAdjustment="GMT+06:30" useDaylightTime="0" value="6.5">(GMT+06:30) Yangon
-                        (Rangoon)</option>
-                    <option timeZoneId="62" gmtAdjustment="GMT+07:00" useDaylightTime="0" value="7">(GMT+07:00) Bangkok,
-                        Hanoi,
-                        Jakarta</option>
-                    <option timeZoneId="63" gmtAdjustment="GMT+07:00" useDaylightTime="1" value="7">(GMT+07:00)
-                        Krasnoyarsk
-                    </option>
-                    <option timeZoneId="64" gmtAdjustment="GMT+08:00" useDaylightTime="0" value="8">(GMT+08:00) Beijing,
-                        Chongqing, Hong Kong, Urumqi</option>
-                    <option timeZoneId="65" gmtAdjustment="GMT+08:00" useDaylightTime="0" value="8">(GMT+08:00) Kuala
-                        Lumpur,
-                        Singapore</option>
-                    <option timeZoneId="66" gmtAdjustment="GMT+08:00" useDaylightTime="0" value="8">(GMT+08:00) Irkutsk,
-                        Ulaan
-                        Bataar</option>
-                    <option timeZoneId="67" gmtAdjustment="GMT+08:00" useDaylightTime="0" value="8">(GMT+08:00) Perth
-                    </option>
-                    <option timeZoneId="68" gmtAdjustment="GMT+08:00" useDaylightTime="0" value="8">(GMT+08:00) Taipei
-                    </option>
-                    <option timeZoneId="69" gmtAdjustment="GMT+09:00" useDaylightTime="0" value="9">(GMT+09:00) Osaka,
-                        Sapporo,
-                        Tokyo</option>
-                    <option timeZoneId="70" gmtAdjustment="GMT+09:00" useDaylightTime="0" value="9">(GMT+09:00) Seoul
-                    </option>
-                    <option timeZoneId="71" gmtAdjustment="GMT+09:00" useDaylightTime="1" value="9">(GMT+09:00) Yakutsk
-                    </option>
-                    <option timeZoneId="72" gmtAdjustment="GMT+09:30" useDaylightTime="0" value="9.5">(GMT+09:30)
-                        Adelaide
-                    </option>
-                    <option timeZoneId="73" gmtAdjustment="GMT+09:30" useDaylightTime="0" value="9.5">(GMT+09:30) Darwin
-                    </option>
-                    <option timeZoneId="74" gmtAdjustment="GMT+10:00" useDaylightTime="0" value="10">(GMT+10:00)
-                        Brisbane
-                    </option>
-                    <option timeZoneId="75" gmtAdjustment="GMT+10:00" useDaylightTime="1" value="10">(GMT+10:00)
-                        Canberra,
-                        Melbourne, Sydney</option>
-                    <option timeZoneId="76" gmtAdjustment="GMT+10:00" useDaylightTime="1" value="10">(GMT+10:00) Hobart
-                    </option>
-                    <option timeZoneId="77" gmtAdjustment="GMT+10:00" useDaylightTime="0" value="10">(GMT+10:00) Guam,
-                        Port
-                        Moresby</option>
-                    <option timeZoneId="78" gmtAdjustment="GMT+10:00" useDaylightTime="1" value="10">(GMT+10:00)
-                        Vladivostok
-                    </option>
-                    <option timeZoneId="79" gmtAdjustment="GMT+11:00" useDaylightTime="1" value="11">(GMT+11:00)
-                        Magadan,
-                        Solomon Is., New Caledonia</option>
-                    <option timeZoneId="80" gmtAdjustment="GMT+12:00" useDaylightTime="1" value="12">(GMT+12:00)
-                        Auckland,
-                        Wellington</option>
-                    <option timeZoneId="81" gmtAdjustment="GMT+12:00" useDaylightTime="0" value="12">(GMT+12:00) Fiji,
-                        Kamchatka, Marshall Is.</option>
-                    <option timeZoneId="82" gmtAdjustment="GMT+13:00" useDaylightTime="0" value="13">(GMT+13:00)
-                        Nuku'alofa
-                    </option>
-                </select>
-            </div>
-        </div>
-        <h3>Attendees</h3>
-        {{!-- <p>{{{json meeting}}}</p> --}}
-        <div class="fields attendees meeting">
-            <div class="twelve wide field">
-                <select class="ui fluid search dropdown select-attendee" multiple="">
-                    {{#unless (eq meeting.who "all")}}<option value="all">All members from #{{meeting.cname}}</option>
-                    {{/unless}}
-                    {{#each meeting.cmembers}}<option value="{{this.uid}}">{{this.real_name}}</option> {{/each}}
-                </select>
-                <input type="text" id="attendees" placeholder="separated by; E.g. Jenny Hollan; Joe Doe;"
-                    value="{{#each meeting.attendees}} {{this.uid}}; {{/each}}" style="display: none">
-            </div>
-        </div>
-        <h4>*Note that you can only choose attendens from the same channel #{{meeting.cname}}(you specified this in the
-            Slack command).</h4>
-        <div id="save" class="ui submit meeting right floated teal button">Save</div>
-        <div id="invite" class="ui invite meeting right floated yellow button">Save and Invite</div>
-    </div>
+    </form>
     {{else}}
-    <h2><i class="exclamation triangle icon"></i>Unknown meeting url - please check your meeting URL in the browser or
-        start over the /we-discuss again!</h2>
+    <div class="ui message warning">
+        <h3><i class="exclamation triangle icon"></i>Unknown meeting url - please check your meeting URL in the browser
+            or start over the /we-discuss again!</h3>
+    </div>
+
     {{/if}}
 </div>
+<div id="data_string" placeholder="Topic" data='{{{json meeting}}}' style="display: None"></div>

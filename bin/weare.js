@@ -523,6 +523,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 									{ label: 'Course materials', value: 'materials' },
 									{ label: 'Homework discussion (Q&A)', value: 'homework' },
 									{ label: 'Group sync', value: 'sync' },
+									{ label: 'Other', value: 'other' },
 								],
 							},
 							{
@@ -1064,7 +1065,7 @@ app.get('/meetings', async function (req, res) {
 	let to_be_rendered = {};
 	// console.log(`the req.params to be show is ${util.inspect(req.params, {depth: null})}`);
 	to_be_rendered.layout = 'default';
-	to_be_rendered.template = 'home-template';
+	to_be_rendered.template = 'meetings-template';
 	to_be_rendered.userInfo = req.session.user;
 	to_be_rendered.meetings = await DB.collection('meetings').find({ creator_uid: req.session.user.uid }).toArray().then(async (results, err) => {
 		if (err) console.error(err);
@@ -1079,16 +1080,19 @@ app.get('/meetings', async function (req, res) {
 			// 	duration: results[0].duration,
 			// 	creator: results[0].creator_uid
 			// }
+			console.log(`User info is ${to_be_rendered.userInfo.uid}, and the creator is ${to_be_rendered.meetings[0].creator_uid}`);
 			return Promise.resolve(results);
 		}
+		else to_be_rendered.empty = true;
 	});
+
 	res.render('meetings_table', to_be_rendered);
 });
 
 app.get('/meeting/:mid', async function (req, res) {
 	let to_be_rendered = {};
 	to_be_rendered.layout = 'default';
-	// to_be_rendered.template = 'home-template';
+	to_be_rendered.template = 'meeting-template';
 	to_be_rendered.userInfo = req.session.user;
 	to_be_rendered.meeting = await DB.collection('meetings').find({ mid: req.params.mid }).toArray().then(async (results, err) => {
 		if (err) console.error(err);
@@ -1096,17 +1100,35 @@ app.get('/meeting/:mid', async function (req, res) {
 			console.log(`the meeting info to be show is ${util.inspect(results, { depth: null })}`);
 			var obj = {
 				exist: true,
+				mid: results[0].mid,
 				purpose: results[0].purpose,
 				description: results[0].description,
 				topic: results[0].topic,
 				who: results[0].who,
-				start_time: results[0].start_time,
+				date: results[0].date,
+				time: results[0].start_time,
 				duration: results[0].duration,
-				creator: results[0].creator_uid,
+				creator_uid: results[0].creator_uid,
 				cmembers: results[0].cmembers,
 				cname: results[0].cname,
 				attendees: results[0].attendees
 			}
+			return Promise.resolve(obj);
+		}
+		else if (req.params.mid=="new"){
+			console.log(`create new meeting`);
+			const members = await ChannelMembers("T0A286J8K_C0A28BAHG", "general");
+			var obj = {
+				exist: true,
+				mid: makeid(),
+				new:true,
+				creator_uid: req.session.user.uid,
+				cmembers: members,
+				attendees: [],
+				cname: 'general',
+				who: 'custom'
+			}
+			
 			return Promise.resolve(obj);
 		}
 		else {
@@ -1119,14 +1141,91 @@ app.get('/meeting/:mid', async function (req, res) {
 	res.render('meeting_form', to_be_rendered);
 });
 
-app.get('/meetings', async function (req, res) {
-	let to_be_rendered = {};
-	to_be_rendered.layout = 'default';
-	to_be_rendered.template = 'home-template';
-	to_be_rendered.userInfo = req.session.user;
-	res.render('meetings_table', to_be_rendered);
+app.post('/meeting/:mid', async function (req, res) {
+	console.log(`post update the meeting form is ${util.inspect(req.body, { depth: 2 })}`);
+	console.error('updating now');
+	var updateObj = {
+		purpose: req.body.purpose,
+		description: req.body.description,
+		topic: req.body.topic,
+		who: req.body.who,
+		start_time: req.body.time,
+		date: req.body.date
+	};
+	(async () => {
+		const cmembers = await DB.collection('meetings').find({ mid: req.params.mid }).toArray().then(async (results, err) => {
+			if (err) console.error(err);
+			else if (results.length != 0) {
+				if (req.body.who == "custom") {
+					updateObj.attendees = await results[0].cmembers.filter(member => req.body.attendees.includes(
+						member.uid
+						// 	{
+						// 	uid: member.uid,
+						// 	real_name: member.real_name,
+						// 	last_name: member.last_name,
+						// 	first_name: member.first_name,
+						// 	email: member.email
+						// }
+					));
+					console.log(`the update is set to be custom attendees: ${util.inspect(updateObj.attendees, { depth: null })}`);
+				}
+				else updateObj.attendees = await results[0].cmembers;
+				return Promise.resolve(updateObj.attendees);
+			}
+		});
+
+		await DB.collection('meetings').updateOne({ mid: req.params.mid },
+			{
+				$set: updateObj
+			},
+			{ upsert: false },
+			function (err, res) {
+				if (err) console.error(err);
+				console.log(`Meeting information updated succesfully: ${util.inspect(updateObj, { depth: 2 })}`);
+			});
+		res.redirect('/meeting/' + req.params.mid);
+	})();
+
 });
 
+
+app.post('/reactmeeting', async function (req, res) {
+	console.error("into reacting post");
+	await DB.collection('meetings').find({ mid: req.body.mid }).toArray().then(async (results, err) => {
+		if (err) console.error(err);
+		else if (results.length != 0) {
+			var attendees_info = await results[0].cmembers.filter(member => req.body.attendees.includes(
+				member.uid
+			));
+			console.log(`find the attendee info is ${util.inspect(attendees_info, { depth: null })}`);
+			const newAttendees = await attendees_info.map(atd => {
+				if (atd.uid == req.body.who_react) {
+					atd.attend = req.body.react;
+					return atd;
+				}
+				else return atd;
+			});
+			console.log(`new attendees are: ${util.inspect(newAttendees, { depth: 2 })}`);
+			await DB.collection('meetings').updateOne({ mid: req.body.mid },
+				{
+					$set: {
+						attendees: newAttendees
+					}
+				},
+				{ upsert: false },
+				function (err, res) {
+					if (err) console.error(err);
+					console.log(`Meeting information updated succesfully, new attendees are: ${util.inspect(newAttendees, { depth: 2 })}`);
+				});
+			return Promise.resolve(attendees_info);
+		}
+	});
+
+
+
+
+	res.sendStatus(200);
+});
 function similarTo(list, user) {
 	console.log(`the list in similarTo is ${util.inspect(list, { depth: 3 })}`);
 	var dist = 'impossible value';
