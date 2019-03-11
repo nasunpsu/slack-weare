@@ -12,7 +12,7 @@ const onboard = require('../server/onboard.js')
 const similarity = require('../server/similarity/similarity');
 // const app = http.createServer(server);
 // console.log(`this is the PORT: ${process.env.PORT}`)
-
+const { sanitizeBody } = require('express-validator/filter');
 
 const bodyParser = require("body-parser");
 const request = require('request');
@@ -935,7 +935,12 @@ app.get('/home', async function (req, res) {
 	});
 	res.render('index', to_be_rendered);
 });
-
+app.get('/cardview', async function (req, res) {
+	let to_be_rendered = {};
+	to_be_rendered.layout = 'default';
+	to_be_rendered.template = 'card-template';
+	res.render('cardview', to_be_rendered);
+});
 
 app.get('/tablelist', async function (req, res) {
 	// generate the basic table for the logged in user to check who is closet to him/her
@@ -1067,10 +1072,10 @@ app.get('/meetings', async function (req, res) {
 	to_be_rendered.layout = 'default';
 	to_be_rendered.template = 'meetings-template';
 	to_be_rendered.userInfo = req.session.user;
-	to_be_rendered.meetings = await DB.collection('meetings').find({ creator_uid: req.session.user.uid }).toArray().then(async (results, err) => {
+	const meetings1 = await DB.collection('meetings').find({ creator_uid: req.session.user.uid }).toArray().then(async (results, err) => {
 		if (err) console.error(err);
 		else if (results.length != 0) {
-			console.log(`the meetings info to be show is ${util.inspect(results, { depth: null })}`);
+			console.log(`the meetings info created by you are ${util.inspect(results, { depth: null })}`);
 			// var obj = {
 			// 	purpose: results[0].submission.purpose,
 			// 	description: results[0].submission.description,
@@ -1080,12 +1085,43 @@ app.get('/meetings', async function (req, res) {
 			// 	duration: results[0].duration,
 			// 	creator: results[0].creator_uid
 			// }
-			console.log(`User info is ${to_be_rendered.userInfo.uid}, and the creator is ${to_be_rendered.meetings[0].creator_uid}`);
+			// console.log(`User info is ${to_be_rendered.userInfo.uid}, and the creator is ${to_be_rendered.meetings[0].creator_uid}`);
 			return Promise.resolve(results);
 		}
-		else to_be_rendered.empty = true;
+		else to_be_rendered.empty1 = true;
 	});
-
+	const meetings2 = await DB.collection('meetings').find({
+		attendees:
+		{
+			
+			real_name: req.session.user.real_name,
+			first_name: req.session.user.first_name,
+			last_name: req.session.user.last_name,
+			uid: req.session.user.uid,
+			email: req.session.user.email,
+			attend: "accept"
+		}
+	}).toArray().then(async (results, err) => {
+		if (err) console.error(err);
+		else if (results.length != 0) {
+			console.log(`the meetings you are invited are ${util.inspect(results, { depth: null })}`);
+			// to_be_rendered.empty = false;
+			// var obj = {
+			// 	purpose: results[0].submission.purpose,
+			// 	description: results[0].submission.description,
+			// 	topic: results[0].submission.topic,
+			// 	who: results[0].submission.who,
+			// 	start_time: results[0].start_time,
+			// 	duration: results[0].duration,
+			// 	creator: results[0].creator_uid
+			// }
+			// console.log(`User info is ${to_be_rendered.userInfo.uid}, and the creator is ${to_be_rendered.meetings[0].creator_uid}`);
+			return Promise.resolve(results);
+		}
+		else to_be_rendered.empty2 = true;
+	});
+	if(to_be_rendered.empty1 & to_be_rendered.empty2) to_be_rendered.empty = true;
+	to_be_rendered.meetings = await [...new Set([...meetings1, ...meetings2])];
 	res.render('meetings_table', to_be_rendered);
 });
 
@@ -1115,20 +1151,20 @@ app.get('/meeting/:mid', async function (req, res) {
 			}
 			return Promise.resolve(obj);
 		}
-		else if (req.params.mid=="new"){
+		else if (req.params.mid == "new") {
 			console.log(`create new meeting`);
 			const members = await ChannelMembers("T0A286J8K_C0A28BAHG", "general");
 			var obj = {
 				exist: true,
 				mid: makeid(),
-				new:true,
+				new: true,
 				creator_uid: req.session.user.uid,
 				cmembers: members,
 				attendees: [],
 				cname: 'general',
 				who: 'custom'
 			}
-			
+
 			return Promise.resolve(obj);
 		}
 		else {
@@ -1144,6 +1180,11 @@ app.get('/meeting/:mid', async function (req, res) {
 app.post('/meeting/:mid', async function (req, res) {
 	console.log(`post update the meeting form is ${util.inspect(req.body, { depth: 2 })}`);
 	console.error('updating now');
+	// Sanitize fields.
+    // sanitizeBody('first_name').trim().escape(),
+    // sanitizeBody('family_name').trim().escape(),
+    // sanitizeBody('date_of_birth').toDate(),
+    // sanitizeBody('date_of_death').toDate(),
 	var updateObj = {
 		purpose: req.body.purpose,
 		description: req.body.description,
@@ -2049,3 +2090,4 @@ function makeid() {
 
 	return text;
 }
+
