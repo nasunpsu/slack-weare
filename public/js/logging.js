@@ -33,6 +33,9 @@ const triggerScrollEvent = () => {
 
 const calcVisibleElements = (yStart, yEnd) => {
     return scrollElements.filter(scrollElement => {
+        if(window.location.pathname !== scrollElement.route){
+            return false;
+        }
         const element = $(`#${scrollElement.id}`);
         const top = $(element).offset().top;
         const bottom = top + $(element).height();
