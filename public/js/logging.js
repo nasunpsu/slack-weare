@@ -12,15 +12,33 @@ const serverUrl = 'http://16778e8a.ngrok.io/log';
     });
 })();
 
+const scrollElements = [{
+    id: 'home-table',
+    route: '/home',
+    label: 'home view table'
+}]
+
 const triggerScrollEvent = () => {
     const doc = document.documentElement;
     const yStart = (window.pageYOffset || doc.scrollTop)  - (doc.clientTop || 0);
     const yEnd = (window.innerHeight || doc.clientHeight) + yStart;
+    const visibleElements = calcVisibleElements(yStart, yEnd);
     const content = {
         yStart,
-        yEnd
+        yEnd,
+        elements: visibleElements
     }
     logEvent('Scroll', content);
+}
+
+const calcVisibleElements = (yStart, yEnd) => {
+    return scrollElements.filter(scrollElement => {
+        const element = $(`#${scrollElement.id}`);
+        const top = $(element).offset().top;
+        const bottom = top + $(element).height();
+        return yStart < top &&  bottom < yEnd;
+    })
+    .map(scrollElement => scrollElement.label);
 }
 
 
