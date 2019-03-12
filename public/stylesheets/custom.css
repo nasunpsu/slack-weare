@@ -428,12 +428,36 @@ p{
   border: 1px rgba(0,0,0,.1) solid;
   border-radius: 5px;
   padding: 40px;
+  position: relative;
 }
 
+.save-profile-changes{
+  position: absolute;
+  bottom: 15px;
+  right: 15px;
+}
+
+.availability-label{
+  padding-top: 50px!important;
+  margin-bottom: 10px!important;
+  font-weight: bold!important;
+}
+
+.profile-email{
+  margin-bottom: 20px!important;
+}
+
+.profile-form .fields, .profile-form .field{
+  margin-bottom: 20px!important;
+}
+
+.availability{
+  margin-top: 15px!important;
+}
 
 .profile-info-header{
   margin-top: 100px!important;
-  margin-bottom: 50px!important;
+  margin-bottom: -20px!important;
 }
 
 .profile-img-wrapper{
@@ -520,3 +544,4 @@ form  h3, h4 {
 .invisible {
   display: None!important;
 }
+
