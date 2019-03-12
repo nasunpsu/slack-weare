@@ -2,6 +2,18 @@
  * Binds all functions to always have 'this' to be the object itself
  * @param {any} obj Object to bind all methods to
  */
+
+$('.search-by-dropdown .ui.dropdown')
+.dropdown({
+  clearable: true,
+  placeholder: 'Search By'
+});
+
+$('.sort-dropdown .ui.dropdown')
+.dropdown({
+  clearable: true,
+  placeholder: 'Sort By'
+});
 function bindAll(obj){
     for (const key in obj) {
         if (typeof obj[key] === 'function') {
@@ -34,7 +46,7 @@ class UserTable {
         this.tableBody = document.getElementById('table-body');
         this.tableHeading = document.getElementById('table-head');
         this.search = document.getElementById('search');
-        this.searchDropdown = document.getElementById('dropdown');
+        this.searchDropdown = document.getElementById('searchby-dropdown');
         this.checkboxes = $('#checkboxes').find('input');
         this.nextPage = document.getElementById('nextPage');
         this.previousPage = document.getElementById('previousPage');

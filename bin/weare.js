@@ -12,14 +12,15 @@ const onboard = require('../server/onboard.js')
 const similarity = require('../server/similarity/similarity');
 // const app = http.createServer(server);
 // console.log(`this is the PORT: ${process.env.PORT}`)
-
+const { sanitizeBody } = require('express-validator/filter');
 
 const bodyParser = require("body-parser");
 const request = require('request');
 const apiUrl = 'https://slack.com/api';
+const base_url = 'https://ad4a5c00.ngrok.io/';
 // const methodUril = 'https://slack.com/api/';
 const qs = require('querystring');
-const hbs = require('express-handlebars'); 	
+const hbs = require('express-handlebars');
 const session = require('express-session');
 const MongoStore = require('connect-mongo')(session);
 const cookieParser = require('cookie-parser');
@@ -35,9 +36,9 @@ const urlencodedParser = bodyParser.urlencoded({ extended: false });
 const jsonParser = bodyParser.json();
 app.use(cookieParser());
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  next();
+	res.header("Access-Control-Allow-Origin", "*");
+	res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+	next();
 });
 
 
@@ -83,7 +84,7 @@ if (app.get('env') === 'production') {
 app.use(morgan('dev'));//combined				        
 app.use(session(sess));
 app.use((req, res, next) => {
-	const {method, body, params, query, path} = req;
+	const { method, body, params, query, path } = req;
 	const log = {
 		type: `${method} Request`,
 		time: new Date().toString(),
@@ -113,17 +114,25 @@ app.engine('hbs', hbs({
 		path.join(__dirname, '/../views/partials/'),
 		path.join(__dirname, '/../semantic/dist/')
 	],
-	helpers: { json: function (context) { return JSON.stringify(context); } }
+	helpers: {
+		json: function (context) { return JSON.stringify(context); },
+		eq: function () {
+			const args = Array.prototype.slice.call(arguments, 0, -1);
+			return args.every(function (expression) {
+				return args[0] === expression;
+			});
+		}
+	}
 }));
 
 const logEvent = (body, req) => {
-	if(!!req.sessionID){
+	if (!!req.sessionID) {
 		body.sessionID = req.sessionID;
 	}
-	if(!!req.session && !!req.session.user){
+	if (!!req.session && !!req.session.user) {
 		body.uid = req.session.user.uid;
 	}
-	if(!('error' in req.ipInfo)){
+	if (!('error' in req.ipInfo)) {
 		body.ipInfo = req.ipInfo;
 	}
 	return DB.collection('logging').insertOne(body);
@@ -131,26 +140,26 @@ const logEvent = (body, req) => {
 
 // app.engine('handlebars', exphbs({ helpers: { json: function (context) { return JSON.stringify(context); } } }));
 app.post('/log', async (req, res) => {
-	const {body} = req;
-	try{
+	const { body } = req;
+	try {
 		assert('type' in body, `'type' must be present in body`);
 		assert('time' in body, `'time' must be present in body`);
 		assert('content' in body, `'content' must be present in body`);
 		assert('path' in body, `'path' must be present in body`);
 	}
-	catch(e){
+	catch (e) {
 		res.status(400);
-		res.send({response: e.toString()});
+		res.send({ response: e.toString() });
 		return;
 	}
 	const dbResult = await logEvent(body, req);
-	if(dbResult.result.n === 1 && dbResult.result.ok === 1){
+	if (dbResult.result.n === 1 && dbResult.result.ok === 1) {
 		res.status(200);
-		res.send({response: 'Inserted'});
+		res.send({ response: 'Inserted' });
 		return;
 	}
 	res.status(500);
-	res.send({response: 'Server error'});
+	res.send({ response: 'Server error' });
 });
 
 app.get('/install', (req, res) => {
@@ -168,6 +177,19 @@ app.get('/login', function (req, res) {
 	res.render('login', to_be_rendered);
 });
 
+// GET /logout
+app.get('/logout', function (req, res, next) {
+	if (req.session) {
+		// delete session object
+		req.session.destroy(function (err) {
+			if (err) {
+				return next(err);
+			} else {
+				return res.redirect('/');
+			}
+		});
+	}
+});
 
 
 app.get('/api/oauth', function (req, res, next) {
@@ -183,7 +205,7 @@ app.get('/api/oauth', function (req, res, next) {
 	};
 	web.oauth.access(data.form, async function (err, result) {
 		if (err) console.error(err);
-        // await insertUser(result.user);
+		// await insertUser(result.user);
 		console.log(`enter the oauth access: ${util.inspect(result, { depth: 2 })}`)
 		if (!err) {
 			if (!result.bot) { //this is signed in with slack
@@ -201,8 +223,8 @@ app.get('/api/oauth', function (req, res, next) {
 								return res.redirect('/install');
 							}
 							console.log('before retrieving usr DB');
-							await DB.collection('users').find({major : {$exists: true}}).toArray()
-							// await DB.collection('users').find({ uid: result.team.id + '_' + result.user.id }).toArray()
+							// await DB.collection('users').find({major : {$exists: true}}).toArray()
+							await DB.collection('users').find({ uid: result.team.id + '_' + result.user.id }).toArray()
 								.then(async (users_docs, err) => {
 									console.log(`the user is read from MongoDB: ${util.inspect(users_docs[0], { depth: 2 })}`);
 									if (err) console.error(err);
@@ -311,8 +333,8 @@ app.post('/slack/events', (req, res, next) => {
 
 });
 
-app.post('/slack/commands/study', urlencodedParser, (req, res) => {
-	console.log(`within study`);
+app.post('/slack/commands/discuss', urlencodedParser, (req, res) => {
+	console.log(`within discuss`);
 	res.status(200).end(); // best practice to respond with empty 200 status code
 	var reqBody = req.body
 	var responseURL = reqBody.response_url
@@ -321,7 +343,6 @@ app.post('/slack/commands/study', urlencodedParser, (req, res) => {
 		"text": "Would you like to study with others Now or Later?",
 		"attachments": [
 			{
-				// "text": "Check who is online or schedule a meeting.",
 				"fallback": "Shame... buttons aren't supported in this land",
 				"callback_id": "schedule_0",
 				"color": "#3AA3E3",
@@ -360,10 +381,69 @@ app.post('/slack/commands/WhoIsOnline', urlencodedParser, (req, res) => {
 	OnlineNow(req.body.channel_id, req.body.user_id, req.body.response_url);
 });
 
+app.post('/slack/commands/intro', urlencodedParser, (req, res) => {
+	console.log(`within intro`);
+	res.status(200).end(); // best practice to respond with empty 200 status code
+	var reqBody = req.body;
+	var msg = {
+		title: 'I am, We Are!',
+		callback_id: 'self_intro',
+		submit_label: 'Hello!',
+		elements: [
+			{
+				label: 'Fun fact',
+				type: 'text',
+				name: 'fun',
+				text: 'existing content blah blah',
+				hint: 'Tell them something fun!'
+			},
+			{
+				label: 'I live in',
+				type: 'text',
+				name: 'city',
+				optional: true,
+				hint: 'Separate places with ";"! (e.g. Pittsburgh, PA; Victoria, BC'
+			},
+			{
+				label: 'Current profession',
+				type: 'select',
+				name: 'topic',
+				options: [
+					{ label: 'Veteran/military', value: 'military' },
+					{ label: 'Industry sector', value: 'industry' },
+					{ label: 'Education sector', value: 'education' },
+					{ label: 'No job yet', value: 'unemployed' },
+				],
+			},
+			{
+				label: 'I identify with',
+				type: 'text',
+				name: 'unique',
+				optional: true,
+				hint: 'e.g. interests, language, value systems, hobbies, minority roles'
+			},
+			// {
+			// 	label: 'I would like to be addressed by',
+			// 	type: 'text',
+			// 	name: 'unique',
+			// 	optional: true,
+			// 	hint: 'e.g. interests, language, value systems, hobbies, minority roles'
+			// }
+		],
+	};
+	console.log('before dialog web method');
+	console.log(util.inspect(msg, { depth: 3 }));
+	web.dialog.open({
+		trigger_id: reqBody.trigger_id,
+		dialog: msg
+	}).then(res => console.log(`successfully opened intro dialog`)).catch(err => { console.error(err); console.log(util.inspect(err, { depth: 3 })) });
+
+});
+
 app.post('/slack/actions', urlencodedParser, (req, res) => {
 	res.status(200).end(); // best practice to respond with 200 status
 	var body = JSON.parse(req.body.payload); // parse URL-encoded payload JSON string
-	const { type, text, token, trigger_id } = body;
+	const { type, token, trigger_id } = body;
 	console.log(`the req body includes + ${util.inspect(req.body, { depth: null })}`);
 
 	if (type == 'interactive_message') {
@@ -375,14 +455,43 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 					as_user: false,
 					channel: body.channel.id,
 					user: body.user.id,
-					text: `Thanks for accepting the conduct of behaviors in the group. Remember to introduce yourself :point_up_2:`
+					text: `Thanks for participating our research project We Are! an online community for World Campus students. Remember to introduce yourself :point_down:`,
+					attachments: JSON.stringify([
+						{
+							title: 'Welcome to the World Campus Students Community! We Are!',
+							text: 'Penn State is where learning gains and your career takes off. If this is your first time using Slack, take some time to read the help docs at get.slack.help and our internal <https://docs.google.com/document/d/1-nCasqUcPrLYbhDuAm9SmuvY0S5ZOevPLbp52-PpZLM/edit?usp=sharing|wiki>. If you have any questions, jump into #help-slack and we\'ll help you out',
+							callback_id: 'intro',
+							color: '#74c8ed',
+							actions: [{
+								name: 'introduce',
+								text: 'Introduce myself',
+								type: 'button',
+								value: 'intro',
+								style: 'primary'
+							},
+							{
+								name: 'later',
+								text: 'Perhaps later',
+								type: 'button',
+								value: 'not-intro',
+								style: 'default'
+							},
+								// {
+								// 	name: 'neverIntro',
+								// 	text: 'Don\'t show this again',
+								// 	type: 'button',
+								// 	value: 'never-intro',
+								// 	style: 'default'
+								// }
+							],
+						},]
+					)
 				}).catch(err => console.error(err));
 				break;
 			case 'now': console.log('now selected');
 				OnlineNow(body.channel.id, body.user.id, body.response_url);//body.response_url
 				break;
 			case 'later': console.log('later selected');
-
 				//// create the dialog payload - includes the dialog structure, Slack API token,
 				// and trigger ID
 				const dialog = {
@@ -391,14 +500,14 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 					dialog: JSON.stringify({
 						title: 'Schedule a meeting',
 						callback_id: 'schedule_later',
-						submit_label: 'Invite',
+						submit_label: 'Next',
 						elements: [
 							{
 								label: 'Purpose',
 								type: 'text',
 								name: 'purpose',
-								value: text, //TODO: support command paramters later
-								hint: '30 second summary of meeting purpose',
+								value: 'Blah blah is it there', //TODO: support command paramters later
+								hint: '150 characters summary of meeting purpose',
 							},
 							{
 								label: 'Description',
@@ -414,6 +523,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 									{ label: 'Course materials', value: 'materials' },
 									{ label: 'Homework discussion (Q&A)', value: 'homework' },
 									{ label: 'Group sync', value: 'sync' },
+									{ label: 'Other', value: 'other' },
 								],
 							},
 							{
@@ -421,28 +531,8 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 								type: 'select',
 								name: 'who',
 								options: [
-									// {
-									// 	"name": "email-tz",
-									// 	"text": "Email people of the same time zone",
-									// 	"type": "button",
-									// 	"value": "email-tz"
-									// },
-									// {
-									// 	"name": "email-similar",
-									// 	"text": "Email to peers similar to myself",
-									// 	"type": "button",
-									// 	"value": "email-similar"
-									// },
-									// {
-									// 	"name": "email-all",
-									// 	"text": "Email to all channel members",
-									// 	"type": "button",
-									// 	"value": "email-channel"
-									// },
 									{ label: 'All the channel members', value: 'all' },
-									{ label: 'Channel members of the near time zone with me', value: 'schedule-tz' },
-									{ label: 'Channel members similar to myself', value: 'schedule-similar' },
-									{ label: 'Specify a subgroup', value: 'custom' }, //TODO
+									{ label: 'Specify individuals (in the next page)', value: 'custom' }, //TODO, custom
 								],
 							}
 						],
@@ -464,7 +554,9 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 						console.error(err);
 					};
 					console.log('open successfully the dialog');
-				})
+				});
+
+
 				// sendMessageToSlackResponseURL(`${apiUrl}/dialog.open`, dialog);
 				break;
 			case 'hangout':
@@ -501,16 +593,16 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 							hint: 'Tell them something fun!'
 						},
 						{
-							label: 'I have lived in',
+							label: 'I live in',
 							type: 'text',
 							name: 'city',
 							optional: true,
-							hint: 'Separate places with "," !'
+							hint: 'Separate places with ";"! (e.g. Pittsburgh, PA; Victoria, BC'
 						},
 						{
-							label: 'Career',
+							label: 'Current profession',
 							type: 'select',
-							name: 'topic',
+							name: 'profession',
 							options: [
 								{ label: 'Veteran/military', value: 'military' },
 								{ label: 'Industry sector', value: 'industry' },
@@ -518,15 +610,11 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 							],
 						},
 						{
-							label: 'Something unique',
-							type: 'select',
+							label: 'I identify with',
+							type: 'text',
 							name: 'unique',
-							options: [
-								{ label: 'First-generation college student', value: 'first-gen' },
-								{ label: 'Parent', value: 'parent' },
-								{ label: 'Early bird', value: 'early' },
-							],
-							hint: 'What else do you identify with most'
+							optional: true,
+							hint: 'e.g. language, value systems, hobbies, minority roles, ethnicity'
 						},
 					],
 				};
@@ -535,7 +623,103 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 				web.dialog.open({
 					trigger_id: trigger_id,
 					dialog: msg
-				}).then(res => console.log(`successfully opened welcome dialog`)).catch(err => { console.error(err); console.log(util.inspect(err, { depth: 3 })) });
+				}).then(res => console.log(`successfully opened intro dialog`)).catch(err => { console.error(err); console.log(util.inspect(err, { depth: 3 })) });
+				break;
+			case 'hello':
+				console.log(`interactive message - hello!`);
+				(async () => {
+					await DB.collection('users').updateOne(
+						{ uid: body.team.id + '_' + body.user.id },
+						{
+							$set: {
+								fun_fact: submission.fun,
+								profession_type: submission.profession,
+								unique: submission.unique,
+								cities: submission.city
+							}
+						},
+						{ upsert: false },
+						function (err, res) {
+							if (err) console.error(err);
+						});
+					let edit_url = `editProfile/`;
+					web.chat.postEphemeral({
+						as_user: false,
+						channel: body.channel.id,
+						user: body.user.id,
+						attachments: JSON.stringify([
+							{
+								title: 'An interesting profile can help your compatible peers find you!',
+								text: 'Go to ' + base_url + edit_url + ' to edit your profile.',
+								color: '#74c8ed',
+								// actions: [{
+								// 	name: 'hello',
+								// 	text: 'Say hello to my peers in my current channel now',
+								// 	type: 'button',
+								// 	value: ‘hello',
+								// 	style: 'primary'
+								// },
+								// {
+								// 	name: 'helloLater',
+								// 	text: 'Perhaps later',
+								// 	type: 'button',
+								// 	value: 'helloLater',
+								// 	style: 'default'
+								// }
+								// ],
+							}
+						])
+					}).catch(err => console.error(err));
+				})();
+				break;
+			case 'specify-now':
+				const msg = {
+					title: 'Schedule a meeting',
+					callback_id: 'specify-now',
+					submit_label: 'Invite',
+					elements: [
+						{
+							label: 'Purpose',
+							type: 'text',
+							name: 'purpose',
+							value: req.session.submission.purpose,
+							hint: '150 characters summary of meeting purpose',
+						},
+						{
+							label: 'Description',
+							type: 'textarea',
+							value: req.session.submission.description,
+							name: 'description',
+							optional: true,
+						},
+						{
+							label: 'Topic',
+							type: 'select',
+							name: 'topic',
+							value: req.session.submission.topic,
+							options: [
+								{ label: 'Course materials', value: 'materials' },
+								{ label: 'Homework discussion (Q&A)', value: 'homework' },
+								{ label: 'Group sync', value: 'sync' },
+							],
+						},
+						{
+							label: 'With whom',
+							type: 'select',
+							name: 'who',
+							value: req.session.submission.description,
+							options: members,
+						}
+					],
+
+				};
+
+				//open the dialog by caling dialogs.open
+				web.dialog.open({
+					trigger_id: trigger_id,
+					dialog: msg
+				}).then(res => console.log(`successfully opened custom followup dialog`))
+					.catch(err => { console.error(err); console.log(util.inspect(err, { depth: 3 })) });
 				break;
 			default: console.log('nothing cased'); break;
 		}
@@ -547,17 +731,18 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 		console.log(`callback id is ${callback_id}`);
 		switch (callback_id) {
 			case 'self_intro':
-				console.log(`this is in self-intro, say hello and welcome! ${body.channel_id}`)
+				console.log(`this is in self-intro, say hello and welcome! ${body.channel.id}`)
 				web.chat.postMessage({
 					channel: body.channel.id,
-					text: `${body.user.name} just joined here`,
+					text: `I'd like to introduce ${body.user.name}!`,
 					attachments: [
 						{
-							"text": `Coming from XXXX, ${body.user.name} has done something really fun: YYYY `,
+							"title": `Let's welcome ${body.user.name} from ${body.submission.city}.`,
+							"text": `${body.user.name} identifies with ${body.submission.unique}.`,
 							color: 'good'
 						},
 						{
-							"text": `Welcome ${body.user.name} with We Are! or Hello!`,
+							"text": `Send ${body.user.name} some We Are! or some positive vibes! :fireworks: :tada: :wave: :clap:`,
 							"fallback": "Shame... buttons aren't supported in this land",
 							"callback_id": "hello_all",
 							"color": "#3AA3E3",
@@ -567,21 +752,22 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 									"name": "weare-welcome",
 									"text": "We Are!",
 									"type": "button",
-									// color: "#093162",//this is the PSU team color
+									"style": "primary",//093162 this is the PSU team color
 									"value": "weare-welcome"
 								},
 								{
-									"name": "Hi",
-									"text": "Hello",
+									"name": "heart",
+									"text": ":heart:",
 									"type": "button",
-									"value": "hi"
+									"value": "heart",
+									"style": "danger"
 								},
 								{
 									"name": "dismiss",
 									"text": "Dismiss",
 									"type": "button",
 									"value": "cancel",
-									"style": "danger"
+									"style": "default"
 								}
 							]
 						}
@@ -589,9 +775,91 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 				})
 				break;
 			case 'schedule_later':
-				console.log(`action type is ${type} and body user is ${body.user.id}`);
-				ticket.create(body.user.id, body.channel.id, submission);
+				console.log(`action type is ${type} and body content is ${util.inspect(body, { depth: null })}`);
+				(async () => {
+					let meeting_id = makeid();
+					const members = await ChannelMembers(body.team.id + '_' + body.channel.id, body.channel.name);
+					await DB.collection('meetings').updateOne(
+						{ mid: meeting_id },
+						{
+							$set: {
+								creator_uid: body.team.id + '_' + body.user.id,
+								cid: body.team.id + '_' + body.channel.id,
+								cname: body.channel.name,
+								purpose: body.submission.purpose,
+								topic: body.submission.topic,
+								description: body.submission.description,
+								who: body.submission.who,
+								attendees: body.submission.who == "all" ? members : [],
+								cmembers: members,
+								start_time: '',
+								end_time: '',
+								duration: 60 //minutes
+							}
+						},
+						{ upsert: true },
+						function (err, res) {
+							if (err) console.error(err);
+						});
+					// req.session.submission = body.submission;
+					let meeting_url = `meeting/` + meeting_id;
+					web.chat.postEphemeral({
+						as_user: false,
+						channel: body.channel.id,
+						user: body.user.id,
+						attachments: JSON.stringify([
+							{
+								title: 'Just one step away from completing the meeting invitation.',
+								text: 'Go to ' + base_url + meeting_url + ' to specify when and with whom to meet; Otherwise, type /we-meet later to manage your meetings.',
+								color: '#74c8ed',
+								// actions: [{
+								// 	name: 'editMeeting',
+								// 	text: 'Edit meeting details (e.g. when with whom)',
+								// 	type: 'button',
+								// 	value: meeting_url,
+								// 	style: 'primary'
+								// },
+								// {
+								// 	name: 'editLater',
+								// 	text: 'Perhaps later',
+								// 	type: 'button',
+								// 	value: 'editLater',
+								// 	style: 'default'
+								// }
+								// ],
+							}
+						])
+					}).catch(err => console.error(err));
+				})();
+				// (async () => {
+				// 	const members = await ChannelMembers(body.channel.id);
+
+				// 	switch (body.submission.who) {
+				// 		case 'all':
+
+				// 			break;
+				// 		case 'custom':
+				// 			console.log('inside custom message now!');
+
+				// 			break;
+				// 		default:
+				// 			console.log(`having specified members to schedule a meeting with`);
+				// 			break;
+				// 	}
+				// 	function schedule_a_meeting(body) {
+				// 		web.im.open({
+				// 			user: body.submission.who
+				// 		}).then(dm => {
+				// 			console.log(`the returned channel id is ${dm.channel.id}`);
+				// 		}).catch(err => console.error(err));
+				// 		ticket.create(body.user.id, body.channel.id, submission);
+				// 	};
+				// })();
 				break;
+			case 'specify-later':
+
+				break;
+
 			default:
 				break;
 		}
@@ -665,10 +933,14 @@ app.get('/home', async function (req, res) {
 			return Promise.resolve(obj);
 		}
 	});
-	// console.log(util.inspect(to_be_rendered, { depth: 2 }));
 	res.render('index', to_be_rendered);
 });
-
+app.get('/cardview', async function (req, res) {
+	let to_be_rendered = {};
+	to_be_rendered.layout = 'default';
+	to_be_rendered.template = 'card-template';
+	res.render('cardview', to_be_rendered);
+});
 
 app.get('/tablelist', async function (req, res) {
 	// generate the basic table for the logged in user to check who is closet to him/her
@@ -687,9 +959,9 @@ app.get('/tablelist', async function (req, res) {
 			.map(name => ({
 				name,
 				isShared: channelNames.includes(name),
-				className: `channel${channelNames.indexOf(name)}` 
+				className: `channel${channelNames.indexOf(name)}`
 			}));
-		if(channels.length > 4){
+		if (channels.length > 4) {
 			user.displayChannels = channels.slice(0, 4);
 			user.extraChannels = channels.slice(4);
 			return user;
@@ -772,6 +1044,229 @@ app.get('/network_balloon', async function (req, res) {
 	res.render('network', to_be_rendered);
 });
 
+app.get('/editProfile', async function (req, res) {
+	let to_be_rendered = {};
+	to_be_rendered.layout = 'default';
+	to_be_rendered.template = 'home-template';
+	to_be_rendered.userInfo = req.session.user;
+	res.render('profile', to_be_rendered);
+});
+
+app.post('/editProfile', async function (req, res) {
+	let to_be_rendered = {};
+	to_be_rendered.layout = 'default';
+	to_be_rendered.template = 'home-template';
+	to_be_rendered.userInfo = await DB.collection('users').find({ uid: req.session.user.uid }).toArray().then(async (results, err) => {
+		if (err) console.error(err);
+		else if (results.length != 0) {
+
+		};
+
+	});
+	res.render('profile', to_be_rendered);
+});
+
+app.get('/meetings', async function (req, res) {
+	let to_be_rendered = {};
+	// console.log(`the req.params to be show is ${util.inspect(req.params, {depth: null})}`);
+	to_be_rendered.layout = 'default';
+	to_be_rendered.template = 'meetings-template';
+	to_be_rendered.userInfo = req.session.user;
+	const meetings1 = await DB.collection('meetings').find({ creator_uid: req.session.user.uid }).toArray().then(async (results, err) => {
+		if (err) console.error(err);
+		else if (results.length != 0) {
+			console.log(`the meetings info created by you are ${util.inspect(results, { depth: null })}`);
+			// var obj = {
+			// 	purpose: results[0].submission.purpose,
+			// 	description: results[0].submission.description,
+			// 	topic: results[0].submission.topic,
+			// 	who: results[0].submission.who,
+			// 	start_time: results[0].start_time,
+			// 	duration: results[0].duration,
+			// 	creator: results[0].creator_uid
+			// }
+			// console.log(`User info is ${to_be_rendered.userInfo.uid}, and the creator is ${to_be_rendered.meetings[0].creator_uid}`);
+			return Promise.resolve(results);
+		}
+		else to_be_rendered.empty1 = true;
+	});
+	const meetings2 = await DB.collection('meetings').find({
+		attendees:
+		{
+			
+			real_name: req.session.user.real_name,
+			first_name: req.session.user.first_name,
+			last_name: req.session.user.last_name,
+			uid: req.session.user.uid,
+			email: req.session.user.email,
+			attend: "accept"
+		}
+	}).toArray().then(async (results, err) => {
+		if (err) console.error(err);
+		else if (results.length != 0) {
+			console.log(`the meetings you are invited are ${util.inspect(results, { depth: null })}`);
+			// to_be_rendered.empty = false;
+			// var obj = {
+			// 	purpose: results[0].submission.purpose,
+			// 	description: results[0].submission.description,
+			// 	topic: results[0].submission.topic,
+			// 	who: results[0].submission.who,
+			// 	start_time: results[0].start_time,
+			// 	duration: results[0].duration,
+			// 	creator: results[0].creator_uid
+			// }
+			// console.log(`User info is ${to_be_rendered.userInfo.uid}, and the creator is ${to_be_rendered.meetings[0].creator_uid}`);
+			return Promise.resolve(results);
+		}
+		else to_be_rendered.empty2 = true;
+	});
+	if(to_be_rendered.empty1 & to_be_rendered.empty2) to_be_rendered.empty = true;
+	to_be_rendered.meetings = await [...new Set([...meetings1, ...meetings2])];
+	res.render('meetings_table', to_be_rendered);
+});
+
+app.get('/meeting/:mid', async function (req, res) {
+	let to_be_rendered = {};
+	to_be_rendered.layout = 'default';
+	to_be_rendered.template = 'meeting-template';
+	to_be_rendered.userInfo = req.session.user;
+	to_be_rendered.meeting = await DB.collection('meetings').find({ mid: req.params.mid }).toArray().then(async (results, err) => {
+		if (err) console.error(err);
+		else if (results.length != 0) {
+			console.log(`the meeting info to be show is ${util.inspect(results, { depth: null })}`);
+			var obj = {
+				exist: true,
+				mid: results[0].mid,
+				purpose: results[0].purpose,
+				description: results[0].description,
+				topic: results[0].topic,
+				who: results[0].who,
+				date: results[0].date,
+				time: results[0].start_time,
+				duration: results[0].duration,
+				creator_uid: results[0].creator_uid,
+				cmembers: results[0].cmembers,
+				cname: results[0].cname,
+				attendees: results[0].attendees
+			}
+			return Promise.resolve(obj);
+		}
+		else if (req.params.mid == "new") {
+			console.log(`create new meeting`);
+			const members = await ChannelMembers("T0A286J8K_C0A28BAHG", "general");
+			var obj = {
+				exist: true,
+				mid: makeid(),
+				new: true,
+				creator_uid: req.session.user.uid,
+				cmembers: members,
+				attendees: [],
+				cname: 'general',
+				who: 'custom'
+			}
+
+			return Promise.resolve(obj);
+		}
+		else {
+			console.log(`the meeting url ${req.params.mid} does not exist!`);
+			return Promise.resolve({
+				exist: false
+			});
+		}
+	});
+	res.render('meeting_form', to_be_rendered);
+});
+
+app.post('/meeting/:mid', async function (req, res) {
+	console.log(`post update the meeting form is ${util.inspect(req.body, { depth: 2 })}`);
+	console.error('updating now');
+	// Sanitize fields.
+    // sanitizeBody('first_name').trim().escape(),
+    // sanitizeBody('family_name').trim().escape(),
+    // sanitizeBody('date_of_birth').toDate(),
+    // sanitizeBody('date_of_death').toDate(),
+	var updateObj = {
+		purpose: req.body.purpose,
+		description: req.body.description,
+		topic: req.body.topic,
+		who: req.body.who,
+		start_time: req.body.time,
+		date: req.body.date
+	};
+	(async () => {
+		const cmembers = await DB.collection('meetings').find({ mid: req.params.mid }).toArray().then(async (results, err) => {
+			if (err) console.error(err);
+			else if (results.length != 0) {
+				if (req.body.who == "custom") {
+					updateObj.attendees = await results[0].cmembers.filter(member => req.body.attendees.includes(
+						member.uid
+						// 	{
+						// 	uid: member.uid,
+						// 	real_name: member.real_name,
+						// 	last_name: member.last_name,
+						// 	first_name: member.first_name,
+						// 	email: member.email
+						// }
+					));
+					console.log(`the update is set to be custom attendees: ${util.inspect(updateObj.attendees, { depth: null })}`);
+				}
+				else updateObj.attendees = await results[0].cmembers;
+				return Promise.resolve(updateObj.attendees);
+			}
+		});
+
+		await DB.collection('meetings').updateOne({ mid: req.params.mid },
+			{
+				$set: updateObj
+			},
+			{ upsert: false },
+			function (err, res) {
+				if (err) console.error(err);
+				console.log(`Meeting information updated succesfully: ${util.inspect(updateObj, { depth: 2 })}`);
+			});
+		res.redirect('/meeting/' + req.params.mid);
+	})();
+
+});
+
+
+app.post('/reactmeeting', async function (req, res) {
+	console.error("into reacting post");
+	await DB.collection('meetings').find({ mid: req.body.mid }).toArray().then(async (results, err) => {
+		if (err) console.error(err);
+		else if (results.length != 0) {
+			var attendees_info = await results[0].cmembers.filter(member => req.body.attendees.includes(
+				member.uid
+			));
+			console.log(`find the attendee info is ${util.inspect(attendees_info, { depth: null })}`);
+			const newAttendees = await attendees_info.map(atd => {
+				if (atd.uid == req.body.who_react) {
+					atd.attend = req.body.react;
+					return atd;
+				}
+				else return atd;
+			});
+			console.log(`new attendees are: ${util.inspect(newAttendees, { depth: 2 })}`);
+			await DB.collection('meetings').updateOne({ mid: req.body.mid },
+				{
+					$set: {
+						attendees: newAttendees
+					}
+				},
+				{ upsert: false },
+				function (err, res) {
+					if (err) console.error(err);
+					console.log(`Meeting information updated succesfully, new attendees are: ${util.inspect(newAttendees, { depth: 2 })}`);
+				});
+			return Promise.resolve(attendees_info);
+		}
+	});
+
+
+
+
+	res.sendStatus(200);
+});
 function similarTo(list, user) {
 	console.log(`the list in similarTo is ${util.inspect(list, { depth: 3 })}`);
 	var dist = 'impossible value';
@@ -792,59 +1287,56 @@ app.get('/network', async function (req, res) {
 	let to_be_rendered = {};
 	to_be_rendered.layout = 'default';
 	to_be_rendered.template = 'home-template';
-	to_be_rendered.data = await DB.collection('users_distance').find({ team_id: req.session.team.team_id }).toArray().then(async (results, err) => {
+	to_be_rendered.data = await DB.collection('users').find({ team_id: req.session.team.team_id }).toArray().then(async (results, err) => {
 		if (err) console.error(err);
 		else if (results.length != 0) {
 			var nodes = results, direct_nodes = [], distL = [], links = [], c_node = req.session.user, self_channels = req.session.user.channels;
-			// var dist = await DB.collection('usersDistance').find({ "": c_node.uid });//.limit(10)
-			// console.log(`the dist are ${util.inspect(dist, {depth: null})}`);
-			// console.log(`the self_channels are ${util.inspect(self_channels, { depth: null })}`);
 			(async () => {
 				nodes.forEach(async (n) => {
-				if (n.uid == c_node.uid) {
-					// console.error("now this is the logged user in the nodes loop");
-					n.fixed = true;
-					n.x = 400;//half of the canvas width/height
-					n.y = 300;
-					n.distIdx = 1;
-					return;
-				}
-				n.distIdx = await similarTo(n.similar_users, c_node.uid);
-				console.log(`distance is ${util.inspect(n.distIdx, { depth: null })}`);
-				distL.push(n.distIdx);
-
-				if (n.distIdx <= 0.4) {
-					links.push({
-						source: n.uid,
-						target: c_node.uid,
-						value: n.distIdx
-					});
-					direct_nodes.push(n);
-				}
-			});
-			var i = await direct_nodes.length;
-			console.log(`number of direct_nodes is ${direct_nodes.length}`)
-			while (i--) {
-				c_node = direct_nodes.splice(i, 1)[0];
-				console.log(`c_node is ${util.inspect(c_node, { depth: null })}`);
-				nodes.forEach(async (n) => {
-
 					if (n.uid == c_node.uid) {
+						// console.error("now this is the logged user in the nodes loop");
+						n.fixed = true;
+						n.x = 400;//half of the canvas width/height
+						n.y = 300;
+						n.distIdx = 1;
 						return;
-					};
-					dis = await similarTo(n.similar_users, c_node.uid);
-					console.log(`dist is ${util.inspect(dis, { depth: null })}`);
-					distL.push(dis);
-					if (dis <= 0.4) {
+					}
+					n.distIdx = await similarTo(n.similar_users, c_node.uid);
+					console.log(`distance is ${util.inspect(n.distIdx, { depth: null })}`);
+					distL.push(n.distIdx);
+
+					if (n.distIdx <= 0.4) {
 						links.push({
 							source: n.uid,
 							target: c_node.uid,
-							value: dis
+							value: n.distIdx
 						});
+						direct_nodes.push(n);
 					}
-				})
-			}
-		})();
+				});
+				var i = await direct_nodes.length;
+				console.log(`number of direct_nodes is ${direct_nodes.length}`)
+				while (i--) {
+					c_node = direct_nodes.splice(i, 1)[0];
+					console.log(`c_node is ${util.inspect(c_node, { depth: null })}`);
+					nodes.forEach(async (n) => {
+
+						if (n.uid == c_node.uid) {
+							return;
+						};
+						dis = await similarTo(n.similar_users, c_node.uid);
+						console.log(`dist is ${util.inspect(dis, { depth: null })}`);
+						distL.push(dis);
+						if (dis <= 0.4) {
+							links.push({
+								source: n.uid,
+								target: c_node.uid,
+								value: dis
+							});
+						}
+					})
+				}
+			})();
 			// console.log(`the third quantile similarity index is ${median(distL)}; and the min is ${Math.min(...distL)} and max is ${Math.max(...distL)}`);
 			// console.log(`the nodes are ${util.inspect(nodes[0], { depth: null })}`);
 			var obj = {
@@ -982,7 +1474,7 @@ async function InitTeamMembers(team_id, token, limit = null) {
 			console.log(`first while iteration in InitTeamMembers: round ${counter}`)
 			await local_slack.users.list({
 				include_locale: true,
-				limit: limit | 20
+				limit: limit | 200
 			}).then(res => {
 				// console.log(`members in the team include ${util.inspect(res.members, { depth: null })}`);
 				cursor = res.response_metadata.next_cursor;
@@ -1031,6 +1523,7 @@ async function InitTeamMembers(team_id, token, limit = null) {
 								first_name: m.profile.first_name ? m.profile.first_name : m.profile.real_name.split(' ')[0],
 								last_name: m.profile.last_name,
 								image_48: m.profile.image_48,
+								image_512: m.profile.image_512,
 								is_custom_image: m.profile.is_custom_image,
 								is_bot: m.is_bot,
 								last_updated: m.updated,
@@ -1051,7 +1544,7 @@ async function InitTeamMembers(team_id, token, limit = null) {
 			await local_slack.users.list({
 				cursor: cursor,
 				include_locale: true,
-				limit: limit | 20
+				limit: limit | 200
 			}).then(res => {
 				// console.log(`members in the team include ${util.inspect(res.members, { depth: null })}`);
 				cursor = res.response_metadata.next_cursor;
@@ -1095,6 +1588,7 @@ async function InitTeamMembers(team_id, token, limit = null) {
 								first_name: m.profile.first_name ? m.profile.first_name : m.profile.real_name.split(' ')[0],
 								last_name: m.profile.last_name,
 								image_48: m.profile.image_48,
+								image_512: m.profile.image_512,
 								is_custom_image: m.profile.is_custom_image,
 								is_bot: m.is_bot,
 								last_updated: m.updated,
@@ -1293,13 +1787,42 @@ async function ActiveWho(channel_id, user_id) {
 		});
 	return activeMembers;
 }
+
+async function ChannelMembers(channel_id, channel_name) {
+	const members = await DB.collection('users')
+		.find({
+			"channels": {
+				cid: channel_id,
+				cname: channel_name
+			}
+		}).toArray()
+		.then(async (docs, err) => {
+			if (err) console.error(err);
+			if (docs.length != 0) {
+				// console.log(`Members in Channel ${channel_id}: ${util.inspect(docs, { depth: 2 })}`);
+				const members = docs.map(x => {
+					return {
+						real_name: x.real_name,
+						first_name: x.first_name,
+						last_name: x.last_name,
+						uid: x.uid,
+						email: x.email
+					}
+				})
+				return Promise.resolve(members);
+			}
+			else console.error(`Members in Channel ${channel_id} are none`);
+		});
+	// console.log(`Members in Channel ${channel_id}: ${util.inspect(members, { depth: 2 })}`);
+	return members;
+}
 function OnlineNow(channel_id, user_id, responseURL) {
 
 	(async () => {
 		const active = await ActiveWho(channel_id, user_id);
 		console.log(`who is online with ActiveWho func: ${util.inspect(active, { depth: 2 })}`);
 		var message = active.length ? {
-			"text": `There are ${active.length} students of this channel online except you`,
+			"text": `There are ${active.length} other students in this channel online`,
 			"attachments": [
 				{
 					"text": "Would you like to invite them for video call or a Slack group chat",
@@ -1552,8 +2075,19 @@ function median(values) {
 
 	var half = Math.floor(values.length * 3 / 4);//third quantile
 
-  if (values.length % 2)
-    return values[half];
-  else
-    return (values[half - 1] + values[half]) / 2.0;
+	if (values.length % 2)
+		return values[half];
+	else
+		return (values[half - 1] + values[half]) / 2.0;
 }
+
+function makeid() {
+	var text = "";
+	var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+	for (var i = 0; i < 5; i++)
+		text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+	return text;
+}
+

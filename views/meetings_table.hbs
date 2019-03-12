@@ -1,0 +1,65 @@
+<div class="meetings-wrapper">
+    {{#if empty}}
+    <div class="ui message info">
+        <div class="header">
+            You have not created or been invited to any meetings.
+        </div>
+        <ul class="list">
+            <li>Click the green button below to schedule a meeting with your peers.</li>
+            <li>Or Use /we-discuss in Slach channels and select Later to schedule a meeting.</li>
+        </ul>
+    </div>
+
+    {{else}}
+    <div class="ui message info">
+        <h2>You have created or been invited to the following meetings.</h2>
+    </div>
+    {{!-- <p>{{{json userInfo}}}</p> --}}
+
+    <table class="ui sortable table ascending celled list-table">
+        <thead>
+            <tr id="table-head">
+                <th scope="col">Meeting Purpose</th>
+                <th scope="col">Date & Time</th>
+                <th scope="col">Topic</th>
+                <th scope="col">Attendees</th>
+                <th scope="col">Action</th>
+            </tr>
+        </thead>
+        <tbody id="table-body">
+            {{#each meetings as |meeting|}}
+            <tr>
+                <td>
+                    <a href="/meeting/{{this.mid}}" data-toggle="modal"
+                        data-target=".meeting-modal">{{this.purpose}}</a>
+                </td>
+                <td> {{meeting.start_time}}</td>
+                <td> {{meeting.topic}}</td>
+                <td> {{#each meeting.attendees as |attendee|}} {{attendee.real_name}};{{/each}}</td>
+                <td>
+                    {{!-- |creator is {{meeting.creator_uid}}|uid is {{../userInfo.uid}} --}}
+                    {{#if (eq meeting.creator_uid ../userInfo.uid)}}
+                    <div id="edit" class="ui basic meeting blue edit button"> <i class="pencil icon"></i><a class="edit"
+                            href="/meeting/{{meeting.mid}}">Edit</a> </div>
+                    <div id="edit" class="ui basic meeting yellow remind button"> <i class="pencil icon"></i><a
+                            class="remind" href="/remindmeeting/{{meeting.mid}}">Remind attendees</a> </div>
+                    {{else}}
+                    <div class="ui buttons">
+                        <div class="ui basic meeting red button reject">
+                            <i class="times icon"></i><a class="reject" href="/meeting/{{meeting.mid}}">Reject</a>
+                        </div>
+                        <div class="or"></div>
+                        <div class="ui basic meeting teal button accept">
+                            <i class="check icon"></i><a class="accept" href="/meeting/{{meeting.mid}}">Accept</a>
+                        </div>
+                    </div>
+
+                    {{/if}}
+                </td>
+            </tr>
+            {{/each}}
+        </tbody>
+    </table>
+    {{/if}}
+    <div id="new" class="ui create meeting right floated teal button">New Meeting</div>
+</div>

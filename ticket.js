@@ -21,7 +21,7 @@ const sendConfirmation = (ticket) => {
                 {
                     title: `Request to meet sent out`,
                     // Get this from the 3rd party helpdesk system
-                    title_link: 'http://example.com', //TODO: make a dashboard for this or ???
+                    title_link: 'https://ad4a5c00.ngrok.io/Meetings', //TODO: update to the server address
                     text: ticket.text,
                     response_type: 'ephemeral',
                     fields: [
