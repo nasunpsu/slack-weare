@@ -130,16 +130,26 @@ app.engine('hbs', hbs({
 }));
 
 const logEvent = (body, req) => {
-	if (!!req.sessionID) {
-		body.sessionID = req.sessionID;
-	}
-	if (!!req.session && !!req.session.user) {
-		body.uid = req.session.user.uid;
-	}
-	if (!('error' in req.ipInfo)) {
-		body.ipInfo = req.ipInfo;
-	}
-	return DB.collection('logging').insertOne(body);
+  if (!!req.sessionID) {
+    body.sessionID = req.sessionID;
+  }
+  if (!('error' in req.ipInfo)) {
+    body.ipInfo = req.ipInfo;
+  }
+  if (!!req.session && !!req.session.user) {
+    body.uid = req.session.user.uid;
+  }
+
+  if('uid' in body && body.type === 'Activity'){
+    const isActive = body.content.type === 'Active';
+    const updateDoc = {$set: {isActive}}
+    DB.collection('users').updateOne({uid: body.uid}, updateDoc);
+  }
+  if('uid' in body && 'ipInfo' in body){
+    const updateDoc = {$set: {ipInfo: body.ipInfo}}
+    DB.collection('users').updateOne({uid: body.uid}, updateDoc);
+  }
+  return DB.collection('logging').insertOne(body);
 }
 
 // app.engine('handlebars', exphbs({ helpers: { json: function (context) { return JSON.stringify(context); } } }));
