@@ -1,7 +1,8 @@
-<section class="profile-wrapper">
-  <h4 class="ui horizontal divider header profile-info-header">
+<h4 class="ui horizontal divider header profile-info-header">
     General Info
   </h4>
+<section class="profile-wrapper">
+  
   <div class="basic-info">
     <div class="profile-img-wrapper">
       <img class="ui small image profile-img" src={{userInfo.image_512}}>
@@ -10,54 +11,75 @@
       </a>
     </div>
     <div class="basic-info-text">
-      <div class="ui divided selection list">
-        <a class="item">
-          <div class="ui blue basic mini horizontal label">Name</div>
-          <br>
-          <p>{{userInfo.real_name}}</p>
-          <div class="right floated content">
-            <button class="ui tiny basic blue icon button">
-              <i class="blue pencil icon"></i>
-            </button>
+      <form class="ui form profile-form">
+        <div class="field">
+          <label>Name</label>
+            <div class="field">
+              <input type="text" name="FirstName" placeholder="{{userInfo.real_name}}">
+            </div>
+        </div>
+        <div class="field">
+          <label>Current Career</label>
+          <select class="ui fluid dropdown" name="f" id="f">
+            <option value="17" selected="">Architecture and Engineering</option>
+            <option value="27">Arts, Design, Entertainment, Sports, and Media</option>
+            <option value="37">Building and Grounds Cleaning and Maintenance</option>
+            <option value="13">Business and Financial Operations</option>
+            <option value="21">Community and Social Service</option>
+            <option value="15">Computer and Mathematical</option>
+            <option value="47">Construction and Extraction</option>
+            <option value="25">Education, Training, and Library</option>
+            <option value="45">Farming, Fishing, and Forestry</option>
+            <option value="35">Food Preparation and Serving Related</option>
+            <option value="29">Healthcare Practitioners and Technical</option>
+            <option value="31">Healthcare Support</option>
+            <option value="49">Installation, Maintenance, and Repair</option>
+            <option value="23">Legal</option>
+            <option value="19">Life, Physical, and Social Science</option>
+            <option value="11">Management</option>
+            <option value="55">Military Specific</option>
+            <option value="43">Office and Administrative Support</option>
+            <option value="39">Personal Care and Service</option>
+            <option value="51">Production</option>
+            <option value="33">Protective Service</option>
+            <option value="41">Sales and Related</option>
+            <option value="53">Transportation and Material Moving</option>
+            <option value="0">All Occupations</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Location</label>
+          <div class="two fields">
+            <div class="twelve wide field">
+              <input type="text" name="city" placeholder={{userInfo.city}}>
+            </div>
+            <div class="four wide field">
+              <input type="text" name="province" placeholder=" {{userInfo.province}}">
+            </div>
           </div>
-        </a>
-      </div>
-      <div class="ui divided selection list">
-        <a class="item">
-          <div class="ui blue basic mini horizontal label">City</div>
-          <br>
-          <p>{{userInfo.city}}, {{userInfo.province}}</p>
-          <div class="right floated content">
-            <button class="ui tiny basic blue icon button">
-              <i class="blue pencil icon"></i>
-            </button>
-          </div>
-        </a>
-      </div>
-      <div class="ui divided selection list">
-        <a class="item">
-          <div class="ui blue basic mini horizontal label">Current Timezone</div>
-          <br>
-          <select name='tz-selection' class="ui fluid normal dropdown">
-            <option timeZoneId="1" gmtAdjustment="GMT-12:00" useDaylightTime="0" value="-12">(GMT-12:00) International
+        </div>
+        <div class="field">
+            <label>Time Zone</label>
+            <select class="ui fluid dropdown">
+              <option timeZoneId="1" gmtAdjustment="GMT-12:00" useDaylightTime="0" value="-12">(GMT-12:00) International
               Date Line West</option>
             <option timeZoneId="2" gmtAdjustment="GMT-11:00" useDaylightTime="0" value="-11">(GMT-11:00) Midway Island,
               Samoa</option>
             <option timeZoneId="3" gmtAdjustment="GMT-10:00" useDaylightTime="0" value="-10">(GMT-10:00) Hawaii</option>
             <option timeZoneId="4" gmtAdjustment="GMT-09:00" useDaylightTime="1" value="-9">(GMT-09:00) Alaska</option>
             <option timeZoneId="5" gmtAdjustment="GMT-08:00" useDaylightTime="1" value="-8">(GMT-08:00) Pacific Time (US
-              & Canada)</option>
+              &amp; Canada)</option>
             <option timeZoneId="6" gmtAdjustment="GMT-08:00" useDaylightTime="1" value="-8">(GMT-08:00) Tijuana, Baja
               California</option>
             <option timeZoneId="7" gmtAdjustment="GMT-07:00" useDaylightTime="0" value="-7">(GMT-07:00) Arizona</option>
             <option timeZoneId="8" gmtAdjustment="GMT-07:00" useDaylightTime="1" value="-7">(GMT-07:00) Chihuahua, La
               Paz, Mazatlan</option>
             <option timeZoneId="9" gmtAdjustment="GMT-07:00" useDaylightTime="1" value="-7">(GMT-07:00) Mountain Time
-              (US & Canada)</option>
+              (US &amp; Canada)</option>
             <option timeZoneId="10" gmtAdjustment="GMT-06:00" useDaylightTime="0" value="-6">(GMT-06:00) Central America
             </option>
             <option timeZoneId="11" gmtAdjustment="GMT-06:00" useDaylightTime="1" value="-6">(GMT-06:00) Central Time
-              (US & Canada)</option>
+              (US &amp; Canada)</option>
             <option timeZoneId="12" gmtAdjustment="GMT-06:00" useDaylightTime="1" value="-6">(GMT-06:00) Guadalajara,
               Mexico City, Monterrey</option>
             <option timeZoneId="13" gmtAdjustment="GMT-06:00" useDaylightTime="0" value="-6">(GMT-06:00) Saskatchewan
@@ -65,7 +87,7 @@
             <option timeZoneId="14" gmtAdjustment="GMT-05:00" useDaylightTime="0" value="-5">(GMT-05:00) Bogota, Lima,
               Quito, Rio Branco</option>
             <option timeZoneId="15" gmtAdjustment="GMT-05:00" useDaylightTime="1" value="-5">(GMT-05:00) Eastern Time
-              (US & Canada)</option>
+              (US &amp; Canada)</option>
             <option timeZoneId="16" gmtAdjustment="GMT-05:00" useDaylightTime="1" value="-5">(GMT-05:00) Indiana (East)
             </option>
             <option timeZoneId="17" gmtAdjustment="GMT-04:00" useDaylightTime="1" value="-4">(GMT-04:00) Atlantic Time
@@ -184,39 +206,81 @@
               Kamchatka, Marshall Is.</option>
             <option timeZoneId="82" gmtAdjustment="GMT+13:00" useDaylightTime="0" value="13">(GMT+13:00) Nuku'alofa
             </option>
-          </select>
-          <div class="right floated content">
-            <button class="ui tiny basic blue icon button">
-              <i class="blue pencil icon"></i>
-            </button>
+            </select>
           </div>
-        </a>
-      </div>
-      <div class="ui divided selection list">
-        <a class="item">
-          <div class="ui blue basic mini horizontal label">Email</div>
-          <br>
-          <p>{{userInfo.email}}</p>
-          <div class="right floated content">
-            <button class="ui tiny basic blue icon button">
-              <i class="blue pencil icon"></i>
-            </button>
-          </div>
-        </a>
-      </div>
-    </div>
-    <div class="ui divided selection list">
-      <a class="item">
-        <div class="ui blue basic mini horizontal label">Availability</div>
-        <p><br>MWF 5:30pm-9:30pm<br>
-          TuTh 8:00am-12:00pm</p>
-        <div class="right floated content">
-          <button class="ui tiny basic blue icon button">
-            <i class="blue pencil icon"></i>
-          </button>
+        <div class="profile-email field">
+          <label>Email</label>
+            <div class="field">
+              <input type="text" name="email" placeholder={{userInfo.email}}>
+            </div>
         </div>
-      </a>
-    </div>
+        <label class="availability-label">Availability</label>
+        <div class="two availability inline fields">
+          <div class="six wide field">
+            <label>Sunday</label>
+            <input type="text" placeholder="5:30pm">
+          </div>
+          <div class="four wide field">
+            <input type="text" placeholder="10:30pm">
+          </div>
+        </div>
+        <div class="two inline fields">
+          <div class="six wide field">
+            <label>Monday</label>
+            <input type="text" placeholder="5:30pm">
+          </div>
+          <div class="four wide field">
+            <input type="text" placeholder="10:30pm">
+          </div>
+        </div>
+        <div class="two inline fields">
+          <div class="six wide field">
+            <label>Tuesday</label>
+            <input type="text" placeholder="5:30pm">
+          </div>
+          <div class="four wide field">
+            <input type="text" placeholder="10:30pm">
+          </div>
+        </div>
+        <div class="two inline fields">
+          <div class="six wide field">
+            <label>Wednesday</label>
+            <input type="text" placeholder="5:30pm">
+          </div>
+          <div class="four wide field">
+            <input type="text" placeholder="10:30pm">
+          </div>
+        </div>
+        <div class="two inline fields">
+          <div class="six wide field">
+            <label>Thursday</label>
+            <input type="text" placeholder="5:30pm">
+          </div>
+          <div class="four wide field">
+            <input type="text" placeholder="10:30pm">
+          </div>
+        </div>
+        <div class="two inline fields">
+          <div class="six wide field">
+            <label>Friday</label>
+            <input type="text" placeholder="5:30pm">
+          </div>
+          <div class="four wide field">
+            <input type="text" placeholder="10:30pm">
+          </div>
+        </div>
+        <div class="two inline fields">
+          <div class="six wide field">
+            <label>Saturday</label>
+            <input type="text" placeholder="5:30pm">
+          </div>
+          <div class="four wide field">
+            <input type="text" placeholder="10:30pm">
+          </div>
+        </div>
+      </form>
+      <button class="ui disabled button save-profile-changes">Save Changes</button>
+
   </div>
 </section>
 <h4 class="ui horizontal divider header profile-info-header">
@@ -225,122 +289,133 @@
 <section class="profile-wrapper">
   <div class="basic-info">
     <div class="basic-info-text">
-      <div class="ui divided selection list">
-        <a class="item">
-          <div class="ui teal basic mini horizontal label">Major</div>
-          <br>
-          <p>{{userInfo.major}} {{userInfo.title}} </p>
-          <div class="right floated content">
-            <button class="ui tiny basic teal icon button">
-              <i class="teal pencil icon"></i>
-            </button>
+      <form class="ui form profile-form">
+        <div class="two fields">
+          <div class="field">
+            <label>Major</label>
+              <div class="field">
+                <input type="text" name="major" placeholder="{{userInfo.major}} {{userInfo.title}}">
+              </div>
           </div>
-        </a>
-      </div>
-      <div class="ui divided selection list">
-        <a class="item">
-          <div class="ui teal basic mini horizontal label">Penn State Campus</div>
-          <br>
-          <p>{{userInfo.campus}}</p>
-          <div class="right floated content">
-            <button class="ui tiny basic teal icon button">
-              <i class="teal pencil icon"></i>
-            </button>
+          <div class="field">
+            <label>Penn State Campus</label>
+              <div class="field">
+                <input type="text" name="major" placeholder="{{userInfo.campus}}">
+              </div>
           </div>
-        </a>
-      </div>
-      <div class="ui divided selection list">
-        <a class="item">
-          <div class="ui teal basic mini horizontal label">Current Courses</div>
-          <br>
-          <p>
-            IST110 | IST220 | GD 100 | GD101 | GD200 | GD201 | GD203, PHOTO202</p>
-          <div class="right floated content">
-            <button class="ui tiny basic teal icon button">
-              <i class="teal pencil icon"></i>
-            </button>
+        </div>
+        <div class="two inline fields">
+            <div class="nine wide field">
+              <label>Current Courses</label>
+              <input type="text" placeholder="IST 110">
+            </div>
+            <div class="six wide field">
+              <input type="text" placeholder="IST 110">
+            </div>
+            <div class="six wide field">
+              <input type="text" placeholder="IST 110">
+            </div>
+            <div class="six wide field">
+              <input type="text" placeholder="IST 110">
+            </div>
+            <div class="six wide field">
+              <input type="text" placeholder="IST 110">
+            </div>
+        </div>
+        <div class="two inline fields">
+            <div class="nine wide field">
+              <label>Courses I Recommend</label>
+              <input type="text" placeholder="IST 110">
+            </div>
+            <div class="six wide field">
+              <input type="text" placeholder="IST 110">
+            </div>
+            <div class="six wide field">
+              <input type="text" placeholder="IST 110">
+            </div>
+            <div class="six wide field">
+              <input type="text" placeholder="IST 110">
+            </div>
+        </div>
+        <div class="field">
+          <label>Instructors I Recommend</label>
+          <div class="two fields">
+            <div class="field">
+              <input type="text" name="recommended-instructor" placeholder="Instructor 1">
+            </div>
+            <div class="field">
+              <input type="text" name="recommended-instructor" placeholder="Instructor 2">
+            </div>
+            <div class="field">
+              <input type="text" name="recommended-instructor" placeholder="Instructor 2">
+            </div>
           </div>
-        </a>
-      </div>
-      <div class="ui divided selection list">
-        <a class="item">
-          <div class="ui teal basic mini horizontal label">Courses I Recommend</div>
-          <br>
-          <p>IST110 | IST220 | GD 100</p>
-          <div class="right floated content">
-            <button class="ui tiny basic teal icon button">
-              <i class="teal pencil icon"></i>
-            </button>
+        </div>
+        <div class="field">
+          <label>What I want to gain most from World Campus activities</label>
+          <div class="two fields">
+            <div class="field">
+              <input type="text" name="goal" placeholder="Straight A's">
+            </div>
+            <div class="field">
+              <input type="text" name="goal" placeholder="Gaining knowledge">
+            </div>
+            <div class="field">
+              <input type="text" name="goal" placeholder="Learning skills to apply in the industry">
+            </div>
           </div>
-        </a>
-      </div>
-      <div class="ui divided selection list">
-        <a class="item">
-          <div class="ui teal basic mini horizontal label">Instructors I recommend</div>
-          <br>
-          <p>Instructors</p>
-          <div class="right floated content">
-            <button class="ui tiny basic teal icon button">
-              <i class="teal pencil icon"></i>
-            </button>
-          </div>
-        </a>
-      </div>
-      <div class="ui divided selection list">
-        <a class="item">
-          <div class="ui teal basic mini horizontal label">What do you want to gain most from World Campus activities?</div>
-          <br>
-          <p>Straight A's<br>Gaining knowledge<br>Learning skills to apply in the industry</p>
-          <div class="right floated content">
-            <button class="ui tiny basic teal icon button">
-              <i class="teal pencil icon"></i>
-            </button>
-          </div>
-        </a>
-      </div>
+        </div>
+      </form>
+      <button class="ui disabled button save-profile-changes">Save Changes</button>
     </div>
   </div>
 </section>
+
 <h4 class="ui horizontal divider header profile-info-header">
   Personal Info
 </h4>
 <section class="profile-wrapper">
   <div class="basic-info">
     <div class="basic-info-text">
-      <div class="ui divided selection list">
-        <a class="item">
-          <div class="ui green basic mini horizontal label">Places I want to visit</div>
-          <br>
-          <p>State College, PA | Miami, FL | Collegeville, PA</p>
-          <div class="right floated content">
-            <button class="ui tiny basic green icon button">
-              <i class="green pencil icon"></i>
-            </button>
+      <form class="ui form profile-form">
+        <div class="field">
+          <label>Places I've Lived</label>
+          <div class="two fields">
+            <div class="field">
+              <input type="text" name="goal" placeholder="State College, PA">
+            </div>
           </div>
-        </a>
-      </div>
-      <div class="ui divided selection list">
-        <a class="item">
-          <div class="ui green basic mini horizontal label">Relationship Status</div>
-          <p><br>Married</p>
-          <div class="right floated content">
-            <button class="ui tiny basic green icon button">
-              <i class="green pencil icon"></i>
-            </button>
+        </div>
+        <div class="field">
+          <label>Places I'd Like to Visit</label>
+          <div class="two fields">
+            <div class="field">
+              <input type="text" name="goal" placeholder="New Zealand">
+            </div>
+            <div class="field">
+              <input type="text" name="goal" placeholder="Alaska">
+            </div>
+            <div class="field">
+              <input type="text" name="goal" placeholder="Ireland">
+            </div>
           </div>
-        </a>
-      </div>
-      <div class="ui divided selection list">
-        <a class="item">
-          <div class="ui green basic mini horizontal label">Number of Kids</div>
-          <p><br>3</p>
-          <div class="right floated content">
-            <button class="ui tiny basic green icon button">
-              <i class="green pencil icon"></i>
-            </button>
+        </div>
+        <div class="two fields">
+          <div class="field">
+            <label>Marital Status</label>
+              <div class="field">
+                <input type="text" name="major" placeholder="married">
+              </div>
           </div>
-        </a>
-      </div>
+          <div class="field">
+            <label>Number of Kids</label>
+              <div class="field">
+                <input type="text" name="major" placeholder="3">
+              </div>
+          </div>
+        </div>
+      </form>
+      <button class="ui disabled button save-profile-changes">Save Changes</button>
     </div>
   </div>
 </section>

@@ -7,7 +7,7 @@ __pycache__/
 .vscode/
 #Semantic UI elements
 semantic.json
-semantic/
+semantic/ 
 ##########################
 # Application specfic
 ##########################
@@ -117,8 +117,3 @@ typings/
 
 
 #specifics
-<<<<<<< HEAD
-=======
-
->>>>>>> origin/prototypes
-*.png
