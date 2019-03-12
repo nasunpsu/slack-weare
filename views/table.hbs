@@ -50,6 +50,12 @@
                         <input type="checkbox" id="industryCheck">
                         <label for="pastClassCheck">Past Classes</label>
                     </div>
+                    {{#each this.channelNames}}
+                        <div class="ui checkbox">
+                            <input type="checkbox">
+                            <label>{{this}}</label>
+                        </div>
+                    {{/each}}
                 </form>
             </div>
             <div class="ui category search search-table">

@@ -685,14 +685,17 @@ app.get('/tablelist', async function (req, res) {
 	to_be_rendered.users = similarity.createSimilarityField(req.session.user, users, fields);
 	to_be_rendered.users = similarity.createIsSharedField(req.session.user, users, fields);
 	const channelNames = req.session.user.channels.map(channel => channel.cname);
+	to_be_rendered.channelNames = channelNames;
 	to_be_rendered.users = to_be_rendered.users.map(user => {
-		const channels = user.channels.map(channel => channel.cname)
-			.filter(channel => channel != 'general')
-			.map(name => ({
+		user.channelNames = user.channels.map(channel => channel.cname)
+				.filter(channel => channel != 'general');
+		const channels = user.channelNames.map(name => 
+			({
 				name,
 				isShared: channelNames.includes(name),
 				className: `channel${channelNames.indexOf(name)}` 
-			}));
+			})
+		);
 		if(channels.length > 4){
 			user.displayChannels = channels.slice(0, 4);
 			user.extraChannels = channels.slice(4);
