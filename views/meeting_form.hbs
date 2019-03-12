@@ -15,7 +15,7 @@
     </div>
     {{/unless}}
     <form
-        class="ui form attached fluid {{#unless (eq meeting.creator_uid userInfo.uid)}}segment{{/unless}} meeting-form"
+        class="ui form attached fluid {{#unless (eq meeting.creator_uid userInfo.uid)}}segment{{/unless}} meeting-form" data-mid="{{meeting.mid}}" data-cid="{{meeting.cid}}" data-cname="{{meeting.cname}}"
         id="meeting-form" method="POST">
         {{#unless (eq meeting.creator_uid userInfo.uid)}}<fieldset disabled="disabled">{{/unless}}
             {{!-- action="/meeting/{{meeting.mid}}" --}}
@@ -377,11 +377,14 @@
             </div>
             <h4>*Note that you can only choose attendees from the same channel #{{meeting.cname}}.</h4>
             <div id="save"
-                class="ui submit meeting right floated teal button {{#unless (eq meeting.creator_uid userInfo.uid)}}invisible{{/unless}}">
+                class="ui meeting right floated teal button {{#unless (eq meeting.creator_uid userInfo.uid)}}invisible{{/unless}}">
                 Save</div>
             <div id="invite"
                 class="ui invite meeting right floated yellow button {{#unless (eq meeting.creator_uid userInfo.uid)}}invisible{{/unless}}">
                 Save and Invite</div>
+            <div id="delete"
+                class="ui invite meeting right floated red basic button {{#unless (eq meeting.creator_uid userInfo.uid)}}invisible{{/unless}}">
+                Delete</div>
 
 
 

@@ -520,3 +520,8 @@ form  h3, h4 {
 .invisible {
   display: None!important;
 }
+
+i.attendance-status {
+  font-size: xx-small;
+  color:grey;
+}

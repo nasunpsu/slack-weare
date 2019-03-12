@@ -413,10 +413,11 @@ app.post('/slack/commands/intro', urlencodedParser, (req, res) => {
 					{ label: 'Industry sector', value: 'industry' },
 					{ label: 'Education sector', value: 'education' },
 					{ label: 'No job yet', value: 'unemployed' },
+					{}
 				],
 			},
 			{
-				label: 'I identify with',
+				label: 'Things I want my peers here to know about me',
 				type: 'text',
 				name: 'unique',
 				optional: true,
@@ -571,7 +572,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 						as_user: false,
 						channel: body.channel.id,
 						user: body.user.id,
-						text: `Type \`/hangout\` and Copy the emails for ${usersnames} as follows: ${emails}`
+						text: `Type \`/hangout\` and Enter; Copy the emails for ${usersnames} as follows: ${emails}`
 					}).catch(err => console.error(err));
 					console.log('after empheral');
 				})();
@@ -597,7 +598,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 							type: 'text',
 							name: 'city',
 							optional: true,
-							hint: 'Separate places with ";"! (e.g. Pittsburgh, PA; Victoria, BC'
+							hint: 'Separate places with ";"! (e.g. Pittsburgh, PA; Victoria, BC)'
 						},
 						{
 							label: 'Current profession',
@@ -607,10 +608,11 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 								{ label: 'Veteran/military', value: 'military' },
 								{ label: 'Industry sector', value: 'industry' },
 								{ label: 'Education sector', value: 'education' },
+								{ label: 'No job yet', value: 'unemployed' },
 							],
 						},
 						{
-							label: 'I identify with',
+							label: 'Things I want my peers here to know about me',
 							type: 'text',
 							name: 'unique',
 							optional: true,
@@ -651,22 +653,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 							{
 								title: 'An interesting profile can help your compatible peers find you!',
 								text: 'Go to ' + base_url + edit_url + ' to edit your profile.',
-								color: '#74c8ed',
-								// actions: [{
-								// 	name: 'hello',
-								// 	text: 'Say hello to my peers in my current channel now',
-								// 	type: 'button',
-								// 	value: ‘hello',
-								// 	style: 'primary'
-								// },
-								// {
-								// 	name: 'helloLater',
-								// 	text: 'Perhaps later',
-								// 	type: 'button',
-								// 	value: 'helloLater',
-								// 	style: 'default'
-								// }
-								// ],
+								color: '#74c8ed'
 							}
 						])
 					}).catch(err => console.error(err));
@@ -738,7 +725,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 					attachments: [
 						{
 							"title": `Let's welcome ${body.user.name} from ${body.submission.city}.`,
-							"text": `${body.user.name} identifies with ${body.submission.unique}.`,
+							"text": `Meet ${body.user.name} at <https://${base_url}/${body.team.id}_${body.user.id}|profile page>.`,
 							color: 'good'
 						},
 						{
@@ -1088,19 +1075,22 @@ app.get('/meetings', async function (req, res) {
 			// console.log(`User info is ${to_be_rendered.userInfo.uid}, and the creator is ${to_be_rendered.meetings[0].creator_uid}`);
 			return Promise.resolve(results);
 		}
-		else to_be_rendered.empty1 = true;
+		else {
+			to_be_rendered.empty1 = true;
+		}
 	});
 	const meetings2 = await DB.collection('meetings').find({
-		attendees:
-		{
-			
-			real_name: req.session.user.real_name,
-			first_name: req.session.user.first_name,
-			last_name: req.session.user.last_name,
-			uid: req.session.user.uid,
-			email: req.session.user.email,
-			attend: "accept"
-		}
+		"attendees.uid": req.session.user.uid
+		// attendees:
+		// {
+
+		// 	real_name: req.session.user.real_name,
+		// 	first_name: req.session.user.first_name,
+		// 	last_name: req.session.user.last_name,
+		// 	uid: req.session.user.uid,
+		// 	email: req.session.user.email,
+		// 	attend: "accept"
+		// }
 	}).toArray().then(async (results, err) => {
 		if (err) console.error(err);
 		else if (results.length != 0) {
@@ -1120,8 +1110,8 @@ app.get('/meetings', async function (req, res) {
 		}
 		else to_be_rendered.empty2 = true;
 	});
-	if(to_be_rendered.empty1 & to_be_rendered.empty2) to_be_rendered.empty = true;
-	to_be_rendered.meetings = await [...new Set([...meetings1, ...meetings2])];
+	if (to_be_rendered.empty1 & to_be_rendered.empty2) to_be_rendered.empty = true;
+	to_be_rendered.meetings = await union(meetings1, meetings2);//[...new Set([...meetings1, ...meetings2])];//
 	res.render('meetings_table', to_be_rendered);
 });
 
@@ -1147,6 +1137,7 @@ app.get('/meeting/:mid', async function (req, res) {
 				creator_uid: results[0].creator_uid,
 				cmembers: results[0].cmembers,
 				cname: results[0].cname,
+				cid: results[0].cid,
 				attendees: results[0].attendees
 			}
 			return Promise.resolve(obj);
@@ -1161,6 +1152,7 @@ app.get('/meeting/:mid', async function (req, res) {
 				creator_uid: req.session.user.uid,
 				cmembers: members,
 				attendees: [],
+				cid: 'T0A286J8K_C0A28BAHG',
 				cname: 'general',
 				who: 'custom'
 			}
@@ -1181,57 +1173,87 @@ app.post('/meeting/:mid', async function (req, res) {
 	console.log(`post update the meeting form is ${util.inspect(req.body, { depth: 2 })}`);
 	console.error('updating now');
 	// Sanitize fields.
-    // sanitizeBody('first_name').trim().escape(),
-    // sanitizeBody('family_name').trim().escape(),
-    // sanitizeBody('date_of_birth').toDate(),
-    // sanitizeBody('date_of_death').toDate(),
+	// sanitizeBody('first_name').trim().escape(),
+	// sanitizeBody('family_name').trim().escape(),
+	// sanitizeBody('date_of_birth').toDate(),
+	// sanitizeBody('date_of_death').toDate(),
+	const cmembers = await ChannelMembers(req.body.cid, req.body.cname);
 	var updateObj = {
 		purpose: req.body.purpose,
 		description: req.body.description,
 		topic: req.body.topic,
 		who: req.body.who,
 		start_time: req.body.time,
-		date: req.body.date
+		date: req.body.date,
+		creator_uid: req.session.user.uid,
+		cid: req.body.cid,
+		cname: req.body.cname,
+		cmembers: cmembers,
+		duration: req.body.duration
 	};
 	(async () => {
-		const cmembers = await DB.collection('meetings').find({ mid: req.params.mid }).toArray().then(async (results, err) => {
-			if (err) console.error(err);
-			else if (results.length != 0) {
-				if (req.body.who == "custom") {
-					updateObj.attendees = await results[0].cmembers.filter(member => req.body.attendees.includes(
-						member.uid
-						// 	{
-						// 	uid: member.uid,
-						// 	real_name: member.real_name,
-						// 	last_name: member.last_name,
-						// 	first_name: member.first_name,
-						// 	email: member.email
-						// }
-					));
-					console.log(`the update is set to be custom attendees: ${util.inspect(updateObj.attendees, { depth: null })}`);
-				}
-				else updateObj.attendees = await results[0].cmembers;
-				return Promise.resolve(updateObj.attendees);
-			}
-		});
+		
+		if (req.body.who == "custom") {
+			updateObj.attendees = await cmembers.filter(member => req.body.attendees.includes(
+				member.uid
+				// 	{
+				// 	uid: member.uid,
+				// 	real_name: member.real_name,
+				// 	last_name: member.last_name,
+				// 	first_name: member.first_name,
+				// 	email: member.email
+				// }
+			));
+			console.log(`the update is set to be custom attendees: ${util.inspect(updateObj.attendees, { depth: null })}`);
+		}
+		else updateObj.attendees = await cmembers;
+		
 
-		await DB.collection('meetings').updateOne({ mid: req.params.mid },
+
+		// const cmembers = await DB.collection('meetings').find({ mid: req.params.mid }).toArray().then(async (results, err) => {
+		// 	if (err) console.error(err);
+		// 	else if (results.length != 0) {
+		// 		if (req.body.who == "custom") {
+		// 			updateObj.attendees = await results[0].cmembers.filter(member => req.body.attendees.includes(
+		// 				member.uid
+		// 				// 	{
+		// 				// 	uid: member.uid,
+		// 				// 	real_name: member.real_name,
+		// 				// 	last_name: member.last_name,
+		// 				// 	first_name: member.first_name,
+		// 				// 	email: member.email
+		// 				// }
+		// 			));
+		// 			console.log(`the update is set to be custom attendees: ${util.inspect(updateObj.attendees, { depth: null })}`);
+		// 		}
+		// 		else updateObj.attendees = await results[0].cmembers;
+		// 		return Promise.resolve(updateObj.attendees);
+		// 	}
+		// 	else if (req.params.mid=="new") {
+
+		// 	}
+		// });
+
+		await DB.collection('meetings').updateOne({ mid: req.body.mid },
 			{
 				$set: updateObj
 			},
-			{ upsert: false },
+			{ upsert: true },
 			function (err, res) {
 				if (err) console.error(err);
+				return Promise.resolve(res);
 				console.log(`Meeting information updated succesfully: ${util.inspect(updateObj, { depth: 2 })}`);
 			});
-		res.redirect('/meeting/' + req.params.mid);
+		console.log('redirecting to meetings');
+		// res.redirect('/meetings');//ajax this will not be responded
+		res.json({ success: true });
 	})();
 
 });
 
 
 app.post('/reactmeeting', async function (req, res) {
-	console.error("into reacting post");
+	console.log(`into reacting post with req.body is ${util.inspect(req.body, { depth: null })}`);
 	await DB.collection('meetings').find({ mid: req.body.mid }).toArray().then(async (results, err) => {
 		if (err) console.error(err);
 		else if (results.length != 0) {
@@ -1247,7 +1269,7 @@ app.post('/reactmeeting', async function (req, res) {
 				else return atd;
 			});
 			console.log(`new attendees are: ${util.inspect(newAttendees, { depth: 2 })}`);
-			await DB.collection('meetings').updateOne({ mid: req.body.mid },
+			if (newAttendees.length) await DB.collection('meetings').updateOne({ mid: req.body.mid },
 				{
 					$set: {
 						attendees: newAttendees
@@ -1837,12 +1859,12 @@ function OnlineNow(channel_id, user_id, responseURL) {
 							"type": "button",
 							"value": "hangout"
 						},
-						{
-							"name": "mention",
-							"text": "@here in the channel",
-							"type": "button",
-							"value": "mention"
-						},
+						// {
+						// 	"name": "mention",
+						// 	"text": "@here in the channel",
+						// 	"type": "button",
+						// 	"value": "mention"
+						// },
 						{
 							"name": "Cancel",
 							"text": "Cancel",
@@ -2091,3 +2113,11 @@ function makeid() {
 	return text;
 }
 
+function union(array1, array2) {
+	// if(a1)
+	// return [...new Set([...a1, ...a2])]
+	const result = array2.concat(array1).filter(function (o) {
+		return this.has(o.mid) ? false : this.add(o.mid);
+	}, new Set());
+	return result;
+}

@@ -12,7 +12,13 @@
 
     {{else}}
     <div class="ui message info">
-        <h2>You have created or been invited to the following meetings.</h2>
+        <div class="header">
+            You have created or been invited to the following meetings.
+        </div>
+        <ul class="list">
+            <li>Click the green button below to schedule a meeting with your peers.</li>
+            <li>Or Use /we-discuss in Slach channels and select Later to schedule a meeting.</li>
+        </ul>
     </div>
     {{!-- <p>{{{json userInfo}}}</p> --}}
 
@@ -35,22 +41,22 @@
                 </td>
                 <td> {{meeting.start_time}}</td>
                 <td> {{meeting.topic}}</td>
-                <td> {{#each meeting.attendees as |attendee|}} {{attendee.real_name}};{{/each}}</td>
+                <td> {{#each meeting.attendees as |attendee|}} {{attendee.real_name}} {{#if (eq attendee.attend "accept")}}<i class="check attendance-status icon"></i>{{else if (eq attendee.attend "reject")}}<i class="close attendance-status icon"></i>{{else}}<i class="question circle outline attendance-status icon"></i>{{/if}};{{/each}}</td>
                 <td>
                     {{!-- |creator is {{meeting.creator_uid}}|uid is {{../userInfo.uid}} --}}
                     {{#if (eq meeting.creator_uid ../userInfo.uid)}}
                     <div id="edit" class="ui basic meeting blue edit button"> <i class="pencil icon"></i><a class="edit"
                             href="/meeting/{{meeting.mid}}">Edit</a> </div>
-                    <div id="edit" class="ui basic meeting yellow remind button"> <i class="pencil icon"></i><a
+                    <div id="edit" class="ui basic meeting yellow remind button"> <i class="bell icon"></i><a
                             class="remind" href="/remindmeeting/{{meeting.mid}}">Remind attendees</a> </div>
                     {{else}}
                     <div class="ui buttons">
-                        <div class="ui basic meeting red button reject">
-                            <i class="times icon"></i><a class="reject" href="/meeting/{{meeting.mid}}">Reject</a>
+                        <div class="ui basic meeting red button reject" data-attendees='{{{json meeting.attendees}}}' data-mid="{{meeting.mid}}" data-react="reject">
+                            <i class="times icon"></i>Reject
                         </div>
                         <div class="or"></div>
-                        <div class="ui basic meeting teal button accept">
-                            <i class="check icon"></i><a class="accept" href="/meeting/{{meeting.mid}}">Accept</a>
+                        <div class="ui basic meeting teal button accept" data-attendees='{{{json meeting.attendees}}}' data-mid="{{meeting.mid}}" data-react="accept">
+                            <i class="check icon"></i>Accept
                         </div>
                     </div>
 
@@ -61,5 +67,6 @@
         </tbody>
     </table>
     {{/if}}
+    <h5>*Note that <i class="attendance-status icon question circle"></i>  means the attendee has not responded to the invitations; <i class="attendance-status icon close"></i> means the attendee cannot attend to the scheduled meeting; <i class="attendance-status icon check"></i> means the attendee accepted this invitation.</h5>
     <div id="new" class="ui create meeting right floated teal button">New Meeting</div>
 </div>

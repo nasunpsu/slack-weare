@@ -1,10 +1,11 @@
 let string_data = document.getElementById("data_string").getAttribute('data');
 let meeting = JSON.parse(string_data);
+console.log(meeting);
 
-if(meeting.attendees) $('.select-attendee.ui.fluid.dropdown')
-    .dropdown('set selected', meeting.attendees.map(m=>m.uid));
+if (meeting.attendees) $('.select-attendee.ui.fluid.dropdown')
+    .dropdown('set selected', meeting.attendees.map(m => m.uid));
 
-if(meeting.who == "all" | meeting.who==undefined){
+if (meeting.who == "all" | meeting.who == undefined) {
     $('.select-attendee.ui.dropdown').addClass("disabled");
 };
 //   var topic = document.getElementById("hidden-topic").value;
@@ -94,11 +95,40 @@ window.addEventListener("DOMContentLoaded", function () {
         console.log('save clicked');
         e.preventDefault();
         $('.meeting-form.ui.form').form('validate form');
+
         // $('.meeting-form.ui.form').form('submit');
-        // form.submit();
-
+        // form.submit(); //this is not necessary if the semantic element has submit class, but we will use Ajax instead
+        const Origobj = {};
+        Origobj["attendees"] = [];
+        jQuery('#meeting-form').serializeArray().map(function (x) {
+            if (x.name == "attendees") {
+                Origobj["attendees"].push(x.value);
+            }
+            else Origobj[x.name] = x.value;
+            console.log(`${x.name} value is ${x.value}`);
+        });
+        const UpdateObj = $.extend({
+            mid: meeting.mid,
+            cid: meeting.cid,
+            cname: meeting.cname
+        }, Origobj);
+        // obj.mid = meeting.mid;
+        // obj.cid = meeting.cid ? meeting.cid : 'T0A286J8K_C0A28BAHG';
+        // obj.cname = meeting.cname? meeting.cname:'general';
+        console.dir(UpdateObj);
+        $.ajax({
+            type: 'POST', url: '/meeting/' + meeting.mid,
+            data: UpdateObj
+        }).done(function (res) {
+            if (res.success) {
+                console.log('id from ajax call is', res);
+                location.href = "/meetings";
+                // window.location.reload();
+            } else {
+                console.log('error...ajax');
+            };
+        });
     });
-
     document.getElementById("invite").addEventListener("click", function (e) {
         console.log('save and invite clicked');
         e.preventDefault();
@@ -106,54 +136,53 @@ window.addEventListener("DOMContentLoaded", function () {
         $('.meeting-form.ui.form').form('validate form');
         console.dir($('.ui.form input').serializeArray());
         $('.meeting-form.ui.form').form('set value', 'invite', 'true');
-        $('.ui.invite').addClass('submit');
-        // $('.meeting-form.ui.form').form('submit');
-        form.submit();
+        // $('.ui.invite').addClass('submit'); //<===== without submit class, click will not trigger the post behavior
+        // // $('.meeting-form.ui.form').form('submit');
+        // form.submit();
 
     });
 
     document.getElementById("reject").addEventListener("click", function (e) {
         console.log('reject clicked');
         e.preventDefault();
-        $.ajax({ type: 'POST', url: '/reactmeeting', data: {
-            mid:meeting.mid,
-            react: "reject",
-            who_react: document.getElementById("profile_uid").getAttribute("data-uid"),
-            attendees: $(".ui.form").form('get value', 'attendees')
-        },success: function(data) {
-            console.log(data);
-            console.log('successfully reject');
-        }});
+        $.ajax({
+            type: 'POST', url: '/reactmeeting', data: {
+                mid: meeting.mid,
+                react: "reject",
+                who_react: document.getElementById("profile_uid").getAttribute("data-uid"),
+                attendees: $(".ui.form").form('get value', 'attendees')
+            }, success: function (data) {
+                console.log(data);
+                console.log('successfully reject');
+            }
+        });
 
     });
 
     document.getElementById("accept").addEventListener("click", function (e) {
         console.log('save clicked');
         e.preventDefault();
-        $.ajax({ type: 'POST', url: '/reactmeeting', data: {
-            mid:meeting.mid,
-            react: "accept",
-            who_react: document.getElementById("profile_uid").getAttribute("data-uid"),
-            attendees: $(".ui.form").form('get value', 'attendees')
-        },success: function(data) {
-            console.log(data);
-            console.log('successfully accept');
-        }});
+        $.ajax({
+            type: 'POST', url: '/reactmeeting', data: {
+                mid: meeting.mid,
+                react: "accept",
+                who_react: document.getElementById("profile_uid").getAttribute("data-uid"),
+                attendees: $(".ui.form").form('get value', 'attendees')
+            }, success: function (data) {
+                console.log(data);
+                console.log('successfully accept');
+            }
+        });
 
     });
     document.querySelector('select[name="who"]').onchange = changeEventHandler;
     function changeEventHandler(event) {
-        // You can use “this” to refer to the selected element.
-        // if(!event.target.value) alert('Please Select One');
-        // else alert('You like ' + event.target.value + ' ice cream.'); 
-        console.log(event.target.value);
-        console.dir(event);
         if (event.target.value == 'all') {
             console.log('changing attribute into disabled')
             // document.getElementById("select-attendees").setAttribute("disabled", "disabled");
 
             $('.select-attendee.ui.fluid.dropdown')
-                .dropdown('set selected', meeting.cmembers.map(m=>m.uid));
+                .dropdown('set selected', meeting.cmembers.map(m => m.uid));
             $('.select-attendee.ui.dropdown').addClass("disabled");
             // $('.select-attendee.ui.dropdown');
         }
@@ -165,23 +194,23 @@ window.addEventListener("DOMContentLoaded", function () {
     }
 }, false);
 
-// function submitForm() {
-//     console.log('submmitForm() function called');
-//     var formData = {
-//         purpose: getFieldValue('purpose'),
-//         topic: getFieldValue('topic'),
-//         description: getFieldValue('description'),
-//         date: getFieldValue('date'),
-//         time: getFieldValue('time'),
-//         duration: getFieldValue('duration'),
-//         attendees: getFieldValue('attendees'),
-//     };
+    // function submitForm() {
+    //     console.log('submmitForm() function called');
+    //     var formData = {
+    //         purpose: getFieldValue('purpose'),
+    //         topic: getFieldValue('topic'),
+    //         description: getFieldValue('description'),
+    //         date: getFieldValue('date'),
+    //         time: getFieldValue('time'),
+    //         duration: getFieldValue('duration'),
+    //         attendees: getFieldValue('attendees'),
+    //     };
 
-//     // $.ajax({ type: 'POST', url: '/meeting/:'+meeting.mid, data: formData, success: onFormSubmitted });
-// }
+    //     // $.ajax({ type: 'POST', url: '/meeting/:'+meeting.mid, data: formData, success: onFormSubmitted });
+    // }
 
-// Handle post response
-function onFormSubmitted(response) {
-    // Do something with response ...
-    alert(`successfully submmited form `);
-}
+    // Handle post response
+    // function onFormSubmitted(response) {
+    //     // Do something with response ...
+    //     alert(`successfully submmited form `);
+    // }
