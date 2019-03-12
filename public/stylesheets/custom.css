@@ -533,10 +533,6 @@ fieldset {
   border: 0;
 }
 
-form  h3, h4 {
-  color: rgba(189, 40, 40, 0.87);
-}
-
 .meeting-form.buttons {
   float: right;
 }
