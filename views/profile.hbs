@@ -341,31 +341,52 @@
     </div>
   </div>
 </section>
+
 <h4 class="ui horizontal divider header profile-info-header">
   Personal Info
 </h4>
 <section class="profile-wrapper">
   <div class="basic-info">
     <div class="basic-info-text">
-      <div class="ui divided selection list">
-        <a class="item">
-          <div class="ui green basic mini horizontal label">Places I want to visit</div>
-          <br>
-          <p>State College, PA | Miami, FL | Collegeville, PA</p>
-        </a>
-      </div>
-      <div class="ui divided selection list">
-        <a class="item">
-          <div class="ui green basic mini horizontal label">Relationship Status</div>
-          <p><br>Married</p>
-        </a>
-      </div>
-      <div class="ui divided selection list">
-        <a class="item">
-          <div class="ui green basic mini horizontal label">Number of Kids</div>
-          <p><br>3</p>
-        </a>
-      </div>
+      <form class="ui form profile-form">
+        <div class="field">
+          <label>Places I've Lived</label>
+          <div class="two fields">
+            <div class="field">
+              <input type="text" name="goal" placeholder="State College, PA">
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Places I'd Like to Visit</label>
+          <div class="two fields">
+            <div class="field">
+              <input type="text" name="goal" placeholder="New Zealand">
+            </div>
+            <div class="field">
+              <input type="text" name="goal" placeholder="Alaska">
+            </div>
+            <div class="field">
+              <input type="text" name="goal" placeholder="Ireland">
+            </div>
+          </div>
+        </div>
+        <div class="two fields">
+          <div class="field">
+            <label>Marital Status</label>
+              <div class="field">
+                <input type="text" name="major" placeholder="married">
+              </div>
+          </div>
+          <div class="field">
+            <label>Number of Kids</label>
+              <div class="field">
+                <input type="text" name="major" placeholder="3">
+              </div>
+          </div>
+        </div>
+      </form>
+      <button class="ui disabled button save-profile-changes">Save Changes</button>
     </div>
   </div>
 </section>
