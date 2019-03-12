@@ -13,13 +13,14 @@
     <meta name="theme-color" content="#ffffff" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/components/icon.min.css">
-    {{!--
-    <link rel="stylesheet" href="semantic.min.css">
-    <link rel="stylesheet" href="icon.min.css"> --}}
+    <!-- Proxima Nova Font -->
+    <link rel="stylesheet" href="https://use.typekit.net/ufx2dge.css">  
+    <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="/stylesheets/custom.css">
     <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
     crossorigin="anonymous"></script>
     <script src="/js/logging.js"></script>
+       
 </head>
 
 <body class="{{template}}">
@@ -30,12 +31,14 @@
     {{/if}}
 
     <div class="container pusher"> {{{body}}} </div>
-    {{!-- {{> member_tz }} --}}
+
     {{> footer}}
-
-
-    <script src="semantic.min.js"></script>
-    <script src="/js/app.js"></script>
 </body>
-
+{{!-- <script src="/semantic.min.js"></script> --}}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui-calendar/0.0.8/calendar.min.js"></script>
+{{!-- <script src="https://cdn.rawgit.com/mdehoog/Semantic-UI/6e6d051d47b598ebab05857545f242caf2b4b48c/dist/semantic.min.js"></script> --}}
+<script src="/js/app.js"></script>
+{{#if (eq template "meeting-template")}} <script src="/js/meeting.js"></script>{{/if}}
+{{#if (eq template "meetings-template")}} <script src="/js/meetings.js"></script>{{/if}}
 </html>

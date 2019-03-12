@@ -1,91 +1,101 @@
-
-<div class="ui main container">
-    <div class="ui centered grid">
-        <main class="dashboard-wrapper">
-            <h1 class="we-are-message">We Are! Connecting you to your&nbsp;peers.</h1>
-            <div class="slack-stats">
-                <div class="ui header">
-                    <div class="ui four statistics">
-                        <div class="teal statistic">
-                            <div class="value">
-                                <i class="slack hash icon"></i>{{channels_info.channels_total}}
-                            </div>
-                            <div class="label">
-                                Channels
-                            </div>
-                        </div>
-                        <div class="blue statistic">
-                            <div class="value">
-                                <i class="users icon"></i> {{members.members_total}}
-                            </div>
-                            <div class="label">
-                                Team members
-                            </div>
-                        </div>
-                        <div class="grey statistic">
-                            <div class="value">
-                                <i class="comments icon"></i>{{channels_info.msg_total}}
-                            </div>
-                            <div class="label">
-                                Messages
-                            </div>
-                        </div>
-
-                    </div>
+<main class="dashboard-wrapper">
+    <h1 class="dashboard-title">We Are! Connecting you to your&nbsp;peers.</h1>
+    <div class="slack-stats">
+        <div class="ui statistics">
+            <div class="statistic yellow">
+                <div class="value">
+                <i class="slack hash small icon"></i>{{channels_info.channels_total}}
+                </div>
+                <div class="label">
+                Channels
                 </div>
             </div>
-            <button class="ui button slack-btn"><a href="slack://open" class="btn" target="_blank">Open Slack</a></button>
-            <p class="post-title">Most Reacted Posts on the World Campus Slack</p>
-            <div class="post-wrapper">
-                <div class="reacted-post">
-                    <div class="ui card">
-                        <div class="content">
-                            <div class="header">Cute Dog</div>
-                            <div class="meta">
-                                <span class="category">Animals</span>
-                            </div>
-                            <div class="description">
-                                <p></p>
-                            </div>
-                        </div>
-                        <div class="extra content">
-                            <div class="right floated author">
-                                <img class="ui avatar image" src="/images/avatar/small/matt.jpg"> Matt
-                            </div>
-                        </div>
-                    </div>
+            <div class="statistic teal">
+                <div class="value">
+                <i class="users small icon"></i> {{members.members_total}}
                 </div>
-                <div class="reacted-post">
-                    <img src="../images/reactions.png">
-                </div>
-                <div class="reacted-post">
-                    <img src="../images/reactions.png">
+                <div class="label">
+                Members
                 </div>
             </div>
-            <p class="channel-title">Most Active Channels You're Subscribed to</p>
-            <div class="channel-wrapper">
-                <table class="ui sortable celled table table-striped table-dark channel-table">
-                    <thead>
-                        <tr>
-                            <th scope="col">CHANNEL</th>
-                            <th scope="col"># OF MEMBERS</th>
-                            <th scope="col"># OF MESSAGES</th>
-                            <th scope="col">MOST RECENT MESSAGE</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                         {{#each channels_info.TopActiveChannels as |channel|}}
-                        <tr>
-                            <td><a href="https://slack.com/app_redirect?channel={{channel.cname}}" target="_blank">#{{channel.cname}}</a></td>
-                            <td>{{channel.num_members}}</td>
-                            <td>{{channel.msgs.length}}</td>
-                            <td>Today, 5:30pm</td>
-                        </tr>
-                        {{/each}}
-                        
-                    </tbody>
-                </table>
+            <div class="statistic blue">
+                <div class="value">
+                <i class="comments small icon"></i>{{channels_info.msg_total}}
+                </div>
+                <div class="label">
+                Messages
+                </div>
             </div>
-        </main>
+        </div>
     </div>
-</div>
+    <button class="ui button slack-btn"><a href="slack://open" target="_blank">Open Slack</a></button>
+    <p class="post-title">Most Reacted Posts on the World Campus Slack</p>
+    <div class="post-wrapper">
+        <div class="ui card">
+            <div class="image">
+                <img src="images/reactions.png">
+            </div>
+            <div class="extra content">
+                <div class="header"><a><i class="slack hash small icon"></i>general</a></div>
+                <div class="meta">
+                    <span class="left floated time">2 days ago</span>
+                </div>
+                <div class="right floated author">
+                <img class="ui avatar image" src="images/placeholder-img.png"> Aaron
+                </div>
+            </div>
+        </div>
+        <div class="ui card">
+            <div class="image">
+                <img src="images/reactions.png">
+            </div>
+            <div class="extra content">
+                <div class="header"><a><i class="slack hash small icon"></i>general</a></div>
+                <div class="meta">
+                    <span class="left floated time">2 days ago</span>
+                </div>
+                <div class="right floated author">
+                <img class="ui avatar image" src="images/placeholder-img.png"> Aaron
+                </div>
+            </div>
+        </div>
+        <div class="ui card">
+            <div class="image">
+                <img src="images/reactions.png">
+            </div>
+            <div class="extra content">
+                <div class="header"><a><i class="slack hash small icon"></i>general</a></div>
+                <div class="meta">
+                    <span class="left floated time">2 days ago</span>
+                </div>
+                <div class="right floated author">
+                <img class="ui avatar image" src="images/placeholder-img.png"> Aaron
+                </div>
+            </div>
+        </div>
+    </div>
+    <p class="channel-title">Most Active Channels You're Subscribed to</p>
+    <div class="channel-wrapper">
+        <table class="ui sortable celled table table-striped table-dark channel-table">
+            <thead>
+                <tr>
+                    <th scope="col">CHANNEL</th>
+                    <th scope="col"># OF MEMBERS</th>
+                    <th scope="col"># OF MESSAGES</th>
+                    <th scope="col">MOST RECENT MESSAGE</th>
+                </tr>
+            </thead>
+            <tbody>
+                    {{#each channels_info.TopActiveChannels as |channel|}}
+                <tr>
+                    <td><a href="https://slack.com/app_redirect?channel={{channel.cname}}" target="_blank">#{{channel.cname}}</a></td>
+                    <td>{{channel.num_members}}</td>
+                    <td>{{channel.msgs.length}}</td>
+                    <td>Today, 5:30pm</td>
+                </tr>
+                {{/each}}
+                
+            </tbody>
+        </table>
+    </div>
+</main>
