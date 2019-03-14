@@ -23,6 +23,11 @@
 .channel9 { color: #6435c9; }
 .channel10 { color: #6435c9; }
 
+/* Class for table heading when that heading is being sorted by */
+.sort-heading{
+  text-decoration: underline;
+}
+
   .container.main{
     margin-top: 7.0em;
 }
