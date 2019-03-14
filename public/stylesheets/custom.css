@@ -452,6 +452,18 @@ p{
   flex-wrap: wrap;
   justify-content: space-around;
 }
+
+.profile-edit-wrapper {
+  /* display: grid;
+  grid-template: auto/repeat(24,1fr);*/
+   padding-bottom: 100px;
+   display: flex;
+   flex-direction: row;
+   flex-wrap: wrap;
+   justify-content: space-around;
+   margin-top: 100px;
+ }
+
 .basic-info{
   display: flex;
   flex-direction: column;
@@ -621,6 +633,8 @@ div.ui.dropdown.weekday.selection {
   width: 10em!important;
 }
 
-.profile-wrapper .ui.horizontal.divider.header, .meeting-form h3 {
+.profile-wrapper .ui.horizontal.divider.header, .meeting-form h3,  .profile-edit-wrapper .ui.horizontal.divider.header{
   color: #FBBD08;
+  margin-top: 60px!important;
+  margin-bottom: 40px!important;
 }
