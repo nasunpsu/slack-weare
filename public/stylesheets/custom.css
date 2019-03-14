@@ -482,10 +482,15 @@ p{
   margin-top: 40px;
 }
 
+.basic-info.availability {
+  /* background-color: grey; */
+  align-items: center!important;
+  display:flex;
+  /* vertical-align: ; */
+}
+
 .save-profile-changes{
-  position: absolute;
-  bottom: 15px;
-  right: 15px;
+  float:right;
 }
 
 .availability-label{
@@ -614,4 +619,8 @@ div.ui.dropdown.weekday.selection {
 
 .ui.input.weekday-time input {
   width: 10em!important;
+}
+
+.profile-wrapper .ui.horizontal.divider.header, .meeting-form h3 {
+  color: #FBBD08;
 }

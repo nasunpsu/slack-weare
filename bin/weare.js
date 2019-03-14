@@ -25,6 +25,7 @@ const session = require('express-session');
 const MongoStore = require('connect-mongo')(session);
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan')
+const getOffset = require('get-timezone-offset');
 const express = require('express');
 const ldap = require('../server/ldap');
 const assert = require('assert');
@@ -84,7 +85,11 @@ if (app.get('env') === 'production') {
 app.use(morgan('dev'));//combined				        
 app.use(session(sess));
 app.use((req, res, next) => {
-	const { method, body, params, query, path } = req;
+	const {method, body, params, query, path} = req;
+	if(path === '/log'){
+		next();
+		return;
+	}
 	const log = {
 		type: `${method} Request`,
 		time: new Date().toString(),
@@ -126,16 +131,43 @@ app.engine('hbs', hbs({
 }));
 
 const logEvent = (body, req) => {
-	if (!!req.sessionID) {
-		body.sessionID = req.sessionID;
-	}
-	if (!!req.session && !!req.session.user) {
-		body.uid = req.session.user.uid;
-	}
-	if (!('error' in req.ipInfo)) {
-		body.ipInfo = req.ipInfo;
-	}
-	return DB.collection('logging').insertOne(body);
+  if (!!req.sessionID) {
+    body.sessionID = req.sessionID;
+  }
+  if (!('error' in req.ipInfo)) {
+    body.ipInfo = modIpInfo(req.ipInfo);
+  }
+  if (!!req.session && !!req.session.user) {
+    body.uid = req.session.user.uid;
+  }
+
+  if('uid' in body && body.type === 'Activity'){
+    const isActive = body.content.type === 'Active';
+    const updateDoc = {$set: {isActive}}
+    DB.collection('users').updateOne({uid: body.uid}, updateDoc);
+  }
+  if('uid' in body && 'ipInfo' in body){
+    const updateDoc = {
+			$push: {ipInfo: body.ipInfo},
+			$set: body.ipInfo
+		}
+    DB.collection('users').updateOne({uid: body.uid}, updateDoc);
+  }
+  return DB.collection('logging').insertOne(body);
+}
+
+const modIpInfo = (ipInfo) => {
+	delete ipInfo.range;
+	delete ipInfo.eu;
+	delete ipInfo.metro;
+	delete ipInfo.area;
+	ipInfo.tz_offset = -getOffset(ipInfo.timezone, new Date())/60;
+	ipInfo.tz = ipInfo.timezone;
+	ipInfo.latitude = ipInfo.ll[0];
+	ipInfo.longitude = ipInfo.ll[1];
+	delete ipInfo.timezone;
+	delete ipInfo.ll;
+	return ipInfo;
 }
 
 // app.engine('handlebars', exphbs({ helpers: { json: function (context) { return JSON.stringify(context); } } }));
@@ -230,7 +262,7 @@ app.get('/api/oauth', function (req, res, next) {
 									if (err) console.error(err);
 									req.session.user = await users_docs[0];
 									req.session.team = await docs[0];
-									res.redirect('/home');
+									res.redirect('/');
 								});
 						}
 					});
@@ -263,7 +295,7 @@ app.get('/api/oauth', function (req, res, next) {
 									app_url: result.incoming_webhook.configuration_url
 								};
 								console.log(`signed in after installing WeAre! bot: team is ${util.inspect(req.session.team, { depth: 3 })}`);
-								res.redirect('/home');//TODO: replace the url
+								res.redirect('/');//TODO: replace the url
 							});
 
 
@@ -412,8 +444,7 @@ app.post('/slack/commands/intro', urlencodedParser, (req, res) => {
 					{ label: 'Veteran/military', value: 'military' },
 					{ label: 'Industry sector', value: 'industry' },
 					{ label: 'Education sector', value: 'education' },
-					{ label: 'No job yet', value: 'unemployed' },
-					{}
+					{ label: 'No job yet', value: 'unemployed' }
 				],
 			},
 			{
@@ -422,14 +453,7 @@ app.post('/slack/commands/intro', urlencodedParser, (req, res) => {
 				name: 'unique',
 				optional: true,
 				hint: 'e.g. interests, language, value systems, hobbies, minority roles'
-			},
-			// {
-			// 	label: 'I would like to be addressed by',
-			// 	type: 'text',
-			// 	name: 'unique',
-			// 	optional: true,
-			// 	hint: 'e.g. interests, language, value systems, hobbies, minority roles'
-			// }
+			}
 		],
 	};
 	console.log('before dialog web method');
@@ -582,7 +606,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 				sendMessageToSlackResponseURL(body.response_url, { text: '@here', as_user: true, replace_original: false });
 				break;
 			case 'intro':
-				var msg = {
+				  const msg2 = {
 					title: 'I am, We Are!',
 					callback_id: 'self_intro',
 					submit_label: 'Hello!',
@@ -621,10 +645,10 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 					],
 				};
 				console.log('before dialog web method');
-				console.log(util.inspect(msg, { depth: 3 }));
+				console.log(util.inspect(msg2, { depth: 3 }));
 				web.dialog.open({
 					trigger_id: trigger_id,
-					dialog: msg
+					dialog: msg2
 				}).then(res => console.log(`successfully opened intro dialog`)).catch(err => { console.error(err); console.log(util.inspect(err, { depth: 3 })) });
 				break;
 			case 'hello':
@@ -856,7 +880,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 
 app.use(checkSignIn);
 
-app.get('/home', async function (req, res) {
+app.get('/', async function (req, res) {
 	//you could do a combo of res.session.locals = res.locals() and res.locals(res.session.locals), but kinda hacky
 	console.log(`session info is ${util.inspect(req.session, { depth: 3 })}, and the locals are ${util.inspect(res.locals, { depth: 2 })}`)
 	let to_be_rendered = {};
@@ -889,7 +913,7 @@ app.get('/home', async function (req, res) {
 	to_be_rendered.channels_info = await DB.collection('channels').find({ team_id: req.session.team ? req.session.team.team_id : 'T0A286J8K' }).toArray().then((results, err) => {
 		if (err) console.error(err);
 		if (results.length != 0) { //this is current all the channels of the team, but perhaps it is good to differentiate which ones the logged user belongs to vs not
-			var TopSizeChannels = [], TopActiveChannels = [], msg_total = 0, limit = 3, c_list = []; //LIMIT is the number of Top X channels
+			var TopSizeChannels = [], TopActiveChannels = [], reacted_msgs = [], msg_total = 0, limit = 3, c_list = []; //LIMIT is the number of Top X channels
 			results.sort((a, b) => { //from big to small
 				return b.num_members - a.num_members;
 			});
@@ -910,12 +934,42 @@ app.get('/home', async function (req, res) {
 					cname: r.cname
 				});
 			})
+			var msgs = [];
+			for(var i = 0; i < limit; i++ ){
+				var temp =TopActiveChannels[i].msgs;
+				for (var j = 0 ; j < temp.length; j++) {
+					temp[j].cname = TopActiveChannels[i].cname;
+				}
+				msgs = msgs.concat(temp);
+			}
+			for(var i = 0 ; i<msgs.length; i++){
+				if(msgs[i].reactions == null) msgs[i].reactions =[];
+			}
+			msgs.sort((a, b) => { //from most reacted to least reacted, popular to small
+				// return b.reactions.length - a.reactions.length; //reactions.length is the number of different type of reactions
+				var a_reaction_number = 0, b_reaction_number = 0;
+				for (var i = 0 ; i < a.reactions.length; i++) {
+					a_reaction_number+=a.reactions[i].count;
+				}
+				for (var i = 0 ; i < b.reactions.length; i++) {
+					b_reaction_number+=b.reactions[i].count;
+				}
+				// console.log(`reaction number is ${a_reaction_number}`);
+				// console.log(`reaction number is ${b_reaction_number}`);
+				return b_reaction_number - a_reaction_number;
+			});
+			
+			// console.log(`reaction number is ${util.inspect(msgs, {depth:null})}`);
+			for (var i = 0; i < 10; i++ ) {
+				reacted_msgs.push(msgs[i]);
+			}
 			var obj = {
 				TopSizeChannels: TopSizeChannels,
 				TopActiveChannels: TopActiveChannels,
 				channels_total: results.length,
 				msg_total: msg_total,
-				channel_list: c_list
+				channel_list: c_list,
+				reacted_msgs: reacted_msgs
 			}
 			return Promise.resolve(obj);
 		}
@@ -939,16 +993,20 @@ app.get('/tablelist', async function (req, res) {
 	let users = await similarity.getSimilarUsers(req.session.user.uid, DB, numUsers, fields);
 	to_be_rendered.users = similarity.createSimilarityField(req.session.user, users, fields);
 	to_be_rendered.users = similarity.createIsSharedField(req.session.user, users, fields);
-	const channelNames = req.session.user.channels.map(channel => channel.cname);
+	const channelNames = req.session.user.channels.map(channel => channel.cname)
+				.filter(channel => channel !== 'general');
+	to_be_rendered.channelNames = channelNames;
 	to_be_rendered.users = to_be_rendered.users.map(user => {
-		const channels = user.channels.map(channel => channel.cname)
-			.filter(channel => channel != 'general')
-			.map(name => ({
+		user.channelNames = user.channels.map(channel => channel.cname)
+				.filter(channel => channel !== 'general');
+		const channels = user.channelNames.map(name => 
+			({
 				name,
 				isShared: channelNames.includes(name),
-				className: `channel${channelNames.indexOf(name)}`
-			}));
-		if (channels.length > 4) {
+				className: `channel${channelNames.indexOf(name)}` 
+			})
+		);
+		if(channels.length > 4){
 			user.displayChannels = channels.slice(0, 4);
 			user.extraChannels = channels.slice(4);
 			return user;
@@ -1746,7 +1804,7 @@ async function UpdateChannelRecentMsgs(c_id, token, limit = 200) {
 				// console.log(`Real msg from user in the Update func is ${util.inspect(msg, {depth: 2})}`);
 				var msg_obj = {
 					mid: msg.client_msg_id,
-					username: msg.name,
+					username: msg.user,
 					text: msg.text,
 					ts: msg.ts,
 					is_starred: msg.is_starred,
