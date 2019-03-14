@@ -30,7 +30,7 @@
     </div>
     <button class="ui button slack-btn"><a href="slack://open" target="_blank">Open Slack</a></button>
 
-    <p>{{{json channels_info.TopActiveChannels}}}</p>
+    <div class="ui segment">{{{json channels_info.TopActiveChannels}}}</div>
     <p class="post-title">Most Reacted Posts on the World Campus Slack</p>
     <div class="post-wrapper">
         {{#each channels_info.reacted_msgs as |msg|}}
