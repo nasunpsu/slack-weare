@@ -84,7 +84,11 @@ if (app.get('env') === 'production') {
 app.use(morgan('dev'));//combined				        
 app.use(session(sess));
 app.use((req, res, next) => {
-	const { method, body, params, query, path } = req;
+	const {method, body, params, query, path} = req;
+	if(path === '/log'){
+		next();
+		return;
+	}
 	const log = {
 		type: `${method} Request`,
 		time: new Date().toString(),
@@ -126,16 +130,26 @@ app.engine('hbs', hbs({
 }));
 
 const logEvent = (body, req) => {
-	if (!!req.sessionID) {
-		body.sessionID = req.sessionID;
-	}
-	if (!!req.session && !!req.session.user) {
-		body.uid = req.session.user.uid;
-	}
-	if (!('error' in req.ipInfo)) {
-		body.ipInfo = req.ipInfo;
-	}
-	return DB.collection('logging').insertOne(body);
+  if (!!req.sessionID) {
+    body.sessionID = req.sessionID;
+  }
+  if (!('error' in req.ipInfo)) {
+    body.ipInfo = req.ipInfo;
+  }
+  if (!!req.session && !!req.session.user) {
+    body.uid = req.session.user.uid;
+  }
+
+  if('uid' in body && body.type === 'Activity'){
+    const isActive = body.content.type === 'Active';
+    const updateDoc = {$set: {isActive}}
+    DB.collection('users').updateOne({uid: body.uid}, updateDoc);
+  }
+  if('uid' in body && 'ipInfo' in body){
+    const updateDoc = {$set: {ipInfo: body.ipInfo}}
+    DB.collection('users').updateOne({uid: body.uid}, updateDoc);
+  }
+  return DB.collection('logging').insertOne(body);
 }
 
 // app.engine('handlebars', exphbs({ helpers: { json: function (context) { return JSON.stringify(context); } } }));
@@ -574,7 +588,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 				sendMessageToSlackResponseURL(body.response_url, { text: '@here', as_user: true, replace_original: false });
 				break;
 			case 'intro':
-				var msg = {
+				  const msg2 = {
 					title: 'I am, We Are!',
 					callback_id: 'self_intro',
 					submit_label: 'Hello!',
@@ -613,10 +627,10 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 					],
 				};
 				console.log('before dialog web method');
-				console.log(util.inspect(msg, { depth: 3 }));
+				console.log(util.inspect(msg2, { depth: 3 }));
 				web.dialog.open({
 					trigger_id: trigger_id,
-					dialog: msg
+					dialog: msg2
 				}).then(res => console.log(`successfully opened intro dialog`)).catch(err => { console.error(err); console.log(util.inspect(err, { depth: 3 })) });
 				break;
 			case 'hello':
@@ -931,16 +945,20 @@ app.get('/tablelist', async function (req, res) {
 	let users = await similarity.getSimilarUsers(req.session.user.uid, DB, numUsers, fields);
 	to_be_rendered.users = similarity.createSimilarityField(req.session.user, users, fields);
 	to_be_rendered.users = similarity.createIsSharedField(req.session.user, users, fields);
-	const channelNames = req.session.user.channels.map(channel => channel.cname);
+	const channelNames = req.session.user.channels.map(channel => channel.cname)
+				.filter(channel => channel !== 'general');
+	to_be_rendered.channelNames = channelNames;
 	to_be_rendered.users = to_be_rendered.users.map(user => {
-		const channels = user.channels.map(channel => channel.cname)
-			.filter(channel => channel != 'general')
-			.map(name => ({
+		user.channelNames = user.channels.map(channel => channel.cname)
+				.filter(channel => channel !== 'general');
+		const channels = user.channelNames.map(name => 
+			({
 				name,
 				isShared: channelNames.includes(name),
-				className: `channel${channelNames.indexOf(name)}`
-			}));
-		if (channels.length > 4) {
+				className: `channel${channelNames.indexOf(name)}` 
+			})
+		);
+		if(channels.length > 4){
 			user.displayChannels = channels.slice(0, 4);
 			user.extraChannels = channels.slice(4);
 			return user;

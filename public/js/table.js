@@ -109,11 +109,18 @@ class UserTable {
 
     filterUsers(checkboxes, users, sessionUser){
         const checked = Array.from(checkboxes).map(check => check.checked);
+        const channelNames = sessionUser.channels.map(channel => channel.cname);
         return users.filter(user => {
             return checked.every((value, index) => {
                 const key = this.checkBoxValues[index];
-                //if the user doesnt have it, continue
+                //if the user doesn't have it, continue
                 if(sessionUser[key] === undefined){
+                    const checkbox = Array.from(checkboxes)[index];
+                    //Name of channel
+                    const text = checkbox.parentElement.innerText;
+                    if(channelNames.includes(text)){
+                        return !value || user.channelNames.includes(text);
+                    }
                     return true;
                 }
                 //if there is no filter set, continue
@@ -121,10 +128,7 @@ class UserTable {
                     return true;
                 }
                 //if the filter is set but the two differ
-                if(value && sessionUser[key] !== user[key]){
-                    return false;
-                }
-                return true;
+                return !(value && sessionUser[key] !== user[key])
             });
         });
     }
