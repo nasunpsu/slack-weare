@@ -138,7 +138,7 @@ const logEvent = (body, req) => {
     body.ipInfo = modIpInfo(req.ipInfo);
   }
   if (!!req.session && !!req.session.user) {
-    body.uid = req.session.user.uid;
+    body.email = req.session.user.email;
   }
 
   if('uid' in body && body.type === 'Activity'){
