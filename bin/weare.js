@@ -1034,7 +1034,7 @@ app.get('/network_balloon', async function (req, res) {
 app.get('/editProfile', async function (req, res) {
 	let to_be_rendered = {};
 	to_be_rendered.layout = 'default';
-	to_be_rendered.template = 'home-template';
+	to_be_rendered.template = 'editprofile-template';
 	to_be_rendered.userInfo = req.session.user;
 	res.render('profile', to_be_rendered);
 });
@@ -1042,7 +1042,7 @@ app.get('/editProfile', async function (req, res) {
 app.post('/editProfile', async function (req, res) {
 	let to_be_rendered = {};
 	to_be_rendered.layout = 'default';
-	to_be_rendered.template = 'home-template';
+	to_be_rendered.template = 'editprofile-template';
 	to_be_rendered.userInfo = await DB.collection('users').find({ uid: req.session.user.uid }).toArray().then(async (results, err) => {
 		if (err) console.error(err);
 		else if (results.length != 0) {
@@ -1051,6 +1051,14 @@ app.post('/editProfile', async function (req, res) {
 
 	});
 	res.render('profile', to_be_rendered);
+});
+
+app.get('/profile/:uid', async function (req, res) {
+	let to_be_rendered = {};
+	to_be_rendered.layout = 'default';
+	to_be_rendered.template = 'profile-template';
+	to_be_rendered.userInfo = req.session.user;
+	res.render('profileview', to_be_rendered);
 });
 
 app.get('/meetings', async function (req, res) {
@@ -1111,7 +1119,7 @@ app.get('/meetings', async function (req, res) {
 		else to_be_rendered.empty2 = true;
 	});
 	if (to_be_rendered.empty1 & to_be_rendered.empty2) to_be_rendered.empty = true;
-	to_be_rendered.meetings = await union(meetings1, meetings2);//[...new Set([...meetings1, ...meetings2])];//
+	to_be_rendered.meetings = await union(meetings1?meetings1:[], meetings2?meetings2:[]);//[...new Set([...meetings1, ...meetings2])];//
 	res.render('meetings_table', to_be_rendered);
 });
 
@@ -2116,6 +2124,8 @@ function makeid() {
 function union(array1, array2) {
 	// if(a1)
 	// return [...new Set([...a1, ...a2])]
+	if(array1 == undefined | array1.length ==0) return array2;
+	else if ( array2 == undefined | array2.length==0) return array1;
 	const result = array2.concat(array1).filter(function (o) {
 		return this.has(o.mid) ? false : this.add(o.mid);
 	}, new Set());

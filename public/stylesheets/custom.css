@@ -545,3 +545,20 @@ i.attendance-status {
   font-size: xx-small;
   color:grey;
 }
+
+
+.ui.form .fields .field .ui.input input, .ui.form .field .ui.input input {
+  width: auto!important;
+}
+
+.field label {
+  display: flex;
+}
+
+div.ui.dropdown.weekday.selection {
+  min-width: 10em!important;
+}
+
+.ui.input.weekday-time input {
+  width: 10em!important;
+}

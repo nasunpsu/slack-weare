@@ -19,6 +19,7 @@
     "cookie-parser": "^1.4.3",
     "dotenv": "^6.2.0",
     "ejs": "^2.6.1",
+    "emoji-js": "^3.4.1",
     "express": "^4.16.4",
     "express-handlebars": "^3.0.0",
     "express-ip": "^1.0.3",
