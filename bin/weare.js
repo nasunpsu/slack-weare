@@ -147,7 +147,10 @@ const logEvent = (body, req) => {
     DB.collection('users').updateOne({uid: body.uid}, updateDoc);
   }
   if('uid' in body && 'ipInfo' in body){
-    const updateDoc = {$push: {ipInfo: body.ipInfo}}
+    const updateDoc = {
+			$push: {ipInfo: body.ipInfo},
+			$set: body.ipInfo
+		}
     DB.collection('users').updateOne({uid: body.uid}, updateDoc);
   }
   return DB.collection('logging').insertOne(body);
@@ -158,7 +161,12 @@ const modIpInfo = (ipInfo) => {
 	delete ipInfo.eu;
 	delete ipInfo.metro;
 	delete ipInfo.area;
-	ipInfo.offset = -getOffset(ipInfo.timezone, new Date())/60;
+	ipInfo.tz_offset = -getOffset(ipInfo.timezone, new Date())/60;
+	ipInfo.tz = ipInfo.timezone;
+	ipInfo.latitude = ipInfo.ll[0];
+	ipInfo.longitude = ipInfo.ll[1];
+	delete ipInfo.timezone;
+	delete ipInfo.ll;
 	return ipInfo;
 }
 
