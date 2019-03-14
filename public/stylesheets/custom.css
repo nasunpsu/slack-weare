@@ -414,27 +414,34 @@ p{
 }
 
 .profile-wrapper {
-  display: grid;
- grid-template: auto/repeat(24,1fr);
+  /* display: grid;
+ grid-template: auto/repeat(24,1fr); */
   padding-bottom: 100px;
   margin-top: 100px;
+  margin-left:50px;
+  margin-right:50px;
 }
-.basic-info{
-  grid-column: 3/23;
+.basic-info, .instrumental-info, .personal-info{
+  /* grid-column: 3/23;
   display: flex;
   margin: auto;
-  flex-wrap: wrap;
+  flex-wrap: wrap; */
   height: auto;
-  border: 1px rgba(0,0,0,.1) solid;
-  border-radius: 5px;
-  padding: 40px;
+  /* border: 1px rgba(0,0,0,.1) solid;
+  border-radius: 5px; */
+  /* padding: 40px; */
   position: relative;
 }
 
+.basic-info.availability {
+  /* background-color: grey; */
+  align-items: center!important;
+  display:flex;
+  /* vertical-align: ; */
+}
+
 .save-profile-changes{
-  position: absolute;
-  bottom: 15px;
-  right: 15px;
+  float:right;
 }
 
 .availability-label{
@@ -561,4 +568,8 @@ div.ui.dropdown.weekday.selection {
 
 .ui.input.weekday-time input {
   width: 10em!important;
+}
+
+.profile-wrapper .ui.horizontal.divider.header, .meeting-form h3 {
+  color: #FBBD08;
 }

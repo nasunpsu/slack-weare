@@ -230,7 +230,7 @@ app.get('/api/oauth', function (req, res, next) {
 									if (err) console.error(err);
 									req.session.user = await users_docs[0];
 									req.session.team = await docs[0];
-									res.redirect('/home');
+									res.redirect('/');
 								});
 						}
 					});
@@ -263,7 +263,7 @@ app.get('/api/oauth', function (req, res, next) {
 									app_url: result.incoming_webhook.configuration_url
 								};
 								console.log(`signed in after installing WeAre! bot: team is ${util.inspect(req.session.team, { depth: 3 })}`);
-								res.redirect('/home');//TODO: replace the url
+								res.redirect('/');//TODO: replace the url
 							});
 
 
@@ -412,8 +412,7 @@ app.post('/slack/commands/intro', urlencodedParser, (req, res) => {
 					{ label: 'Veteran/military', value: 'military' },
 					{ label: 'Industry sector', value: 'industry' },
 					{ label: 'Education sector', value: 'education' },
-					{ label: 'No job yet', value: 'unemployed' },
-					{}
+					{ label: 'No job yet', value: 'unemployed' }
 				],
 			},
 			{
@@ -422,14 +421,7 @@ app.post('/slack/commands/intro', urlencodedParser, (req, res) => {
 				name: 'unique',
 				optional: true,
 				hint: 'e.g. interests, language, value systems, hobbies, minority roles'
-			},
-			// {
-			// 	label: 'I would like to be addressed by',
-			// 	type: 'text',
-			// 	name: 'unique',
-			// 	optional: true,
-			// 	hint: 'e.g. interests, language, value systems, hobbies, minority roles'
-			// }
+			}
 		],
 	};
 	console.log('before dialog web method');
@@ -856,7 +848,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 
 app.use(checkSignIn);
 
-app.get('/home', async function (req, res) {
+app.get('/', async function (req, res) {
 	//you could do a combo of res.session.locals = res.locals() and res.locals(res.session.locals), but kinda hacky
 	console.log(`session info is ${util.inspect(req.session, { depth: 3 })}, and the locals are ${util.inspect(res.locals, { depth: 2 })}`)
 	let to_be_rendered = {};

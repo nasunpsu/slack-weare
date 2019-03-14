@@ -1,403 +1,352 @@
-<h4 class="ui horizontal divider header profile-info-header">
-  General Info
-</h4>
 <section class="profile-wrapper">
 
-  <div class="basic-info">
-    <div class="profile-img-wrapper">
-      <img class="ui small image profile-img" src={{userInfo.image_512}}>
-      <a class="ui small blue left corner label">
-        <i class="pencil icon"></i>
-      </a>
-    </div>
-    <div class="basic-info-text">
-      <form class="ui form profile-form">
-        <div class="field">
-          <label>Name</label>
-          <div class="field">
-            <input type="text" name="FirstName" placeholder="your name presented in the dashboard" value="{{userInfo.real_name}}">
-          </div>
-        </div>
-        <div class="field">
-          <label>Current Career</label>
-          <select class="ui fluid dropdown" name="profession" id="profession">
-            <option value="17" selected="">Architecture and Engineering</option>
-            <option value="27">Arts, Design, Entertainment, Sports, and Media</option>
-            <option value="37">Building and Grounds Cleaning and Maintenance</option>
-            <option value="13">Business and Financial Operations</option>
-            <option value="21">Community and Social Service</option>
-            <option value="15">Computer and Mathematical</option>
-            <option value="47">Construction and Extraction</option>
-            <option value="25">Education, Training, and Library</option>
-            <option value="45">Farming, Fishing, and Forestry</option>
-            <option value="35">Food Preparation and Serving Related</option>
-            <option value="29">Healthcare Practitioners and Technical</option>
-            <option value="31">Healthcare Support</option>
-            <option value="49">Installation, Maintenance, and Repair</option>
-            <option value="23">Legal</option>
-            <option value="19">Life, Physical, and Social Science</option>
-            <option value="11">Management</option>
-            <option value="55">Military Specific</option>
-            <option value="43">Office and Administrative Support</option>
-            <option value="39">Personal Care and Service</option>
-            <option value="51">Production</option>
-            <option value="33">Protective Service</option>
-            <option value="41">Sales and Related</option>
-            <option value="53">Transportation and Material Moving</option>
-            <option value="0">All Occupations</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Location</label>
-          <div class="two fields">
-            <div class="twelve wide field">
-              <input type="text" name="city" placeholder={{userInfo.city}}>
-            </div>
-            <div class="four wide field">
-              <input type="text" name="province" placeholder=" {{userInfo.province}}">
-            </div>
-          </div>
-        </div>
-        <div class="field">
-          <label>Time Zone</label>
-          <select class="ui fluid dropdown">
-            <option timeZoneId="1" gmtAdjustment="GMT-12:00" useDaylightTime="0" value="-12">(GMT-12:00) International
-              Date Line West</option>
-            <option timeZoneId="2" gmtAdjustment="GMT-11:00" useDaylightTime="0" value="-11">(GMT-11:00) Midway Island,
-              Samoa</option>
-            <option timeZoneId="3" gmtAdjustment="GMT-10:00" useDaylightTime="0" value="-10">(GMT-10:00) Hawaii</option>
-            <option timeZoneId="4" gmtAdjustment="GMT-09:00" useDaylightTime="1" value="-9">(GMT-09:00) Alaska</option>
-            <option timeZoneId="5" gmtAdjustment="GMT-08:00" useDaylightTime="1" value="-8">(GMT-08:00) Pacific Time (US
-              &amp; Canada)</option>
-            <option timeZoneId="6" gmtAdjustment="GMT-08:00" useDaylightTime="1" value="-8">(GMT-08:00) Tijuana, Baja
-              California</option>
-            <option timeZoneId="7" gmtAdjustment="GMT-07:00" useDaylightTime="0" value="-7">(GMT-07:00) Arizona</option>
-            <option timeZoneId="8" gmtAdjustment="GMT-07:00" useDaylightTime="1" value="-7">(GMT-07:00) Chihuahua, La
-              Paz, Mazatlan</option>
-            <option timeZoneId="9" gmtAdjustment="GMT-07:00" useDaylightTime="1" value="-7">(GMT-07:00) Mountain Time
-              (US &amp; Canada)</option>
-            <option timeZoneId="10" gmtAdjustment="GMT-06:00" useDaylightTime="0" value="-6">(GMT-06:00) Central America
-            </option>
-            <option timeZoneId="11" gmtAdjustment="GMT-06:00" useDaylightTime="1" value="-6">(GMT-06:00) Central Time
-              (US &amp; Canada)</option>
-            <option timeZoneId="12" gmtAdjustment="GMT-06:00" useDaylightTime="1" value="-6">(GMT-06:00) Guadalajara,
-              Mexico City, Monterrey</option>
-            <option timeZoneId="13" gmtAdjustment="GMT-06:00" useDaylightTime="0" value="-6">(GMT-06:00) Saskatchewan
-            </option>
-            <option timeZoneId="14" gmtAdjustment="GMT-05:00" useDaylightTime="0" value="-5">(GMT-05:00) Bogota, Lima,
-              Quito, Rio Branco</option>
-            <option timeZoneId="15" gmtAdjustment="GMT-05:00" useDaylightTime="1" value="-5">(GMT-05:00) Eastern Time
-              (US &amp; Canada)</option>
-            <option timeZoneId="16" gmtAdjustment="GMT-05:00" useDaylightTime="1" value="-5">(GMT-05:00) Indiana (East)
-            </option>
-            <option timeZoneId="17" gmtAdjustment="GMT-04:00" useDaylightTime="1" value="-4">(GMT-04:00) Atlantic Time
-              (Canada)</option>
-            <option timeZoneId="18" gmtAdjustment="GMT-04:00" useDaylightTime="0" value="-4">(GMT-04:00) Caracas, La Paz
-            </option>
-            <option timeZoneId="19" gmtAdjustment="GMT-04:00" useDaylightTime="0" value="-4">(GMT-04:00) Manaus</option>
-            <option timeZoneId="20" gmtAdjustment="GMT-04:00" useDaylightTime="1" value="-4">(GMT-04:00) Santiago
-            </option>
-            <option timeZoneId="21" gmtAdjustment="GMT-03:30" useDaylightTime="1" value="-3.5">(GMT-03:30) Newfoundland
-            </option>
-            <option timeZoneId="22" gmtAdjustment="GMT-03:00" useDaylightTime="1" value="-3">(GMT-03:00) Brasilia
-            </option>
-            <option timeZoneId="23" gmtAdjustment="GMT-03:00" useDaylightTime="0" value="-3">(GMT-03:00) Buenos Aires,
-              Georgetown</option>
-            <option timeZoneId="24" gmtAdjustment="GMT-03:00" useDaylightTime="1" value="-3">(GMT-03:00) Greenland
-            </option>
-            <option timeZoneId="25" gmtAdjustment="GMT-03:00" useDaylightTime="1" value="-3">(GMT-03:00) Montevideo
-            </option>
-            <option timeZoneId="26" gmtAdjustment="GMT-02:00" useDaylightTime="1" value="-2">(GMT-02:00) Mid-Atlantic
-            </option>
-            <option timeZoneId="27" gmtAdjustment="GMT-01:00" useDaylightTime="0" value="-1">(GMT-01:00) Cape Verde Is.
-            </option>
-            <option timeZoneId="28" gmtAdjustment="GMT-01:00" useDaylightTime="1" value="-1">(GMT-01:00) Azores</option>
-            <option timeZoneId="29" gmtAdjustment="GMT+00:00" useDaylightTime="0" value="0">(GMT+00:00) Casablanca,
-              Monrovia, Reykjavik</option>
-            <option timeZoneId="30" gmtAdjustment="GMT+00:00" useDaylightTime="1" value="0">(GMT+00:00) Greenwich Mean
-              Time : Dublin, Edinburgh, Lisbon, London</option>
-            <option timeZoneId="31" gmtAdjustment="GMT+01:00" useDaylightTime="1" value="1">(GMT+01:00) Amsterdam,
-              Berlin, Bern, Rome, Stockholm, Vienna</option>
-            <option timeZoneId="32" gmtAdjustment="GMT+01:00" useDaylightTime="1" value="1">(GMT+01:00) Belgrade,
-              Bratislava, Budapest, Ljubljana, Prague</option>
-            <option timeZoneId="33" gmtAdjustment="GMT+01:00" useDaylightTime="1" value="1">(GMT+01:00) Brussels,
-              Copenhagen, Madrid, Paris</option>
-            <option timeZoneId="34" gmtAdjustment="GMT+01:00" useDaylightTime="1" value="1">(GMT+01:00) Sarajevo,
-              Skopje, Warsaw, Zagreb</option>
-            <option timeZoneId="35" gmtAdjustment="GMT+01:00" useDaylightTime="1" value="1">(GMT+01:00) West Central
-              Africa</option>
-            <option timeZoneId="36" gmtAdjustment="GMT+02:00" useDaylightTime="1" value="2">(GMT+02:00) Amman</option>
-            <option timeZoneId="37" gmtAdjustment="GMT+02:00" useDaylightTime="1" value="2">(GMT+02:00) Athens,
-              Bucharest, Istanbul</option>
-            <option timeZoneId="38" gmtAdjustment="GMT+02:00" useDaylightTime="1" value="2">(GMT+02:00) Beirut</option>
-            <option timeZoneId="39" gmtAdjustment="GMT+02:00" useDaylightTime="1" value="2">(GMT+02:00) Cairo</option>
-            <option timeZoneId="40" gmtAdjustment="GMT+02:00" useDaylightTime="0" value="2">(GMT+02:00) Harare, Pretoria
-            </option>
-            <option timeZoneId="41" gmtAdjustment="GMT+02:00" useDaylightTime="1" value="2">(GMT+02:00) Helsinki, Kyiv,
-              Riga, Sofia, Tallinn, Vilnius</option>
-            <option timeZoneId="42" gmtAdjustment="GMT+02:00" useDaylightTime="1" value="2">(GMT+02:00) Jerusalem
-            </option>
-            <option timeZoneId="43" gmtAdjustment="GMT+02:00" useDaylightTime="1" value="2">(GMT+02:00) Minsk</option>
-            <option timeZoneId="44" gmtAdjustment="GMT+02:00" useDaylightTime="1" value="2">(GMT+02:00) Windhoek
-            </option>
-            <option timeZoneId="45" gmtAdjustment="GMT+03:00" useDaylightTime="0" value="3">(GMT+03:00) Kuwait, Riyadh,
-              Baghdad</option>
-            <option timeZoneId="46" gmtAdjustment="GMT+03:00" useDaylightTime="1" value="3">(GMT+03:00) Moscow, St.
-              Petersburg, Volgograd</option>
-            <option timeZoneId="47" gmtAdjustment="GMT+03:00" useDaylightTime="0" value="3">(GMT+03:00) Nairobi</option>
-            <option timeZoneId="48" gmtAdjustment="GMT+03:00" useDaylightTime="0" value="3">(GMT+03:00) Tbilisi</option>
-            <option timeZoneId="49" gmtAdjustment="GMT+03:30" useDaylightTime="1" value="3.5">(GMT+03:30) Tehran
-            </option>
-            <option timeZoneId="50" gmtAdjustment="GMT+04:00" useDaylightTime="0" value="4">(GMT+04:00) Abu Dhabi,
-              Muscat</option>
-            <option timeZoneId="51" gmtAdjustment="GMT+04:00" useDaylightTime="1" value="4">(GMT+04:00) Baku</option>
-            <option timeZoneId="52" gmtAdjustment="GMT+04:00" useDaylightTime="1" value="4">(GMT+04:00) Yerevan</option>
-            <option timeZoneId="53" gmtAdjustment="GMT+04:30" useDaylightTime="0" value="4.5">(GMT+04:30) Kabul</option>
-            <option timeZoneId="54" gmtAdjustment="GMT+05:00" useDaylightTime="1" value="5">(GMT+05:00) Yekaterinburg
-            </option>
-            <option timeZoneId="55" gmtAdjustment="GMT+05:00" useDaylightTime="0" value="5">(GMT+05:00) Islamabad,
-              Karachi, Tashkent</option>
-            <option timeZoneId="56" gmtAdjustment="GMT+05:30" useDaylightTime="0" value="5.5">(GMT+05:30) Sri
-              Jayawardenapura</option>
-            <option timeZoneId="57" gmtAdjustment="GMT+05:30" useDaylightTime="0" value="5.5">(GMT+05:30) Chennai,
-              Kolkata, Mumbai, New Delhi</option>
-            <option timeZoneId="58" gmtAdjustment="GMT+05:45" useDaylightTime="0" value="5.75">(GMT+05:45) Kathmandu
-            </option>
-            <option timeZoneId="59" gmtAdjustment="GMT+06:00" useDaylightTime="1" value="6">(GMT+06:00) Almaty,
-              Novosibirsk</option>
-            <option timeZoneId="60" gmtAdjustment="GMT+06:00" useDaylightTime="0" value="6">(GMT+06:00) Astana, Dhaka
-            </option>
-            <option timeZoneId="61" gmtAdjustment="GMT+06:30" useDaylightTime="0" value="6.5">(GMT+06:30) Yangon
-              (Rangoon)</option>
-            <option timeZoneId="62" gmtAdjustment="GMT+07:00" useDaylightTime="0" value="7">(GMT+07:00) Bangkok, Hanoi,
-              Jakarta</option>
-            <option timeZoneId="63" gmtAdjustment="GMT+07:00" useDaylightTime="1" value="7">(GMT+07:00) Krasnoyarsk
-            </option>
-            <option timeZoneId="64" gmtAdjustment="GMT+08:00" useDaylightTime="0" value="8">(GMT+08:00) Beijing,
-              Chongqing, Hong Kong, Urumqi</option>
-            <option timeZoneId="65" gmtAdjustment="GMT+08:00" useDaylightTime="0" value="8">(GMT+08:00) Kuala Lumpur,
-              Singapore</option>
-            <option timeZoneId="66" gmtAdjustment="GMT+08:00" useDaylightTime="0" value="8">(GMT+08:00) Irkutsk, Ulaan
-              Bataar</option>
-            <option timeZoneId="67" gmtAdjustment="GMT+08:00" useDaylightTime="0" value="8">(GMT+08:00) Perth</option>
-            <option timeZoneId="68" gmtAdjustment="GMT+08:00" useDaylightTime="0" value="8">(GMT+08:00) Taipei</option>
-            <option timeZoneId="69" gmtAdjustment="GMT+09:00" useDaylightTime="0" value="9">(GMT+09:00) Osaka, Sapporo,
-              Tokyo</option>
-            <option timeZoneId="70" gmtAdjustment="GMT+09:00" useDaylightTime="0" value="9">(GMT+09:00) Seoul</option>
-            <option timeZoneId="71" gmtAdjustment="GMT+09:00" useDaylightTime="1" value="9">(GMT+09:00) Yakutsk</option>
-            <option timeZoneId="72" gmtAdjustment="GMT+09:30" useDaylightTime="0" value="9.5">(GMT+09:30) Adelaide
-            </option>
-            <option timeZoneId="73" gmtAdjustment="GMT+09:30" useDaylightTime="0" value="9.5">(GMT+09:30) Darwin
-            </option>
-            <option timeZoneId="74" gmtAdjustment="GMT+10:00" useDaylightTime="0" value="10">(GMT+10:00) Brisbane
-            </option>
-            <option timeZoneId="75" gmtAdjustment="GMT+10:00" useDaylightTime="1" value="10">(GMT+10:00) Canberra,
-              Melbourne, Sydney</option>
-            <option timeZoneId="76" gmtAdjustment="GMT+10:00" useDaylightTime="1" value="10">(GMT+10:00) Hobart</option>
-            <option timeZoneId="77" gmtAdjustment="GMT+10:00" useDaylightTime="0" value="10">(GMT+10:00) Guam, Port
-              Moresby</option>
-            <option timeZoneId="78" gmtAdjustment="GMT+10:00" useDaylightTime="1" value="10">(GMT+10:00) Vladivostok
-            </option>
-            <option timeZoneId="79" gmtAdjustment="GMT+11:00" useDaylightTime="1" value="11">(GMT+11:00) Magadan,
-              Solomon Is., New Caledonia</option>
-            <option timeZoneId="80" gmtAdjustment="GMT+12:00" useDaylightTime="1" value="12">(GMT+12:00) Auckland,
-              Wellington</option>
-            <option timeZoneId="81" gmtAdjustment="GMT+12:00" useDaylightTime="0" value="12">(GMT+12:00) Fiji,
-              Kamchatka, Marshall Is.</option>
-            <option timeZoneId="82" gmtAdjustment="GMT+13:00" useDaylightTime="0" value="13">(GMT+13:00) Nuku'alofa
-            </option>
-          </select>
-        </div>
-        <div class="profile-email field">
-          <label>Email</label>
-          <div class="field">
-            <input type="text" name="email" placeholder={{userInfo.email}}>
-          </div>
-        </div>
-
-        <div class="availability inline fields">
-          <div class="field">
-            <div class="ui toggle checkbox" style="min-width: 16em">
-              <input type="checkbox" tabindex="0" class="hidden" checked>
-              <label class="blue basic available">I am available online on</label>
-
-              {{!-- <div class="ui label blue basic available">I am available online on</div> --}}
-            </div>
-          </div>
-          <div class="field">
-            <select class="ui dropdown weekday" name="weekday">
-              <option value="sun">Sunday</option>
-              <option value="mon">Monday</option>
-              <option value="tue">Tuesday</option>
-              <option value="wed">Wednesday</option>
-              <option value="thur">Thursday</option>
-              <option value="fri">Friday</option>
-              <option value="sat">Saturday</option>
-            </select>
-          </div>
-          <div class="field" style="display: flex;">
-            <div class="ui calendar week-day" id="pop-time">
-              <div class="ui input weekday-time left icon">
-                <i class="time icon"></i>
-                <input type="text" name="start" placeholder="Start time" value="{{userInfo.Avail.start_time}}">
-              </div>
-            </div>
-            <label style="margin-left: 10px; margin-right: 10px; align-items: center;display:flex;"> till </label>
-
-          </div>
-          <div class="field">
-            <div class="ui calendar week-day" id="pop-time">
-              <div class="ui input weekday-timeleft icon">
-                <i class="time icon"></i>
-                <input type="text" name="to" placeholder="End time" value="{{userInfo.Avail.end_time}}">
-              </div>
-            </div>
-          </div>
-          <div class="field">
-            <div class="ui buttons">
-              <div class="ui basic button delete-button"><i class="icon trash"></i></div>
-              <div class="ui basic button add-button"><i class="icon green plus"></i></div>
-            </div>
-          </div>
-        </div>
-      </form>
-      <button class="ui button save-profile-changes">Save Changes</button>
-
-    </div>
-</section>
-<h4 class="ui horizontal divider header profile-info-header">
-  Education Info
-</h4>
-<section class="profile-wrapper">
-  <div class="basic-info">
-    <div class="basic-info-text">
-      <form class="ui form profile-form">
-        <div class="two fields">
-          <div class="field">
-            <label>Major</label>
-            <div class="field">
-              <input type="text" name="major" placeholder="{{userInfo.major}} {{userInfo.title}}">
-            </div>
-          </div>
-          <div class="field">
-            <label>Penn State Campus</label>
-            <div class="field">
-              <input type="text" name="major" placeholder="{{userInfo.campus}}">
-            </div>
-          </div>
-        </div>
-        <div class="two inline fields">
-          <div class="nine wide field">
-            <label>Current Courses</label>
-            <input type="text" placeholder="IST 110">
-          </div>
-          <div class="six wide field">
-            <input type="text" placeholder="IST 110">
-          </div>
-          <div class="six wide field">
-            <input type="text" placeholder="IST 110">
-          </div>
-          <div class="six wide field">
-            <input type="text" placeholder="IST 110">
-          </div>
-          <div class="six wide field">
-            <input type="text" placeholder="IST 110">
-          </div>
-        </div>
-        <div class="two inline fields">
-          <div class="nine wide field">
-            <label>Courses I Recommend</label>
-            <input type="text" placeholder="IST 110">
-          </div>
-          <div class="six wide field">
-            <input type="text" placeholder="IST 110">
-          </div>
-          <div class="six wide field">
-            <input type="text" placeholder="IST 110">
-          </div>
-          <div class="six wide field">
-            <input type="text" placeholder="IST 110">
-          </div>
-        </div>
-        <div class="field">
-          <label>Instructors I Recommend</label>
-          <div class="two fields">
-            <div class="field">
-              <input type="text" name="recommended-instructor" placeholder="Instructor 1">
-            </div>
-            <div class="field">
-              <input type="text" name="recommended-instructor" placeholder="Instructor 2">
-            </div>
-            <div class="field">
-              <input type="text" name="recommended-instructor" placeholder="Instructor 2">
-            </div>
-          </div>
-        </div>
-        <div class="field">
-          <label>What I want to gain most from World Campus activities</label>
-          <div class="two fields">
-            <div class="field">
-              <input type="text" name="goal" placeholder="Straight A's">
-            </div>
-            <div class="field">
-              <input type="text" name="goal" placeholder="Gaining knowledge">
-            </div>
-            <div class="field">
-              <input type="text" name="goal" placeholder="Learning skills to apply in the industry">
-            </div>
-          </div>
-        </div>
-      </form>
-      <button class="ui button save-profile-changes">Save Changes</button>
-    </div>
+  <h4 class="ui horizontal divider header">
+    Basic Info
+  </h4>
+  <div class="profile-img-wrapper">
+    <img class="ui small right floated image profile-img" src={{userInfo.image_512}}>
   </div>
-</section>
 
-<h4 class="ui horizontal divider header profile-info-header">
-  Personal Info
-</h4>
-<section class="profile-wrapper">
-  <div class="basic-info">
-    <div class="basic-info-text">
-      <form class="ui form profile-form">
-        <div class="field">
-          <label>Places I've Lived</label>
-          <div class="two fields">
-            <div class="field">
-              <input type="text" name="goal" placeholder="Your city. E.g. State College, PA" value="{{userInfo.city}}">
-            </div>
-          </div>
-        </div>
-        <div class="field">
-          <label>Places I'd Like to Visit</label>
-          <div class="two fields">
-            <div class="field">
-              <input type="text" name="goal" placeholder="New Zealand">
-            </div>
-            <div class="field">
-              <input type="text" name="goal" placeholder="Alaska">
-            </div>
-            <div class="field">
-              <input type="text" name="goal" placeholder="Ireland">
-            </div>
-          </div>
-        </div>
-        <div class="two fields">
-          <div class="field">
-            <label>Marital Status</label>
-            <div class="field">
-              <input type="text" name="marital" placeholder="married">
-            </div>
-          </div>
-          <div class="field">
-            <label>Number of Kids</label>
-            <div class="field">
-              <input type="text" name="kids" placeholder="3">
-            </div>
-          </div>
-        </div>
-      </form>
-      <button class="ui button save-profile-changes">Save Changes</button>
+  <form class="ui form profile-form">
+    <div class="fields basic-info">
+      <div class="six wide field">
+        <label>Full Name</label>
+        <input type="text" name="fullname" placeholder="Your name presented in the dashboard"
+          value="{{userInfo.real_name}}">
+      </div>
+      <div class="six wide field">
+        <label>City, Province I live in</label>
+        <input type="text" name="city" placeholder="E.g. Pittsburgh, PA"
+          value="{{#if userInfo.city}}{{userInfo.city}}, {{userInfo.province}}{{/if}}">
+      </div>
+      <div class="two wide field">
+        <label for=""> Gender</label>
+        <select class="ui dropdown gender" type="text" placeholder="Gender" value="{{userInfo.gender}}">
+          <option value="female" class="value">Male</option>
+          <option value="male" class="value">Female</option>
+        </select>
+      </div>
+
     </div>
-  </div>
+    <div class="tz basic-info fields">
+      <div class="eight wide field">
+        <label>Time Zone</label>
+        <select class="ui fluid dropdown">
+          <option timeZoneId="1" gmtAdjustment="GMT-12:00" useDaylightTime="0" value="-12">(GMT-12:00) International
+            Date Line West</option>
+          <option timeZoneId="2" gmtAdjustment="GMT-11:00" useDaylightTime="0" value="-11">(GMT-11:00) Midway Island,
+            Samoa</option>
+          <option timeZoneId="3" gmtAdjustment="GMT-10:00" useDaylightTime="0" value="-10">(GMT-10:00) Hawaii</option>
+          <option timeZoneId="4" gmtAdjustment="GMT-09:00" useDaylightTime="1" value="-9">(GMT-09:00) Alaska</option>
+          <option timeZoneId="5" gmtAdjustment="GMT-08:00" useDaylightTime="1" value="-8">(GMT-08:00) Pacific Time (US
+            &amp; Canada)</option>
+          <option timeZoneId="6" gmtAdjustment="GMT-08:00" useDaylightTime="1" value="-8">(GMT-08:00) Tijuana, Baja
+            California</option>
+          <option timeZoneId="7" gmtAdjustment="GMT-07:00" useDaylightTime="0" value="-7">(GMT-07:00) Arizona</option>
+          <option timeZoneId="8" gmtAdjustment="GMT-07:00" useDaylightTime="1" value="-7">(GMT-07:00) Chihuahua, La
+            Paz, Mazatlan</option>
+          <option timeZoneId="9" gmtAdjustment="GMT-07:00" useDaylightTime="1" value="-7">(GMT-07:00) Mountain Time
+            (US &amp; Canada)</option>
+          <option timeZoneId="10" gmtAdjustment="GMT-06:00" useDaylightTime="0" value="-6">(GMT-06:00) Central America
+          </option>
+          <option timeZoneId="11" gmtAdjustment="GMT-06:00" useDaylightTime="1" value="-6">(GMT-06:00) Central Time
+            (US &amp; Canada)</option>
+          <option timeZoneId="12" gmtAdjustment="GMT-06:00" useDaylightTime="1" value="-6">(GMT-06:00) Guadalajara,
+            Mexico City, Monterrey</option>
+          <option timeZoneId="13" gmtAdjustment="GMT-06:00" useDaylightTime="0" value="-6">(GMT-06:00) Saskatchewan
+          </option>
+          <option timeZoneId="14" gmtAdjustment="GMT-05:00" useDaylightTime="0" value="-5">(GMT-05:00) Bogota, Lima,
+            Quito, Rio Branco</option>
+          <option timeZoneId="15" gmtAdjustment="GMT-05:00" useDaylightTime="1" value="-5">(GMT-05:00) Eastern Time
+            (US &amp; Canada)</option>
+          <option timeZoneId="16" gmtAdjustment="GMT-05:00" useDaylightTime="1" value="-5">(GMT-05:00) Indiana (East)
+          </option>
+          <option timeZoneId="17" gmtAdjustment="GMT-04:00" useDaylightTime="1" value="-4">(GMT-04:00) Atlantic Time
+            (Canada)</option>
+          <option timeZoneId="18" gmtAdjustment="GMT-04:00" useDaylightTime="0" value="-4">(GMT-04:00) Caracas, La Paz
+          </option>
+          <option timeZoneId="19" gmtAdjustment="GMT-04:00" useDaylightTime="0" value="-4">(GMT-04:00) Manaus</option>
+          <option timeZoneId="20" gmtAdjustment="GMT-04:00" useDaylightTime="1" value="-4">(GMT-04:00) Santiago
+          </option>
+          <option timeZoneId="21" gmtAdjustment="GMT-03:30" useDaylightTime="1" value="-3.5">(GMT-03:30) Newfoundland
+          </option>
+          <option timeZoneId="22" gmtAdjustment="GMT-03:00" useDaylightTime="1" value="-3">(GMT-03:00) Brasilia
+          </option>
+          <option timeZoneId="23" gmtAdjustment="GMT-03:00" useDaylightTime="0" value="-3">(GMT-03:00) Buenos Aires,
+            Georgetown</option>
+          <option timeZoneId="24" gmtAdjustment="GMT-03:00" useDaylightTime="1" value="-3">(GMT-03:00) Greenland
+          </option>
+          <option timeZoneId="25" gmtAdjustment="GMT-03:00" useDaylightTime="1" value="-3">(GMT-03:00) Montevideo
+          </option>
+          <option timeZoneId="26" gmtAdjustment="GMT-02:00" useDaylightTime="1" value="-2">(GMT-02:00) Mid-Atlantic
+          </option>
+          <option timeZoneId="27" gmtAdjustment="GMT-01:00" useDaylightTime="0" value="-1">(GMT-01:00) Cape Verde Is.
+          </option>
+          <option timeZoneId="28" gmtAdjustment="GMT-01:00" useDaylightTime="1" value="-1">(GMT-01:00) Azores</option>
+          <option timeZoneId="29" gmtAdjustment="GMT+00:00" useDaylightTime="0" value="0">(GMT+00:00) Casablanca,
+            Monrovia, Reykjavik</option>
+          <option timeZoneId="30" gmtAdjustment="GMT+00:00" useDaylightTime="1" value="0">(GMT+00:00) Greenwich Mean
+            Time : Dublin, Edinburgh, Lisbon, London</option>
+          <option timeZoneId="31" gmtAdjustment="GMT+01:00" useDaylightTime="1" value="1">(GMT+01:00) Amsterdam,
+            Berlin, Bern, Rome, Stockholm, Vienna</option>
+          <option timeZoneId="32" gmtAdjustment="GMT+01:00" useDaylightTime="1" value="1">(GMT+01:00) Belgrade,
+            Bratislava, Budapest, Ljubljana, Prague</option>
+          <option timeZoneId="33" gmtAdjustment="GMT+01:00" useDaylightTime="1" value="1">(GMT+01:00) Brussels,
+            Copenhagen, Madrid, Paris</option>
+          <option timeZoneId="34" gmtAdjustment="GMT+01:00" useDaylightTime="1" value="1">(GMT+01:00) Sarajevo,
+            Skopje, Warsaw, Zagreb</option>
+          <option timeZoneId="35" gmtAdjustment="GMT+01:00" useDaylightTime="1" value="1">(GMT+01:00) West Central
+            Africa</option>
+          <option timeZoneId="36" gmtAdjustment="GMT+02:00" useDaylightTime="1" value="2">(GMT+02:00) Amman</option>
+          <option timeZoneId="37" gmtAdjustment="GMT+02:00" useDaylightTime="1" value="2">(GMT+02:00) Athens,
+            Bucharest, Istanbul</option>
+          <option timeZoneId="38" gmtAdjustment="GMT+02:00" useDaylightTime="1" value="2">(GMT+02:00) Beirut</option>
+          <option timeZoneId="39" gmtAdjustment="GMT+02:00" useDaylightTime="1" value="2">(GMT+02:00) Cairo</option>
+          <option timeZoneId="40" gmtAdjustment="GMT+02:00" useDaylightTime="0" value="2">(GMT+02:00) Harare, Pretoria
+          </option>
+          <option timeZoneId="41" gmtAdjustment="GMT+02:00" useDaylightTime="1" value="2">(GMT+02:00) Helsinki, Kyiv,
+            Riga, Sofia, Tallinn, Vilnius</option>
+          <option timeZoneId="42" gmtAdjustment="GMT+02:00" useDaylightTime="1" value="2">(GMT+02:00) Jerusalem
+          </option>
+          <option timeZoneId="43" gmtAdjustment="GMT+02:00" useDaylightTime="1" value="2">(GMT+02:00) Minsk</option>
+          <option timeZoneId="44" gmtAdjustment="GMT+02:00" useDaylightTime="1" value="2">(GMT+02:00) Windhoek
+          </option>
+          <option timeZoneId="45" gmtAdjustment="GMT+03:00" useDaylightTime="0" value="3">(GMT+03:00) Kuwait, Riyadh,
+            Baghdad</option>
+          <option timeZoneId="46" gmtAdjustment="GMT+03:00" useDaylightTime="1" value="3">(GMT+03:00) Moscow, St.
+            Petersburg, Volgograd</option>
+          <option timeZoneId="47" gmtAdjustment="GMT+03:00" useDaylightTime="0" value="3">(GMT+03:00) Nairobi</option>
+          <option timeZoneId="48" gmtAdjustment="GMT+03:00" useDaylightTime="0" value="3">(GMT+03:00) Tbilisi</option>
+          <option timeZoneId="49" gmtAdjustment="GMT+03:30" useDaylightTime="1" value="3.5">(GMT+03:30) Tehran
+          </option>
+          <option timeZoneId="50" gmtAdjustment="GMT+04:00" useDaylightTime="0" value="4">(GMT+04:00) Abu Dhabi,
+            Muscat</option>
+          <option timeZoneId="51" gmtAdjustment="GMT+04:00" useDaylightTime="1" value="4">(GMT+04:00) Baku</option>
+          <option timeZoneId="52" gmtAdjustment="GMT+04:00" useDaylightTime="1" value="4">(GMT+04:00) Yerevan</option>
+          <option timeZoneId="53" gmtAdjustment="GMT+04:30" useDaylightTime="0" value="4.5">(GMT+04:30) Kabul</option>
+          <option timeZoneId="54" gmtAdjustment="GMT+05:00" useDaylightTime="1" value="5">(GMT+05:00) Yekaterinburg
+          </option>
+          <option timeZoneId="55" gmtAdjustment="GMT+05:00" useDaylightTime="0" value="5">(GMT+05:00) Islamabad,
+            Karachi, Tashkent</option>
+          <option timeZoneId="56" gmtAdjustment="GMT+05:30" useDaylightTime="0" value="5.5">(GMT+05:30) Sri
+            Jayawardenapura</option>
+          <option timeZoneId="57" gmtAdjustment="GMT+05:30" useDaylightTime="0" value="5.5">(GMT+05:30) Chennai,
+            Kolkata, Mumbai, New Delhi</option>
+          <option timeZoneId="58" gmtAdjustment="GMT+05:45" useDaylightTime="0" value="5.75">(GMT+05:45) Kathmandu
+          </option>
+          <option timeZoneId="59" gmtAdjustment="GMT+06:00" useDaylightTime="1" value="6">(GMT+06:00) Almaty,
+            Novosibirsk</option>
+          <option timeZoneId="60" gmtAdjustment="GMT+06:00" useDaylightTime="0" value="6">(GMT+06:00) Astana, Dhaka
+          </option>
+          <option timeZoneId="61" gmtAdjustment="GMT+06:30" useDaylightTime="0" value="6.5">(GMT+06:30) Yangon
+            (Rangoon)</option>
+          <option timeZoneId="62" gmtAdjustment="GMT+07:00" useDaylightTime="0" value="7">(GMT+07:00) Bangkok, Hanoi,
+            Jakarta</option>
+          <option timeZoneId="63" gmtAdjustment="GMT+07:00" useDaylightTime="1" value="7">(GMT+07:00) Krasnoyarsk
+          </option>
+          <option timeZoneId="64" gmtAdjustment="GMT+08:00" useDaylightTime="0" value="8">(GMT+08:00) Beijing,
+            Chongqing, Hong Kong, Urumqi</option>
+          <option timeZoneId="65" gmtAdjustment="GMT+08:00" useDaylightTime="0" value="8">(GMT+08:00) Kuala Lumpur,
+            Singapore</option>
+          <option timeZoneId="66" gmtAdjustment="GMT+08:00" useDaylightTime="0" value="8">(GMT+08:00) Irkutsk, Ulaan
+            Bataar</option>
+          <option timeZoneId="67" gmtAdjustment="GMT+08:00" useDaylightTime="0" value="8">(GMT+08:00) Perth</option>
+          <option timeZoneId="68" gmtAdjustment="GMT+08:00" useDaylightTime="0" value="8">(GMT+08:00) Taipei</option>
+          <option timeZoneId="69" gmtAdjustment="GMT+09:00" useDaylightTime="0" value="9">(GMT+09:00) Osaka, Sapporo,
+            Tokyo</option>
+          <option timeZoneId="70" gmtAdjustment="GMT+09:00" useDaylightTime="0" value="9">(GMT+09:00) Seoul</option>
+          <option timeZoneId="71" gmtAdjustment="GMT+09:00" useDaylightTime="1" value="9">(GMT+09:00) Yakutsk</option>
+          <option timeZoneId="72" gmtAdjustment="GMT+09:30" useDaylightTime="0" value="9.5">(GMT+09:30) Adelaide
+          </option>
+          <option timeZoneId="73" gmtAdjustment="GMT+09:30" useDaylightTime="0" value="9.5">(GMT+09:30) Darwin
+          </option>
+          <option timeZoneId="74" gmtAdjustment="GMT+10:00" useDaylightTime="0" value="10">(GMT+10:00) Brisbane
+          </option>
+          <option timeZoneId="75" gmtAdjustment="GMT+10:00" useDaylightTime="1" value="10">(GMT+10:00) Canberra,
+            Melbourne, Sydney</option>
+          <option timeZoneId="76" gmtAdjustment="GMT+10:00" useDaylightTime="1" value="10">(GMT+10:00) Hobart</option>
+          <option timeZoneId="77" gmtAdjustment="GMT+10:00" useDaylightTime="0" value="10">(GMT+10:00) Guam, Port
+            Moresby</option>
+          <option timeZoneId="78" gmtAdjustment="GMT+10:00" useDaylightTime="1" value="10">(GMT+10:00) Vladivostok
+          </option>
+          <option timeZoneId="79" gmtAdjustment="GMT+11:00" useDaylightTime="1" value="11">(GMT+11:00) Magadan,
+            Solomon Is., New Caledonia</option>
+          <option timeZoneId="80" gmtAdjustment="GMT+12:00" useDaylightTime="1" value="12">(GMT+12:00) Auckland,
+            Wellington</option>
+          <option timeZoneId="81" gmtAdjustment="GMT+12:00" useDaylightTime="0" value="12">(GMT+12:00) Fiji,
+            Kamchatka, Marshall Is.</option>
+          <option timeZoneId="82" gmtAdjustment="GMT+13:00" useDaylightTime="0" value="13">(GMT+13:00) Nuku'alofa
+          </option>
+        </select>
+      </div>
+    </div>
+    <div class="availability basic-info inline fields">
+      <div class="field">
+        <div class="ui toggle checkbox" style="min-width: 16em">
+          <input type="checkbox" tabindex="0" class="hidden" checked>
+          <label class="blue basic available">I am available online on</label>
+
+          {{!-- <div class="ui label blue basic available">I am available online on</div> --}}
+        </div>
+      </div>
+      <div class="field centered middle aligned">
+        <select class="ui dropdown weekday" name="weekday">
+          <option value="sun">Sunday</option>
+          <option value="mon">Monday</option>
+          <option value="tue">Tuesday</option>
+          <option value="wed">Wednesday</option>
+          <option value="thur">Thursday</option>
+          <option value="fri">Friday</option>
+          <option value="sat">Saturday</option>
+        </select>
+      </div>
+      <div class="field" style="display: flex;">
+        <div class="ui calendar week-day" id="pop-time">
+          <div class="ui input weekday-time left icon">
+            <i class="time icon"></i>
+            <input type="text" name="start" placeholder="Start time" value="{{userInfo.Avail.start_time}}">
+          </div>
+        </div>
+        <label style="margin-left: 10px; margin-right: 10px; align-items: center;display:flex;"> till </label>
+
+      </div>
+      <div class="field">
+        <div class="ui calendar week-day" id="pop-time">
+          <div class="ui input weekday-timeleft icon">
+            <i class="time icon"></i>
+            <input type="text" name="to" placeholder="End time" value="{{userInfo.Avail.end_time}}">
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <div class="ui buttons">
+          <div class="ui basic button delete-button"><i class="icon trash"></i></div>
+          <div class="ui basic button add-button"><i class="icon green plus"></i></div>
+        </div>
+      </div>
+    </div>
+    <h4 class="ui horizontal divider header">
+      Educational Info
+    </h4>
+    <div class="fields instrumental-info courses">
+      <div class="field">
+        <label>Major</label>
+        <div class="field">
+          <input type="text" name="major" placeholder="{{userInfo.major}} {{userInfo.title}}">
+        </div>
+      </div>
+      <div class="field">
+        <label>Penn State Campus</label>
+        <div class="field">
+          <input type="text" name="campus" placeholder="{{userInfo.campus}}">
+        </div>
+      </div>
+      <div class="nine wide field">
+        <label>Current Courses</label>
+        <input type="text" name="courses" placeholder="e.g. IST 110;" value="{{userInfo.courses}}">
+      </div>
+    </div>
+    <div class="instrumental-info field">
+      <label>What I want to gain most from World Campus activities</label>
+      <textarea name="goals" id="" cols="30" rows="5" placeholder="E.g. Straight A's">{{userInfo.goals}}</textarea>
+    </div>
+    <div class="two inline recommendation fields">
+      <div class="nine wide field">
+        <label>Courses I Recommend</label>
+        <input type="text" name="recommended-courses" placeholder="e.g. IST 110;" value="{{userInfo.reccourses}}">
+      </div>
+      <div class="seven wide field">
+        <label>Instructors I Recommend</label>
+        <input type="text" name="recommended-instructor" placeholder="e.g. InstructorName;" value=""
+          {{userInfo.instructors}}>
+      </div>
+    </div>
+    <h4 class="ui horizontal divider header">
+      Professional Info
+    </h4>
+    <div class="fields instrumental-info profession">
+      <div class="six wide field">
+        <label for="">Current profession</label>
+        <select class="ui fluid dropdown" name="profession" id="profession">
+          <option value="17" selected="">Architecture and Engineering</option>
+          <option value="27">Arts, Design, Entertainment, Sports, and Media</option>
+          <option value="37">Building and Grounds Cleaning and Maintenance</option>
+          <option value="13">Business and Financial Operations</option>
+          <option value="21">Community and Social Service</option>
+          <option value="15">Computer and Mathematical</option>
+          <option value="47">Construction and Extraction</option>
+          <option value="25">Education, Training, and Library</option>
+          <option value="45">Farming, Fishing, and Forestry</option>
+          <option value="35">Food Preparation and Serving Related</option>
+          <option value="29">Healthcare Practitioners and Technical</option>
+          <option value="31">Healthcare Support</option>
+          <option value="49">Installation, Maintenance, and Repair</option>
+          <option value="23">Legal</option>
+          <option value="19">Life, Physical, and Social Science</option>
+          <option value="11">Management</option>
+          <option value="55">Military Specific</option>
+          <option value="43">Office and Administrative Support</option>
+          <option value="39">Personal Care and Service</option>
+          <option value="51">Production</option>
+          <option value="33">Protective Service</option>
+          <option value="41">Sales and Related</option>
+          <option value="53">Transportation and Material Moving</option>
+          <option value="0">All Occupations</option>
+        </select>
+      </div>
+      <div class="ten wide field">
+        <label for="">Current military status</label>
+        <select class="ui dropdown military" name="military" id="military" class="military">
+          <option value="ad">Active Duty</option>
+          <option value="re">Reserves</option>
+          <option value="ng">National Guard</option>
+          <option value="vt">Veteran (No reserve service obligation remaining, individual Ready Reserve)</option>
+          <option value="fm">Family member/dependent of a member of the U.S. Armed Forces or Veteran</option>
+          <option value="none">None of the above</option>
+        </select>
+      </div>
+    </div>
+    <h4 class="ui horizontal divider header">
+      Personal Info
+    </h4>
+    <div class="fields personal-info places">
+      <div class="eight wide field">
+        <label>Places I've Lived</label>
+
+        <input type="text" name="goal" placeholder="Your city. E.g. State College, PA" value="{{userInfo.city}}">
+
+      </div>
+      <div class="eight wide field">
+        <label>Places I'd Like to Visit</label>
+        <input type="text" name="goal" placeholder="E.g. Paris, France" value="{{userInfo.likeplaces}}">
+      </div>
+    </div>
+    <div class="fields personal-info family">
+
+      <div class="eight wide field">
+        <label>Marital Status</label>
+        <input type="text" name="marital" placeholder="E.g. married" value="{{userInfo.married}}">
+      </div>
+      <div class="eight wide field">
+        <label>Number of Kids</label>
+        <input type="text" name="kids" placeholder="E.g. 3" value="{{userInfo.kids}}">
+      </div>
+    </div>
+    <div class="fields personal-info facts">
+      <div class="eight wide field">
+        <label for="">Fun fact</label>
+        <textarea name="fun" id="fun" cols="30" rows="5">
+          {{userInfo.fun}}
+        </textarea>
+      </div>
+      <div class="eight wide field">
+        <label for="">Things my peer student should know about me</label>
+        <textarea id="unique" name="unique" cols="30" rows="5">
+          {{userInfo.unique}}
+        </textarea>
+      </div>
+    </div>
+    <div class="ui button save-profile-changes">Save Changes</div>
+  </form>
+
 </section>
