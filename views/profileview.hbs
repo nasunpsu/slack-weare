@@ -6,6 +6,7 @@
   
   <div class="profile-name">
     <h2>{{userInfo.real_name}}</h2>
+    <h5 class="email">Email: abc1234@psu.edu</h5>
     <h5 style="margin-bottom: 0px; margin-top: 0px; font-weight: 100;">Similarities</h5>
     <div class="ui yellow small label">Current Career</div>
     <div class="ui yellow small label">Major</div>
@@ -18,12 +19,18 @@
 </div>
 <section class="profile-wrapper">
   <div class="basic-info">
-    <div class="ui top attached big label">General Info</div>
+    <div class="ui top attached big label">Basic Info</div>
         <div class="basic-info-text">
             <div class="ui list">
               <div class="large item">
-                <div class="ui blue small horizontal label">Current Career</div>
-                  <br><p>Career</p>
+                <div class="ui blue small horizontal label">Name</div>
+                  <br><p>{{userInfo.real_name}}</p>
+              </div>
+            </div>
+            <div class="ui list">
+              <div class="large item">
+                <div class="ui blue small horizontal label">Gender</div>
+                  <br><p>Female</p>
               </div>
             </div>
             <div class="ui list">
@@ -36,12 +43,6 @@
               <div class="item">
                 <div class="ui blue small horizontal label">Timezone</div>
                   <br><p>Eastern Standard Time (EST)</p>
-              </div>
-            </div>
-            <div class="ui list">
-              <div class="item">
-                <div class="ui blue small horizontal label">Email</div>
-                  <br><p>abc1234@psu.edu</p>
               </div>
             </div>
         </div>
@@ -70,6 +71,13 @@
                   <br><p>{{userInfo.campus}}</p>
               </div>
             </div>
+            
+            <div class="ui list">
+              <div class="item">
+                <div class="ui blue small horizontal label">What I want to gain from World Campus</div>
+                  <br><p>Connections with peers</p>
+              </div>
+            </div>
             <div class="ui list">
               <div class="item">
                 <div class="ui blue small horizontal label">Current Courses</div>
@@ -80,6 +88,36 @@
               <div class="item">
                 <div class="ui blue small horizontal label">Courses I Recommend</div>
                   <br><p>IST110; IST110; IST110;</p>
+              </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="basic-info">
+    <div class="ui top attached big label">Professional Info</div>
+        <div class="basic-info-text">
+            <div class="ui list">
+              <div class="large item">
+                <div class="ui blue small horizontal label">Current Career</div>
+                  <br><p>Career</p>
+              </div>
+            </div>
+            <div class="ui list">
+              <div class="item">
+                <div class="ui blue small horizontal label">Military Status</div>
+                  <br><p>Active Duty</p>
+              </div>
+            </div>
+            <div class="ui list">
+              <div class="item">
+                <div class="ui blue small horizontal label">Career Goals</div>
+                  <br><p>I'd like to work in User Experience at a software company.</p>
+              </div>
+            </div>
+            <div class="ui list">
+              <div class="item">
+                <div class="ui blue small horizontal label">Past Careers</div>
+                  <br><p>Example past career</p>
               </div>
             </div>
         </div>
@@ -115,6 +153,20 @@
               <div class="item">
                 <div class="ui blue small horizontal label">Number of Kids</div>
                   <br><p>3</p>
+              </a>
+              </div>
+            </div>
+            <div class="ui list">
+              <div class="item">
+                <div class="ui blue small horizontal label">Fun Fact</div>
+                  <br><p>My father graduated from PSU 20 years ago.</p>
+              </a>
+              </div>
+            </div>
+            <div class="ui list">
+              <div class="item">
+                <div class="ui blue small horizontal label">Things my peers should know about me</div>
+                  <br><p>I served in the military for 10 years, and I care a lot about punctuality.</p>
               </a>
               </div>
             </div>

@@ -429,12 +429,19 @@ p{
   font-size: 250%;
   margin-left: 50px!important;
   align-self: flex-end;
+  margin-bottom: 20px;
+}
+
+.profile-name .email{
+  margin-top: -15px;
+  margin-bottom: 5px;
+  font-weight: 500;
 }
 
 .profile-header .ui.green.button{
   position: absolute;
-  bottom: 25px;
-  right: 25px;
+  bottom: 15px;
+  right: 15px;
 }
 
 .profile-name h2{
@@ -451,6 +458,7 @@ p{
   flex-direction: row;
   flex-wrap: wrap;
   justify-content: space-around;
+  padding: 10px;
 }
 
 .profile-edit-wrapper {
@@ -464,17 +472,18 @@ p{
    margin-top: 100px;
  }
 
-.basic-info{
+.basic-info-edit{
   display: flex;
   flex-direction: column;
-  height: auto;
   border-radius: 5px;
-  border: 1px rgba(0,0,0,.1) solid;
-  padding: 50px;
   position: relative;
-  margin-bottom: 40px;
-  margin-top: 40px;
+}
 
+.personal-info-edit{
+  display: flex;
+  flex-direction: column;
+  border-radius: 5px;
+  position: relative;
 }
 
 .basic-info-text{
@@ -482,16 +491,17 @@ p{
   flex-direction: column;
 }
 
-.personal-info{
+.basic-info, .personal-info{
   display: flex;
   flex-direction: column;
-  height: auto;
   border: 1px rgba(0,0,0,.1) solid;
   border-radius: 5px;
-  padding: 50px;
+  padding: 50px 20px;
   position: relative;
   margin-bottom: 40px;
   margin-top: 40px;
+  max-width: 320px;
+  min-width: 120px;
 }
 
 .basic-info.availability {
