@@ -4,33 +4,64 @@
         <div class="ui statistics">
             <div class="statistic yellow">
                 <div class="value">
-                <i class="slack hash small icon"></i>{{channels_info.channels_total}}
+                    <i class="slack hash small icon"></i>{{channels_info.channels_total}}
                 </div>
                 <div class="label">
-                Channels
+                    Channels
                 </div>
             </div>
             <div class="statistic teal">
                 <div class="value">
-                <i class="users small icon"></i> {{members.members_total}}
+                    <i class="users small icon"></i> {{members.members_total}}
                 </div>
                 <div class="label">
-                Members
+                    Members
                 </div>
             </div>
             <div class="statistic blue">
                 <div class="value">
-                <i class="comments small icon"></i>{{channels_info.msg_total}}
+                    <i class="comments small icon"></i>{{channels_info.msg_total}}
                 </div>
                 <div class="label">
-                Messages
+                    Messages
                 </div>
             </div>
         </div>
     </div>
     <button class="ui button slack-btn"><a href="slack://open" target="_blank">Open Slack</a></button>
+
+    <p>{{{json channels_info.TopActiveChannels}}}</p>
     <p class="post-title">Most Reacted Posts on the World Campus Slack</p>
     <div class="post-wrapper">
+        {{#each channels_info.reacted_msgs as |msg|}}
+        <div class="ui card">
+            {{!-- <div class="image">
+                <img src="images/reactions.png">
+            </div> --}}
+            
+            <div class="ui label">
+                {{msg.text}}
+            </div>
+            <div class="ui blue label">
+                {{#each msg.reactions as |react|}} 
+                {{react.name}};
+                {{/each}}
+            </div>
+            <div class="post-img-wrapper">
+                <img class="ui small right floated image profile-img" src={{userInfo.image_512}}>
+            </div>
+            <div class="extra content">
+                <div class="header"><a href="https://slack.com/app_redirect?channel={{msg.cname}}"
+                            target="_blank"><i class="slack hash small icon"></i>{{msg.cname}}</a></div>
+                <div class="meta">
+                    <span class="left floated time">{{msg.ts}} days ago</span>
+                </div>
+                <div class="right floated author">
+                    <img class="ui avatar image" src="images/placeholder-img.png"> {{msg.username}}
+                </div>
+            </div>
+        </div>
+        {{/each}}
         <div class="ui card">
             <div class="image">
                 <img src="images/reactions.png">
@@ -41,7 +72,7 @@
                     <span class="left floated time">2 days ago</span>
                 </div>
                 <div class="right floated author">
-                <img class="ui avatar image" src="images/placeholder-img.png"> Aaron
+                    <img class="ui avatar image" src="images/placeholder-img.png"> Aaron
                 </div>
             </div>
         </div>
@@ -55,21 +86,7 @@
                     <span class="left floated time">2 days ago</span>
                 </div>
                 <div class="right floated author">
-                <img class="ui avatar image" src="images/placeholder-img.png"> Aaron
-                </div>
-            </div>
-        </div>
-        <div class="ui card">
-            <div class="image">
-                <img src="images/reactions.png">
-            </div>
-            <div class="extra content">
-                <div class="header"><a><i class="slack hash small icon"></i>general</a></div>
-                <div class="meta">
-                    <span class="left floated time">2 days ago</span>
-                </div>
-                <div class="right floated author">
-                <img class="ui avatar image" src="images/placeholder-img.png"> Aaron
+                    <img class="ui avatar image" src="images/placeholder-img.png"> Aaron
                 </div>
             </div>
         </div>
@@ -86,15 +103,16 @@
                 </tr>
             </thead>
             <tbody>
-                    {{#each channels_info.TopActiveChannels as |channel|}}
+                {{#each channels_info.TopActiveChannels as |channel|}}
                 <tr>
-                    <td><a href="https://slack.com/app_redirect?channel={{channel.cname}}" target="_blank">#{{channel.cname}}</a></td>
+                    <td><a href="https://slack.com/app_redirect?channel={{channel.cname}}"
+                            target="_blank">#{{channel.cname}}</a></td>
                     <td>{{channel.num_members}}</td>
                     <td>{{channel.msgs.length}}</td>
                     <td>Today, 5:30pm</td>
                 </tr>
                 {{/each}}
-                
+
             </tbody>
         </table>
     </div>

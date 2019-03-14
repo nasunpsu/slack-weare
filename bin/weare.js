@@ -895,7 +895,7 @@ app.get('/', async function (req, res) {
 	to_be_rendered.channels_info = await DB.collection('channels').find({ team_id: req.session.team ? req.session.team.team_id : 'T0A286J8K' }).toArray().then((results, err) => {
 		if (err) console.error(err);
 		if (results.length != 0) { //this is current all the channels of the team, but perhaps it is good to differentiate which ones the logged user belongs to vs not
-			var TopSizeChannels = [], TopActiveChannels = [], msg_total = 0, limit = 3, c_list = []; //LIMIT is the number of Top X channels
+			var TopSizeChannels = [], TopActiveChannels = [], reacted_msgs = [], msg_total = 0, limit = 3, c_list = []; //LIMIT is the number of Top X channels
 			results.sort((a, b) => { //from big to small
 				return b.num_members - a.num_members;
 			});
@@ -916,12 +916,42 @@ app.get('/', async function (req, res) {
 					cname: r.cname
 				});
 			})
+			var msgs = [];
+			for(var i = 0; i < limit; i++ ){
+				var temp =TopActiveChannels[i].msgs;
+				for (var j = 0 ; j < temp.length; j++) {
+					temp[j].cname = TopActiveChannels[i].cname;
+				}
+				msgs = msgs.concat(temp);
+			}
+			for(var i = 0 ; i<msgs.length; i++){
+				if(msgs[i].reactions == null) msgs[i].reactions =[];
+			}
+			msgs.sort((a, b) => { //from most reacted to least reacted, popular to small
+				// return b.reactions.length - a.reactions.length; //reactions.length is the number of different type of reactions
+				var a_reaction_number = 0, b_reaction_number = 0;
+				for (var i = 0 ; i < a.reactions.length; i++) {
+					a_reaction_number+=a.reactions[i].count;
+				}
+				for (var i = 0 ; i < b.reactions.length; i++) {
+					b_reaction_number+=b.reactions[i].count;
+				}
+				// console.log(`reaction number is ${a_reaction_number}`);
+				// console.log(`reaction number is ${b_reaction_number}`);
+				return b_reaction_number - a_reaction_number;
+			});
+			
+			// console.log(`reaction number is ${util.inspect(msgs, {depth:null})}`);
+			for (var i = 0; i < 10; i++ ) {
+				reacted_msgs.push(msgs[i]);
+			}
 			var obj = {
 				TopSizeChannels: TopSizeChannels,
 				TopActiveChannels: TopActiveChannels,
 				channels_total: results.length,
 				msg_total: msg_total,
-				channel_list: c_list
+				channel_list: c_list,
+				reacted_msgs: reacted_msgs
 			}
 			return Promise.resolve(obj);
 		}
@@ -1756,7 +1786,7 @@ async function UpdateChannelRecentMsgs(c_id, token, limit = 200) {
 				// console.log(`Real msg from user in the Update func is ${util.inspect(msg, {depth: 2})}`);
 				var msg_obj = {
 					mid: msg.client_msg_id,
-					username: msg.name,
+					username: msg.user,
 					text: msg.text,
 					ts: msg.ts,
 					is_starred: msg.is_starred,
