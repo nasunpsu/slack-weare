@@ -1,8 +1,3 @@
-/**
- * Binds all functions to always have 'this' to be the object itself
- * @param {any} obj Object to bind all methods to
- */
-
 $('.search-by-dropdown .ui.dropdown')
 .dropdown({
   clearable: true,
@@ -14,6 +9,11 @@ $('.sort-dropdown .ui.dropdown')
   clearable: true,
   placeholder: 'Sort By'
 });
+
+/**
+ * Binds all functions to always have 'this' to be the object itself
+ * @param {any} obj Object to bind all methods to
+ */
 function bindAll(obj){
     for (const key in obj) {
         if (typeof obj[key] === 'function') {
