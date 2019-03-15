@@ -12,7 +12,7 @@ window.addEventListener("DOMContentLoaded", function () {
     var updateRemind = function (e) {
         console.log('remind clicked');
         e.preventDefault();
-        const attendees = JSON.parse(e.target.getAttribute("data-attendees")).map(x => x.uid);
+        const attendees = JSON.parse(e.target.getAttribute("data-attendees"));
         $.ajax({
             type: 'POST', url: '/remindmeeting', data: {
                 mid: e.target.getAttribute("data-mid"),

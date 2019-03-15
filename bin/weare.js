@@ -1363,19 +1363,20 @@ app.post('/reactmeeting', async function (req, res) {
 });
 
 app.post('/remindmeeting', async (req, res)=>{
+	// var attendeeIDs = req.body.attendees.map(x => x.uid);
 	req.body.attendees.forEach( attendee =>{
 		web.im.open({
-			user: attendee.split('_')[1]
+			user: attendee.uid.split('_')[1]
 		}).then(dm => {
 			console.log(`the returned channel id is ${dm.channel.id}`);
-			web.chat.postMessage({
+			if(attendee.attend == undefined) web.chat.postMessage({
 				as_user: false,
 				channel: dm.channel.id,
-				text: `Would you like to join the meeting?`,
+				text: `Would you like to join the meeting invited by XXX?`,
 				attachments: JSON.stringify([
 					{
-						title: 'Come to our meeting',
-						text: 'Come on',
+						title: 'Purpose: aaa; Time: aaa',
+						text: 'Visit here<>wik',
 						callback_id: 'meeting_react',
 						color: '#74c8ed',
 						actions: [{
@@ -1396,6 +1397,21 @@ app.post('/remindmeeting', async (req, res)=>{
 					},]
 				)
 			}).catch(err => console.error(err));
+			else if (attendee.attend == "accept") {
+				web.chat.postMessage({
+					as_user: false,
+					channel: dm.channel.id,
+					// text: `Would you like to join the meeting?`,
+					attachments: JSON.stringify([
+						{
+							title: 'Reminder: the meeting with XXX',
+							text: `Visit <${base_url}meeting/${req.body.mid}> for more details. `,
+							callback_id: 'meeting_react',
+							color: '#74c8ed'
+						},]
+					)
+				}).catch(err => console.error(err));
+			}
 		}).catch(err => console.error(err));
 	}
 	)
