@@ -85,8 +85,8 @@ if (app.get('env') === 'production') {
 app.use(morgan('dev'));//combined				        
 app.use(session(sess));
 app.use((req, res, next) => {
-	const {method, body, params, query, path} = req;
-	if(path === '/log'){
+	const { method, body, params, query, path } = req;
+	if (path === '/log') {
 		next();
 		return;
 	}
@@ -131,29 +131,29 @@ app.engine('hbs', hbs({
 }));
 
 const logEvent = (body, req) => {
-  if (!!req.sessionID) {
-    body.sessionID = req.sessionID;
-  }
-  if (!('error' in req.ipInfo)) {
-    body.ipInfo = modIpInfo(req.ipInfo);
-  }
-  if (!!req.session && !!req.session.user) {
-    body.uid = req.session.user.uid;
-  }
+	if (!!req.sessionID) {
+		body.sessionID = req.sessionID;
+	}
+	if (!('error' in req.ipInfo)) {
+		body.ipInfo = modIpInfo(req.ipInfo);
+	}
+	if (!!req.session && !!req.session.user) {
+		body.uid = req.session.user.uid;
+	}
 
-  if('uid' in body && body.type === 'Activity'){
-    const isActive = body.content.type === 'Active';
-    const updateDoc = {$set: {isActive}}
-    DB.collection('users').updateOne({uid: body.uid}, updateDoc);
-  }
-  if('uid' in body && 'ipInfo' in body){
-    const updateDoc = {
-			$push: {ipInfo: body.ipInfo},
+	if ('uid' in body && body.type === 'Activity') {
+		const isActive = body.content.type === 'Active';
+		const updateDoc = { $set: { isActive } }
+		DB.collection('users').updateOne({ uid: body.uid }, updateDoc);
+	}
+	if ('uid' in body && 'ipInfo' in body) {
+		const updateDoc = {
+			$push: { ipInfo: body.ipInfo },
 			$set: body.ipInfo
 		}
-    DB.collection('users').updateOne({uid: body.uid}, updateDoc);
-  }
-  return DB.collection('logging').insertOne(body);
+		DB.collection('users').updateOne({ uid: body.uid }, updateDoc);
+	}
+	return DB.collection('logging').insertOne(body);
 }
 
 const modIpInfo = (ipInfo) => {
@@ -161,7 +161,7 @@ const modIpInfo = (ipInfo) => {
 	delete ipInfo.eu;
 	delete ipInfo.metro;
 	delete ipInfo.area;
-	ipInfo.tz_offset = -getOffset(ipInfo.timezone, new Date())/60;
+	ipInfo.tz_offset = -getOffset(ipInfo.timezone, new Date()) / 60;
 	ipInfo.tz = ipInfo.timezone;
 	ipInfo.latitude = ipInfo.ll[0];
 	ipInfo.longitude = ipInfo.ll[1];
@@ -262,6 +262,7 @@ app.get('/api/oauth', function (req, res, next) {
 									if (err) console.error(err);
 									req.session.user = await users_docs[0];
 									req.session.team = await docs[0];
+
 									res.redirect('/');
 								});
 						}
@@ -282,6 +283,7 @@ app.get('/api/oauth', function (req, res, next) {
 							scopes: result.scope
 						}
 					}, { upsert: true }, async function (err, db_result) {
+						if (err) console.error(err);
 						console.log(`team id is ${result.team_id}, and token is ${result.access_token}`);
 						await InitTeamMembers(result.team_id, result.access_token, null);
 						await InitTeamChannels(result.team_id, result.access_token, null);
@@ -289,13 +291,13 @@ app.get('/api/oauth', function (req, res, next) {
 							.then(async (user_docs, err) => {
 								if (err) console.error(err);
 								req.session.user = await user_docs[0];
-								req.session.team = await {
+								req.session.team = {
 									team_id: result.team_id,
 									team_name: result.team_name,
 									app_url: result.incoming_webhook.configuration_url
 								};
-								console.log(`signed in after installing WeAre! bot: team is ${util.inspect(req.session.team, { depth: 3 })}`);
-								res.redirect('/');//TODO: replace the url
+								console.log(`signed in after installing WeAre! bot: team is ${util.inspect(req.session.team, { depth: 3 })}; user is team is ${util.inspect(req.session.user, { depth: 3 })}`);
+								res.redirect('/');
 							});
 
 
@@ -318,9 +320,9 @@ app.get('/auth', (req, res) => {
 app.get('/test', (req, res) => {
 	res.send('haha');
 	res.status(200).end();
-	(async () => {									//TODO: MOVE this Block to the Init Module
-		await InitTeamMembers('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200);
-	})();
+	// (async () => {									//TODO: MOVE this Block to the Init Module
+	// 	await InitTeamMembers('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200);
+	// })();
 	(async () => {
 		await InitTeamChannels('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, null);;
 	})();
@@ -606,7 +608,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 				sendMessageToSlackResponseURL(body.response_url, { text: '@here', as_user: true, replace_original: false });
 				break;
 			case 'intro':
-				  const msg2 = {
+				const msg2 = {
 					title: 'I am, We Are!',
 					callback_id: 'self_intro',
 					submit_label: 'Hello!',
@@ -885,7 +887,9 @@ app.get('/', async function (req, res) {
 	console.log(`session info is ${util.inspect(req.session, { depth: 3 })}, and the locals are ${util.inspect(res.locals, { depth: 2 })}`)
 	let to_be_rendered = {};
 	to_be_rendered.layout = 'default';
-	to_be_rendered.template = 'home-template';
+	to_be_rendered.template = 'index-template';
+	to_be_rendered.team = req.session.team;
+	to_be_rendered.userInfo = req.session.user;
 	to_be_rendered.members = await DB.collection('users').find({ team_id: req.session.team ? req.session.team.team_id : 'T0A286J8K' }).toArray().then((results, err) => {
 		if (err) console.error(err);
 		else if (results.length != 0) {
@@ -910,6 +914,7 @@ app.get('/', async function (req, res) {
 			// res.render('index', { layout: 'default', template: 'home-template', tz_members: members_by_tz });
 		}
 	});
+
 	to_be_rendered.channels_info = await DB.collection('channels').find({ team_id: req.session.team ? req.session.team.team_id : 'T0A286J8K' }).toArray().then((results, err) => {
 		if (err) console.error(err);
 		if (results.length != 0) { //this is current all the channels of the team, but perhaps it is good to differentiate which ones the logged user belongs to vs not
@@ -934,33 +939,34 @@ app.get('/', async function (req, res) {
 					cname: r.cname
 				});
 			})
-			var msgs = [];
-			for(var i = 0; i < limit; i++ ){
-				var temp =TopActiveChannels[i].msgs;
-				for (var j = 0 ; j < temp.length; j++) {
+			var msgs = [], activeChannelIds = TopActiveChannels.map(c => c.cid);
+			for (var i = 0; i < limit; i++) {
+				var temp = TopActiveChannels[i].msgs;
+				for (var j = 0; j < temp.length; j++) {
 					temp[j].cname = TopActiveChannels[i].cname;
+					// await UpdateChannelRecentMsgs(cid, token, limit);
 				}
 				msgs = msgs.concat(temp);
 			}
-			for(var i = 0 ; i<msgs.length; i++){
-				if(msgs[i].reactions == null) msgs[i].reactions =[];
+			for (var i = 0; i < msgs.length; i++) {
+				if (msgs[i].reactions == null) msgs[i].reactions = [];
 			}
 			msgs.sort((a, b) => { //from most reacted to least reacted, popular to small
 				// return b.reactions.length - a.reactions.length; //reactions.length is the number of different type of reactions
 				var a_reaction_number = 0, b_reaction_number = 0;
-				for (var i = 0 ; i < a.reactions.length; i++) {
-					a_reaction_number+=a.reactions[i].count;
+				for (var i = 0; i < a.reactions.length; i++) {
+					a_reaction_number += a.reactions[i].count;
 				}
-				for (var i = 0 ; i < b.reactions.length; i++) {
-					b_reaction_number+=b.reactions[i].count;
+				for (var i = 0; i < b.reactions.length; i++) {
+					b_reaction_number += b.reactions[i].count;
 				}
 				// console.log(`reaction number is ${a_reaction_number}`);
 				// console.log(`reaction number is ${b_reaction_number}`);
 				return b_reaction_number - a_reaction_number;
 			});
-			
+
 			// console.log(`reaction number is ${util.inspect(msgs, {depth:null})}`);
-			for (var i = 0; i < 10; i++ ) {
+			for (var i = 0; i < 10; i++) {
 				reacted_msgs.push(msgs[i]);
 			}
 			var obj = {
@@ -994,19 +1000,19 @@ app.get('/tablelist', async function (req, res) {
 	to_be_rendered.users = similarity.createSimilarityField(req.session.user, users, fields);
 	to_be_rendered.users = similarity.createIsSharedField(req.session.user, users, fields);
 	const channelNames = req.session.user.channels.map(channel => channel.cname)
-				.filter(channel => channel !== 'general');
+		.filter(channel => channel !== 'general');
 	to_be_rendered.channelNames = channelNames;
 	to_be_rendered.users = to_be_rendered.users.map(user => {
 		user.channelNames = user.channels.map(channel => channel.cname)
-				.filter(channel => channel !== 'general');
-		const channels = user.channelNames.map(name => 
+			.filter(channel => channel !== 'general');
+		const channels = user.channelNames.map(name =>
 			({
 				name,
 				isShared: channelNames.includes(name),
-				className: `channel${channelNames.indexOf(name)}` 
+				className: `channel${channelNames.indexOf(name)}`
 			})
 		);
-		if(channels.length > 4){
+		if (channels.length > 4) {
 			user.displayChannels = channels.slice(0, 4);
 			user.extraChannels = channels.slice(4);
 			return user;
@@ -1177,7 +1183,7 @@ app.get('/meetings', async function (req, res) {
 		else to_be_rendered.empty2 = true;
 	});
 	if (to_be_rendered.empty1 & to_be_rendered.empty2) to_be_rendered.empty = true;
-	to_be_rendered.meetings = await union(meetings1?meetings1:[], meetings2?meetings2:[]);//[...new Set([...meetings1, ...meetings2])];//
+	to_be_rendered.meetings = await union(meetings1 ? meetings1 : [], meetings2 ? meetings2 : []);//[...new Set([...meetings1, ...meetings2])];//
 	res.render('meetings_table', to_be_rendered);
 });
 
@@ -1258,7 +1264,7 @@ app.post('/meeting/:mid', async function (req, res) {
 		duration: req.body.duration
 	};
 	(async () => {
-		
+
 		if (req.body.who == "custom") {
 			updateObj.attendees = await cmembers.filter(member => req.body.attendees.includes(
 				member.uid
@@ -1273,7 +1279,7 @@ app.post('/meeting/:mid', async function (req, res) {
 			console.log(`the update is set to be custom attendees: ${util.inspect(updateObj.attendees, { depth: null })}`);
 		}
 		else updateObj.attendees = await cmembers;
-		
+
 
 
 		// const cmembers = await DB.collection('meetings').find({ mid: req.params.mid }).toArray().then(async (results, err) => {
@@ -1785,7 +1791,7 @@ async function UpdateChannelRecentMsgs(c_id, token, limit = 200) {
 	//init the channel info with the msgs from real users in the past month from now
 	let local_slack = new SlackWebClient(token);
 	console.log(`channel id passed in is ${c_id}`)
-	var recent_msgs = [];
+	
 	var x = new Date();
 	x.setDate(1);
 	x.setMonth(x.getMonth() - 1);
@@ -1794,27 +1800,56 @@ async function UpdateChannelRecentMsgs(c_id, token, limit = 200) {
 		count: limit | 200,
 		latest: new Date().getTime(),
 		// oldest: x.getTime() //since previous month
-	}).then(res => {
+	}).then(async res => {
 		const msgs = res.messages;
+		var recent_msgs = [];
+		var promiseArray = [];
 
 		// console.log(`msg in the Update func is ${util.inspect(msgs, {depth: 2})}`);
 		// console.log(`there are ${msgs.length} results from a channel history \n the first one is ${util.inspect(msgs[0], { depth: 2 })}`)
+
 		msgs.forEach(msg => {
 			if (msg.type == 'message' && !msg.bot_id && !msg.subtype) { // only look at the plain text msgs from real users
 				// console.log(`Real msg from user in the Update func is ${util.inspect(msg, {depth: 2})}`);
-				var msg_obj = {
-					mid: msg.client_msg_id,
-					username: msg.user,
-					text: msg.text,
-					ts: msg.ts,
-					is_starred: msg.is_starred,
-					reactions: msg.reactions
-				}
-				recent_msgs.push(msg_obj);
-
+				var promise = DB.collection('users')
+					.find({ uid: c_id.split('_')[0] + '_' + msg.user }
+					).toArray()
+					.then((docs, err) => {
+						if (err) console.error(err);
+						if (docs.length != 0) {
+							console.log(`real_name for the message creator is ${docs[0].real_name}`);
+							return Promise.resolve(docs[0]);
+						}
+						else console.error(`Member ${msg.user} does not exist`);
+					}).then(user => {
+						const msg_obj = {
+							mid: msg.client_msg_id,
+							uid: msg.user,
+							username: user.real_name,
+							user_avatar: user.image_48,
+							text: msg.text,
+							ts: timeConverter(msg.ts),
+							is_starred: msg.is_starred,
+							reactions: msg.reactions
+						}
+						recent_msgs.push(msg_obj);
+					});
+				promiseArray.push(promise);
 			}
 		});
-		// console.log(`recent msgs array is ${util.inspect(recent_msgs, {depth: null})}`)
+
+		await Promise.all(promiseArray).then(res => {
+			console.log(promiseArray)
+			console.log(`recent msgs array inside Promise array is ${util.inspect(recent_msgs, { depth: null })}`)
+
+		})
+		console.log(`recent msgs array is ${util.inspect(recent_msgs, { depth: null })}`)
+		return recent_msgs;
+
+
+	})
+	.then(recent_msgs => {
+		console.log(`recent msgs array is ${util.inspect(recent_msgs, { depth: null })}`)
 		DB.collection('channels').updateOne(
 			{ cid: c_id },
 			{
@@ -1826,10 +1861,10 @@ async function UpdateChannelRecentMsgs(c_id, token, limit = 200) {
 				if (err) console.error(err);
 				// else console.log(`msgs entered with DB transaction ${res}`)
 			});
-
 	})
 		.catch(err => console.error(err));
 }
+
 async function ActiveWho(channel_id, user_id) {
 	var members = [], activeMembers = [], activeProfiles = [];
 	var promiseArray = [];
@@ -1910,7 +1945,7 @@ function OnlineNow(channel_id, user_id, responseURL) {
 		const active = await ActiveWho(channel_id, user_id);
 		console.log(`who is online with ActiveWho func: ${util.inspect(active, { depth: 2 })}`);
 		var message = active.length ? {
-			"text": `There are ${active.length} other students in this channel online`,
+			"text": `There are ${active.length} other students in this channel online :raising_hand: `,
 			"attachments": [
 				{
 					"text": "Would you like to invite them for video call or a Slack group chat",
@@ -1944,7 +1979,7 @@ function OnlineNow(channel_id, user_id, responseURL) {
 			// ,
 			// replace_original: false,
 		} : {
-				'text': 'Ohh...bad time, nobody is online',
+				'text': 'Nobody is online :point_left: :shrug: ',
 				'attachments': [
 					{
 						'text': 'Would you like to send an email to set up something later',
@@ -2182,8 +2217,8 @@ function makeid() {
 function union(array1, array2) {
 	// if(a1)
 	// return [...new Set([...a1, ...a2])]
-	if(array1 == undefined | array1.length ==0) return array2;
-	else if ( array2 == undefined | array2.length==0) return array1;
+	if (array1 == undefined | array1.length == 0) return array2;
+	else if (array2 == undefined | array2.length == 0) return array1;
 	const result = array2.concat(array1).filter(function (o) {
 		return this.has(o.mid) ? false : this.add(o.mid);
 	}, new Set());

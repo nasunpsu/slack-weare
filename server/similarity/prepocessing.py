@@ -39,7 +39,9 @@ def delete_nan_user_columns(user, users):
     
 def clean_email(students): 
     """ Fix up email column in students, returning students """
+    print(list(students))
     students = students.rename(columns={'Email': 'email'})
+    print(list(students))
     students.email = students.email.apply(lambda x: x.lower())
     return students
 

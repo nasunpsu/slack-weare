@@ -28,9 +28,9 @@
             </div>
         </div>
     </div>
-    <button class="ui button slack-btn"><a href="slack://open" target="_blank">Open Slack</a></button>
+    <button class="ui button slack-btn"><a href="slack://open" target="_blank">Open Slack of {{team.team_name}}</a></button>
 
-    <div class="ui segment">{{{json channels_info.TopActiveChannels}}}</div>
+    {{!-- <div id="data" class="ui segment">{{{json channels_info.TopActiveChannels}}}</div> --}}
     <p class="post-title">Most Reacted Posts on the World Campus Slack</p>
     <div class="post-wrapper">
         {{#each channels_info.reacted_msgs as |msg|}}
@@ -42,40 +42,26 @@
             <div class="ui label">
                 {{msg.text}}
             </div>
-            <div class="ui blue label">
+            <div class="ui basic label react-emoji-count">
                 {{#each msg.reactions as |react|}} 
-                {{react.name}};
+                :{{react.name}}: <a class="ui orange basic circular label">{{react.count}}</a>;
                 {{/each}}
             </div>
             <div class="post-img-wrapper">
-                <img class="ui small right floated image profile-img" src={{userInfo.image_512}}>
+                <img class="ui small right floated image profile-img" src=>
             </div>
             <div class="extra content">
                 <div class="header"><a href="https://slack.com/app_redirect?channel={{msg.cname}}"
                             target="_blank"><i class="slack hash small icon"></i>{{msg.cname}}</a></div>
                 <div class="meta">
-                    <span class="left floated time">{{msg.ts}} days ago</span>
+                    <span class="left floated time">{{msg.ts}}</span>
                 </div>
                 <div class="right floated author">
-                    <img class="ui avatar image" src="images/placeholder-img.png"> {{msg.username}}
+                    <img class="ui avatar image" src="{{msg.user_avatar}}"> {{msg.username}}
                 </div>
             </div>
         </div>
         {{/each}}
-        <div class="ui card">
-            <div class="image">
-                <img src="images/reactions.png">
-            </div>
-            <div class="extra content">
-                <div class="header"><a><i class="slack hash small icon"></i>general</a></div>
-                <div class="meta">
-                    <span class="left floated time">2 days ago</span>
-                </div>
-                <div class="right floated author">
-                    <img class="ui avatar image" src="images/placeholder-img.png"> Aaron
-                </div>
-            </div>
-        </div>
         <div class="ui card">
             <div class="image">
                 <img src="images/reactions.png">
