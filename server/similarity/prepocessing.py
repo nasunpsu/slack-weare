@@ -147,6 +147,9 @@ def enumerate_ordinal_columns(users):
     SOCs = ['SOC'+str(x+1) for x in range(10)]
     #names of all the CCE columns
     CCEs = ['CCE'+str(x+1) for x in range(24)]
+    # If users does not have all of the columns don't do any preprocessing
+    if any(col_name not in users for col_name in SOCs + CCEs):
+       return users
     #mapping from each text column to ordinal values
     #format is array of dicts containing keys 'col' and 'mapping'
     ordinal_cols_mapping = generate_ordinal_mapping(users, SOCs, CCEs)
