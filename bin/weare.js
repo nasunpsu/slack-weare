@@ -1361,6 +1361,47 @@ app.post('/reactmeeting', async function (req, res) {
 
 	res.sendStatus(200);
 });
+
+app.post('/remindmeeting', async (req, res)=>{
+	req.body.attendees.forEach( attendee =>{
+		web.im.open({
+			user: attendee.split('_')[1]
+		}).then(dm => {
+			console.log(`the returned channel id is ${dm.channel.id}`);
+			web.chat.postMessage({
+				as_user: false,
+				channel: dm.channel.id,
+				text: `Would you like to join the meeting?`,
+				attachments: JSON.stringify([
+					{
+						title: 'Come to our meeting',
+						text: 'Come on',
+						callback_id: 'meeting_react',
+						color: '#74c8ed',
+						actions: [{
+							name: 'accept',
+							text: 'Sure',
+							type: 'button',
+							value: 'accept',
+							style: 'primary'
+						},
+						{
+							name: 'reject',
+							text: 'No, thanks',
+							type: 'button',
+							value: 'reject',
+							style: 'default'
+						}
+						],
+					},]
+				)
+			}).catch(err => console.error(err));
+		}).catch(err => console.error(err));
+	}
+	)
+	res.sendStatus(200);
+});
+
 function similarTo(list, user) {
 	console.log(`the list in similarTo is ${util.inspect(list, { depth: 3 })}`);
 	var dist = 'impossible value';
@@ -1791,7 +1832,7 @@ async function UpdateChannelRecentMsgs(c_id, token, limit = 200) {
 	//init the channel info with the msgs from real users in the past month from now
 	let local_slack = new SlackWebClient(token);
 	console.log(`channel id passed in is ${c_id}`)
-	
+
 	var x = new Date();
 	x.setDate(1);
 	x.setMonth(x.getMonth() - 1);
@@ -1848,20 +1889,20 @@ async function UpdateChannelRecentMsgs(c_id, token, limit = 200) {
 
 
 	})
-	.then(recent_msgs => {
-		console.log(`recent msgs array is ${util.inspect(recent_msgs, { depth: null })}`)
-		DB.collection('channels').updateOne(
-			{ cid: c_id },
-			{
-				$set: {
-					msgs: recent_msgs
-				}
-			},
-			function (err, res) {
-				if (err) console.error(err);
-				// else console.log(`msgs entered with DB transaction ${res}`)
-			});
-	})
+		.then(recent_msgs => {
+			console.log(`recent msgs array is ${util.inspect(recent_msgs, { depth: null })}`)
+			DB.collection('channels').updateOne(
+				{ cid: c_id },
+				{
+					$set: {
+						msgs: recent_msgs
+					}
+				},
+				function (err, res) {
+					if (err) console.error(err);
+					// else console.log(`msgs entered with DB transaction ${res}`)
+				});
+		})
 		.catch(err => console.error(err));
 }
 

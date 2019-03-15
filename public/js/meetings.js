@@ -6,6 +6,26 @@ window.addEventListener("DOMContentLoaded", function () {
         location.href = "/meeting/new";
     });
 
+    var remind_list = Array.prototype.slice.call(document.getElementsByClassName("button remind"));
+    console.log(remind_list);
+    
+    var updateRemind = function (e) {
+        console.log('remind clicked');
+        e.preventDefault();
+        const attendees = JSON.parse(e.target.getAttribute("data-attendees")).map(x => x.uid);
+        $.ajax({
+            type: 'POST', url: '/remindmeeting', data: {
+                mid: e.target.getAttribute("data-mid"),
+                attendees: attendees
+            }, success: function (data) {
+                console.log(data);
+                console.log('successfully remind');
+            }
+        });
+    };
+    Array.from(remind_list).forEach(function (element) {
+        element.addEventListener('click', updateRemind);
+    });
     var react_list = Array.prototype.slice.call(document.getElementsByClassName("reject")).concat(Array.prototype.slice.call(document.getElementsByClassName("accept")));//[...Array.from(document.getElementsByClassName("reject")), ...Array.from(document.getElementsByClassName("accept"))];
     console.log(react_list);
     var reactUpdate = function (e) {

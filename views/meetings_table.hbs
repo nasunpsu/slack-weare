@@ -45,10 +45,9 @@
                 <td>
                     {{!-- |creator is {{meeting.creator_uid}}|uid is {{../userInfo.uid}} --}}
                     {{#if (eq meeting.creator_uid ../userInfo.uid)}}
-                    <div id="edit" class="ui basic meeting blue edit button"> <i class="pencil icon"></i><a class="edit"
+                    <div class="ui basic meeting blue edit button"> <i class="pencil icon"></i><a class="edit"
                             href="/meeting/{{meeting.mid}}">Edit</a> </div>
-                    <div id="edit" class="ui basic meeting yellow remind button"> <i class="bell icon"></i><a
-                            class="remind" href="/remindmeeting/{{meeting.mid}}">Remind attendees</a> </div>
+                    <div class="ui basic meeting yellow remind button" data-mid="{{meeting.mid}}" data-attendees='{{{json meeting.attendees}}}'> <i class="bell icon"></i>Remind attendees</div>
                     {{else}}
                     <div class="ui buttons">
                         <div class="ui basic meeting red button reject" data-attendees='{{{json meeting.attendees}}}' data-mid="{{meeting.mid}}" data-react="reject">
