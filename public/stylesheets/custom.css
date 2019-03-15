@@ -432,14 +432,9 @@ p{
 }
 
 .header-info .ui.list{
-  margin-top: 1em!important;
+  margin-top: -20px!important;
   margin-right: 10px;
 }
-
-.header-info .ui.list .item .ui.blue.small.horizontal.label{
-  margin-left: -8px!important;
-}
-
 
 
 .profile-header .ui.green.button{
