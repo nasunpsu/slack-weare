@@ -23,6 +23,7 @@
         <select class="ui dropdown gender" type="text" placeholder="Gender" value="{{userInfo.gender}}">
           <option value="female" class="value">Male</option>
           <option value="male" class="value">Female</option>
+          <option value="other" class="value">Other</option>
         </select>
       </div>
 
@@ -185,15 +186,18 @@
       </div>
     </div>
     <div class="availability basic-info-edit inline fields">
-      <div class="field">
-        <div class="ui toggle checkbox" style="min-width: 16em">
-          <input type="checkbox" tabindex="0" class="hidden" checked>
-          <label class="blue basic available">I am available online on</label>
-
+          <div class="field centered middle aligned">
+            <label> I am </label>
+            <select class="ui dropdown" name="availability">
+              <option value="available">available online</option>
+              <option value="unavailable">unavailable online</option>
+            </select>
+          </div>
+            
           {{!-- <div class="ui label blue basic available">I am available online on</div> --}}
-        </div>
-      </div>
+        
       <div class="field centered middle aligned">
+        <label> on </label>
         <select class="ui dropdown weekday" name="weekday">
           <option value="sun">Sunday</option>
           <option value="mon">Monday</option>
@@ -205,13 +209,14 @@
         </select>
       </div>
       <div class="field" style="display: flex;">
+        <label style="align-items: center;display:flex;"> from </label>
         <div class="ui calendar week-day" id="pop-time">
           <div class="ui input weekday-time left icon">
             <i class="time icon"></i>
             <input type="text" name="start" placeholder="Start time" value="{{userInfo.Avail.start_time}}">
           </div>
         </div>
-        <label style="margin-left: 10px; margin-right: 10px; align-items: center;display:flex;"> till </label>
+        <label style="margin-left: 15px; margin-right: 10px; align-items: center;display:flex;"> till </label>
 
       </div>
       <div class="field">
