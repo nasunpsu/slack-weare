@@ -426,17 +426,21 @@ p{
 
 .profile-name{
   color: white;
-  font-size: 250%;
-  margin-left: 50px!important;
   align-self: flex-end;
   margin-bottom: 20px;
+  line-height: .5!important;
 }
 
-.profile-name .email{
-  margin-top: -15px;
-  margin-bottom: 5px;
-  font-weight: 500;
+.header-info .ui.list{
+  margin-top: 1em!important;
+  margin-right: 10px;
 }
+
+.header-info .ui.list .item .ui.blue.small.horizontal.label{
+  margin-left: -8px!important;
+}
+
+
 
 .profile-header .ui.green.button{
   position: absolute;
@@ -504,6 +508,12 @@ p{
   min-width: 120px;
 }
 
+.header-info{
+  display: flex;
+  flex-direction: row;
+  color: white;
+}
+
 .basic-info.availability {
   /* background-color: grey; */
   align-items: center!important;
@@ -541,14 +551,14 @@ p{
 .profile-img-wrapper{
   position: relative;
   display: inline;
-  align-self: center;
+  margin-right: 50px!important;
+
 }
 
 .item p{
   margin-bottom: auto;
   display: inline;
   margin-right: 50px;
-  line-height: 2;
   font-size: 100%;
 }
 
