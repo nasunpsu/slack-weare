@@ -12,7 +12,7 @@
 #
 # c.f. http://www.westwind.com/reference/os-x/invisibles.html
 .DS_Store
-
+.babelrc
 # c.f. http://www.westwind.com/reference/os-x/invisibles.html
 .Trashes
 
