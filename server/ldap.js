@@ -130,7 +130,7 @@ const updateUserWithLdapData = async (email, fullName, uid, DB) => {
  * @return {any} Modified version of object
  */ 
 const removeUndefinedEntries = (obj) => {
-    for(key in obj){
+    for(const key in obj){
         if(!obj[key]){
             delete obj[key];
         }
