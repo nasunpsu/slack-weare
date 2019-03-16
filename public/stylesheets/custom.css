@@ -230,7 +230,7 @@ div.tz-header, span.tz-header  {
   top: -18px;
 }
 
-.user-presence-away[_ngcontent-c0] {
+.user-presence-away {
   background: #dddddd;
 }
 /* .ui.selection.dropdown .menu {
