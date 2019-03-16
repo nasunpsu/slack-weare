@@ -12,13 +12,41 @@
                 </div>
                 <div class="description">{{members.0.local_area}}</div>
             </div>
-            
+
         </div>
 
         <div class="ui horizontal list">
             {{#each members as |member|}}
             <div class="item user">
-                <img class="ui mini circular image user-img" src="{{member.image_48}}">
+                {{!-- <div class="user-detail" style="z-index: 1; opacity: 0;">
+
+                    <div style="margin-top: 60px; font-weight: bold">
+                        {{member.real_name}}
+                    </div>
+                    <div style="margin-top: 0px; font-weight: bold">
+
+                    </div>
+
+                    <div style="margin-top: 5px; margin-bottom: 5px">
+
+                    </div>
+
+                    <!---->
+
+                    <div class="user-email">
+                        <a href="mailto:{{member.email}}">{{member.email}}</a>
+                    </div>
+                    <div class="user-phone">
+                        <a href="tel:"></a>
+                    </div>
+                    <div class="user-dm">
+                        <a href="slack://user?team={{member.tid}}&amp;id={{member.uid}}">Slack DM</a>
+                    </div>
+                </div> --}}
+                <div class="user-img" style="background-image: url('{{member.image_48}}')"></div>  
+                <div class="user-presence">
+                    
+                </div>
                 <div class="content">
                     <div class="ui sub header user-name">{{member.first_name}}</div>
                     {{member.status_text}}
@@ -28,6 +56,6 @@
         </div>
     </div>
     {{/each}}
-    
+
 
 </div>

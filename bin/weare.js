@@ -131,24 +131,24 @@ app.engine('hbs', hbs({
 }));
 
 const logEvent = (body, req) => {
-	if (!!req.sessionID) {
-		body.sessionID = req.sessionID;
-	}
-	if (!('error' in req.ipInfo)) {
-		body.ipInfo = modIpInfo(req.ipInfo);
-	}
-	if (!!req.session && !!req.session.user) {
-		body.uid = req.session.user.uid;
-	}
+  if (!!req.sessionID) {
+    body.sessionID = req.sessionID;
+  }
+  if (!('error' in req.ipInfo)) {
+    body.ipInfo = modIpInfo(req.ipInfo);
+  }
+  if (!!req.session && !!req.session.user) {
+    body.email = req.session.user.email;
+  }
 
-	if ('uid' in body && body.type === 'Activity') {
-		const isActive = body.content.type === 'Active';
-		const updateDoc = { $set: { isActive } }
-		DB.collection('users').updateOne({ uid: body.uid }, updateDoc);
-	}
-	if ('uid' in body && 'ipInfo' in body) {
-		const updateDoc = {
-			$push: { ipInfo: body.ipInfo },
+  if('uid' in body && body.type === 'Activity'){
+    const isActive = body.content.type === 'Active';
+    const updateDoc = {$set: {isActive}}
+    DB.collection('users').updateOne({uid: body.uid}, updateDoc);
+  }
+  if('uid' in body && 'ipInfo' in body){
+    const updateDoc = {
+			$push: {ipInfo: body.ipInfo},
 			$set: body.ipInfo
 		}
 		DB.collection('users').updateOne({ uid: body.uid }, updateDoc);
@@ -320,9 +320,9 @@ app.get('/auth', (req, res) => {
 app.get('/test', (req, res) => {
 	res.send('haha');
 	res.status(200).end();
-	// (async () => {									//TODO: MOVE this Block to the Init Module
-	// 	await InitTeamMembers('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200);
-	// })();
+	(async () => {									//TODO: MOVE this Block to the Init Module
+		await InitTeamMembers('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200);
+	})();
 	(async () => {
 		await InitTeamChannels('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, null);;
 	})();

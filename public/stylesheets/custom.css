@@ -23,6 +23,11 @@
 .channel9 { color: #6435c9; }
 .channel10 { color: #6435c9; }
 
+/* Class for table heading when that heading is being sorted by */
+.sort-heading{
+  text-decoration: underline;
+}
+
   .container.main{
     margin-top: 7.0em;
 }
@@ -199,18 +204,35 @@ div.tz-header, span.tz-header  {
   margin: auto;
   color: #999999;
 }
+
+#tz-wrapper div.user-img {
+  margin-left: 6px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  margin: auto;
+  position: relative;
+  z-index: 2;
+  filter: grayscale(0%) brightness(100%);
+  transition: .5s filter;
+  background-color: #eeeeee;
+  margin: 6px;
+}
 .user-presence {
   background: #00C49B;
   border: 3px solid #ffffff;
   border-radius: 50%;
-  width: 10px;
-  height: 10px;
+  width: 15px;
+  height: 15px;
   position: relative;
   z-index: 2;
   left: 40px;
-  top: -58px;
+  top: -18px;
 }
 
+.user-presence-away[_ngcontent-c0] {
+  background: #dddddd;
+}
 /* .ui.selection.dropdown .menu {
   overflow: visible !important;
 } */
