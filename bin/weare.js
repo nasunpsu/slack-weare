@@ -10,6 +10,7 @@ const util = require('util');
 const ticket = require('../ticket.js');
 const onboard = require('../server/onboard.js')
 const similarity = require('../server/similarity/similarity');
+const WebSocket = require('ws');
 // const app = http.createServer(server);
 // console.log(`this is the PORT: ${process.env.PORT}`)
 const { sanitizeBody } = require('express-validator/filter');
@@ -131,24 +132,24 @@ app.engine('hbs', hbs({
 }));
 
 const logEvent = (body, req) => {
-  if (!!req.sessionID) {
-    body.sessionID = req.sessionID;
-  }
-  if (!('error' in req.ipInfo)) {
-    body.ipInfo = modIpInfo(req.ipInfo);
-  }
-  if (!!req.session && !!req.session.user) {
-    body.email = req.session.user.email;
-  }
+	if (!!req.sessionID) {
+		body.sessionID = req.sessionID;
+	}
+	if (!('error' in req.ipInfo)) {
+		body.ipInfo = modIpInfo(req.ipInfo);
+	}
+	if (!!req.session && !!req.session.user) {
+		body.email = req.session.user.email;
+	}
 
-  if('uid' in body && body.type === 'Activity'){
-    const isActive = body.content.type === 'Active';
-    const updateDoc = {$set: {isActive}}
-    DB.collection('users').updateOne({uid: body.uid}, updateDoc);
-  }
-  if('uid' in body && 'ipInfo' in body){
-    const updateDoc = {
-			$push: {ipInfo: body.ipInfo},
+	if ('uid' in body && body.type === 'Activity') {
+		const isActive = body.content.type === 'Active';
+		const updateDoc = { $set: { isActive } }
+		DB.collection('users').updateOne({ uid: body.uid }, updateDoc);
+	}
+	if ('uid' in body && 'ipInfo' in body) {
+		const updateDoc = {
+			$push: { ipInfo: body.ipInfo },
 			$set: body.ipInfo
 		}
 		DB.collection('users').updateOne({ uid: body.uid }, updateDoc);
@@ -1362,14 +1363,14 @@ app.post('/reactmeeting', async function (req, res) {
 	res.sendStatus(200);
 });
 
-app.post('/remindmeeting', async (req, res)=>{
+app.post('/remindmeeting', async (req, res) => {
 	// var attendeeIDs = req.body.attendees.map(x => x.uid);
-	req.body.attendees.forEach( attendee =>{
+	req.body.attendees.forEach(attendee => {
 		web.im.open({
 			user: attendee.uid.split('_')[1]
 		}).then(dm => {
 			console.log(`the returned channel id is ${dm.channel.id}`);
-			if(attendee.attend == undefined) web.chat.postMessage({
+			if (attendee.attend == undefined) web.chat.postMessage({
 				as_user: false,
 				channel: dm.channel.id,
 				text: `Would you like to join the meeting invited by XXX?`,
@@ -1558,6 +1559,48 @@ app.get('/temporal', async function (req, res) {
 		if (err) console.error(err);
 		else if (results.length != 0) {
 			//categorize the users based on their tz_labels, sorted by tz_offset
+			web.rtm.connect({
+				token: process.env.BOT_USER_OAUTH_ACCESS_TOKEN,
+				batch_presence_aware: 1
+			}).then(c_result => {
+				if (c_result.ok) {
+					console.log(`The bot is successfully calling RTM.connect`);
+					const ws = new WebSocket(c_result.url);;
+					ws.on('event', function (e) {
+						console.log(`event contained is ${util.inspect(e, { depth: null })}`);
+					});
+					ws.on('open', function open() {
+						ws.send(JSON.stringify({type: 'presence_sub',
+						ids: results.map(u=>u.uid.split('_')[1])}), function incoming(data) {
+							console.log(`the response from prsence_sub is ${util.inspect(data, {depth: 2})}`)
+						});
+					});
+
+					ws.on('message', function incoming(data) {
+						console.log(data);
+					});
+					// var postOptions = {
+					// 	uri: c_result.url,
+					// 	method: 'POST',
+					// 	headers: {
+					// 		'Content-type': 'application/json'
+					// 	},
+					// 	json: {type: 'presence_sub',
+					// 		ids: results.map(u=>u.uid.split('_')[1])}
+					// }
+					// request(postOptions, (error, response, body) => {
+					// 	if (error) {
+					// 		// handle errors as you see fit
+					// 		console.error(error);
+					// 	}
+					// 	else {
+					// 		console.log(`the response from prsence_sub is ${util.inspect(response, {depth: 2})}`);
+					// 		console.log(`the body from prsence_sub is ${util.inspect(body, {depth: 2})}`)
+
+					// 	}
+					// });
+				}
+			});
 			results.sort((a, b) => {
 				return a.tz_offset - b.tz_offset;
 			});
