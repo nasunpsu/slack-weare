@@ -1,5 +1,5 @@
 window.addEventListener("DOMContentLoaded", function () {
-
+    $('table').tablesort();
     document.getElementById("new").addEventListener("click", function (e) {
         console.log('save clicked');
         // e.preventDefault();

@@ -25,7 +25,7 @@
                 <div class="user-detail" style="z-index: 1; opacity: 0;">
 
                     <div style="margin-top: 60px; font-weight: bold">
-                        {{member.real_name}}
+                        <a href="/profile/{{member.uid}}">{{member.real_name}}</a>
                     </div>
                     <div style="margin-top: 0px; font-weight: bold">
 
@@ -43,6 +43,9 @@
                     <div class="user-phone">
                         <a href="tel:"></a>
                     </div> --}}
+                    {{!-- <div class="user-profile-page">
+                        
+                    </div>  --}}
                     <div class="user-dm">
                         <a href="slack://user?team={{member.team_id}}&amp;id={{{get_UserID member.uid}}}">Slack DM</a>
                     </div>
