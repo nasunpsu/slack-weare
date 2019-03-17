@@ -29,82 +29,100 @@ $('.ui.checkbox')
   .checkbox()
 ;
 
+function submitForm(event){
+    // event.preventDefault()
+    console.log(event);
+    return false;
+}
 
+var validationRules = {
+    major: {
+        rules: [
+            {
+                type: 'empty',
+                prompt: 'Please enter your major.'
+            },
+            {
+                type: 'maxLength[150]',
+                prompt: 'Your major must be at most {ruleValue} characters.'
+            }
+        ]
 
+    }
 
-// var validationRules = {
-//     fields: {
-//         "purpose": {
-//             identifier: "purpose",
-//             rules: [
-//                 {
-//                     type: 'empty',
-//                     prompt: 'Please enter your purpose.'
-//                 },
-//                 {
-//                     type: 'maxLength[150]',
-//                     prompt: 'Your purpose must be at most {ruleValue} characters.'
-//                 }
-//             ]
+    // fields: {
+    //     "purpose": {
+    //         identifier: "purpose",
+    //         rules: [
+    //             {
+    //                 type: 'empty',
+    //                 prompt: 'Please enter your purpose.'
+    //             },
+    //             {
+    //                 type: 'maxLength[150]',
+    //                 prompt: 'Your purpose must be at most {ruleValue} characters.'
+    //             }
+    //         ]
 
-//         },
-//         "topic": {
-//             identifier: "topic",
-//             rules: [
-//                 {
-//                     type: 'empty',
-//                     prompt: 'Please select a topic.'
-//                 }
-//             ]
-//         },
-//         "date": {
-//             identifier: "date",
-//             rules: [
-//                 {
-//                     type: 'empty',
-//                     prompt: 'Please enter the meeting date.'
-//                 }
-//             ]
-//         },
-//         "time": {
-//             identifier: "time",
-//             rules: [
-//                 {
-//                     type: 'empty',
-//                     prompt: 'Please enter the meeting time.'
-//                 }
-//             ]
-//         },
-//         duration: {
-//             identifier: 'duration',
-//             rules: [
-//                 {
-//                     type: 'integer[1..100]',
-//                     prompt: 'Please enter an integer value for duration in minutes'
-//                 }
-//             ]
-//         }
-        // password: ['minLength[6]', 'empty'],
-        // skills: ['minCount[2]', 'empty'],
-        // terms: 'checked'
+    //     },
+    //     "topic": {
+    //         identifier: "topic",
+    //         rules: [
+    //             {
+    //                 type: 'empty',
+    //                 prompt: 'Please select a topic.'
+    //             }
+    //         ]
+    //     },
+    //     "date": {
+    //         identifier: "date",
+    //         rules: [
+    //             {
+    //                 type: 'empty',
+    //                 prompt: 'Please enter the meeting date.'
+    //             }
+    //         ]
+    //     },
+    //     "time": {
+    //         identifier: "time",
+    //         rules: [
+    //             {
+    //                 type: 'empty',
+    //                 prompt: 'Please enter the meeting time.'
+    //             }
+    //         ]
+    //     },
+    //     duration: {
+    //         identifier: 'duration',
+    //         rules: [
+    //             {
+    //                 type: 'integer[1..100]',
+    //                 prompt: 'Please enter an integer value for duration in minutes'
+    //             }
+    //         ]
+    //     },
+    //     password: ['minLength[6]', 'empty'],
+    //     skills: ['minCount[2]', 'empty'],
+    //     terms: 'checked'
     // }
-// }
-// $('.ui.form').form(validationRules);//, { onSuccess: submitForm });
+}
 //Get value from an input field
 function getFieldValue(fieldId) {
     // 'get field' is part of Semantics form behavior API
     return $('.ui.form').form('get field', fieldId).val();
 }
 
+
 $(document).ready(() => {
-    const button = $('#submit-button');
     const form = $('form');
-    button.click(() => {
-        const array = form.serializeArray();
-        const json = array.reduce((obj, current) => {
-            obj[current.name] = current.value;
-            return obj;
-        }, {})
-        console.log(json);
-    })
+    form.form({fields: validationRules, onSuccess: submitForm, onFailure: submitForm});//, { onSuccess: submitForm });
+    // const button = $('#submit-button');
+    // button.click(() => {
+    //     const array = form.serializeArray();
+    //     const json = array.reduce((obj, current) => {
+    //         obj[current.name] = current.value;
+    //         return obj;
+    //     }, {})
+    //     console.log(json);
+    // })
 });
