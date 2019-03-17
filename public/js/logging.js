@@ -1,4 +1,4 @@
-const serverUrl = 'https://ad4a5c00.ngrok.io/log';
+const serverUrl = window.location.origin + '/log';
 
 (function setUpPostRequests() {
     $.ajaxSetup({
