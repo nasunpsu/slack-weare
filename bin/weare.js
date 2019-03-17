@@ -1130,24 +1130,40 @@ app.get('/editProfile', async function (req, res) {
 });
 
 app.post('/editProfile', async function (req, res) {
-	let to_be_rendered = {};
-	to_be_rendered.layout = 'default';
-	to_be_rendered.template = 'editprofile-template';
-	to_be_rendered.userInfo = await DB.collection('users').find({ uid: req.session.user.uid }).toArray().then(async (results, err) => {
-		if (err) console.error(err);
-		else if (results.length != 0) {
+	const uid = req.session.user.uid;
+	const query = {uid};
+	const insertObj = req.body;
+	const dbResponse = await DB.collection('users').updateOne(query, { $set: insertObj });
+	if (!dbResponse.result.ok) {
+		console.warn(`Error with update query ${JSON.stringify(query)}, inserting object ${JSON.stringify(insertObj)}`);
+	}
+	res.send({received: req.body});
+	// let to_be_rendered = {};
+	// to_be_rendered.layout = 'default';
+	// to_be_rendered.template = 'editprofile-template';
+	// to_be_rendered.userInfo = await DB.collection('users').find({ uid: req.session.user.uid }).toArray().then(async (results, err) => {
+	// 	if (err) console.error(err);
+	// 	else if (results.length != 0) {
 
-		};
+	// 	};
 
-	});
-	res.render('profile', to_be_rendered);
+	// });
+	// res.render('profile', to_be_rendered);
 });
 
 app.get('/profile/:uid', async function (req, res) {
 	let to_be_rendered = {};
+	const { uid } = req.params;
 	to_be_rendered.layout = 'default';
 	to_be_rendered.template = 'profile-template';
-	to_be_rendered.userInfo = req.session.user;
+	const queryResult = await DB.collection('users').find({uid});
+	const doc = await queryResult.toArray();
+	if(doc.length === 0){
+		console.error(`No results found for uid ${uid}`);
+	}
+	else{
+		to_be_rendered.userInfo = doc[0];
+	}
 	res.render('profileview', to_be_rendered);
 });
 
