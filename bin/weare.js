@@ -21,6 +21,7 @@ const request = require('request');
 const apiUrl = 'https://slack.com/api';
 const base_url = 'https://ad4a5c00.ngrok.io/';
 const presence_snapshot = {};
+const snapshot_db = {};
 // const methodUril = 'https://slack.com/api/';
 const qs = require('querystring');
 const hbs = require('express-handlebars');
@@ -129,6 +130,9 @@ app.engine('hbs', hbs({
 			return args.every(function (expression) {
 				return args[0] === expression;
 			});
+		},
+		get_UserID: function (uid) {
+			return uid.split('_')[1];
 		}
 	}
 }));
@@ -268,6 +272,7 @@ app.get('/api/oauth', function (req, res, next) {
 
 									res.redirect('/');
 								});
+							snapshot_db['users'] = await DB.collection('users').find({}).toArray();
 						}
 					});
 			}
@@ -290,6 +295,12 @@ app.get('/api/oauth', function (req, res, next) {
 						console.log(`team id is ${result.team_id}, and token is ${result.access_token}`);
 						await InitTeamMembers(result.team_id, result.access_token, null);
 						await InitTeamChannels(result.team_id, result.access_token, null);
+						// (async () => {									//TODO: MOVE this Block to the Init Module
+						// 	await InitTeamMembers(result.team_id, result.access_token, null);
+						// })();
+						// (async () => {
+						// 	await InitTeamChannels(result.team_id, result.access_token, null);;
+						// })();
 						await DB.collection('users').find({ uid: result.team_id + '_' + result.user_id }).toArray()
 							.then(async (user_docs, err) => {
 								if (err) console.error(err);
@@ -327,8 +338,11 @@ app.get('/test', (req, res) => {
 		await InitTeamMembers('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200);
 	})();
 	(async () => {
-		await InitTeamChannels('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, null);;
+		await InitTeamChannels('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, null);
+		snapshot_db['users'] = await DB.collection('users').find({}).toArray();
 	})();
+
+
 
 	console.log('---------------test----------------');
 });
@@ -883,15 +897,16 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 	}
 });
 
-app.ws('/temporal/presenceUpdate', function (ws, req) {
+expressWs.app.ws('/temporal/presenceUpdate', function (ws, req) {
 	ws.on('message', function (msg) {
 		console.log(msg);
 	});
-	console.log('socket', req.testing);
+	console.log('socket', req.session);
 });
-var aWss = expressWs.getWss('/temporal/presenceUpdate');
 
 app.use(checkSignIn);
+
+// app.use(rtmConnectFn);
 
 app.get('/', async function (req, res) {
 	//you could do a combo of res.session.locals = res.locals() and res.locals(res.session.locals), but kinda hacky
@@ -916,7 +931,7 @@ app.get('/', async function (req, res) {
 					members_by_tz[r.tz_offset].push(r);
 				}
 			});
-			console.log(`the total time zones are ${Object.keys(members_by_tz)}`)
+
 			var obj = {
 				tz_members: members_by_tz,
 				members_total: results.length
@@ -1561,159 +1576,128 @@ app.get('/network11', async function (req, res) {
 	res.render('network', to_be_rendered);
 });
 
-
-
-app.use('/temporal', async function (req, res, next) {
+app.get('/temporal', async function (req, res) {
 	let to_be_rendered = {};
-	let user_list = [];
 	to_be_rendered.layout = 'default';
 	to_be_rendered.template = 'tz-template';
+	to_be_rendered.userInfo = req.session.user;
 	to_be_rendered.members = await DB.collection('users').find({ team_id: req.session.team.team_id }).toArray().then(async (results, err) => {
 		if (err) console.error(err);
 		else if (results.length != 0) {
-			req.user_list = results;
 			//categorize the users based on their tz_labels, sorted by tz_offset
-			// const activeMembers = await ActiveWho(body.channel.id, body.user.id);
-			var promiseArray = [];
-
 			results.sort((a, b) => {
 				return a.tz_offset - b.tz_offset;
 			});
+			console.log(`the tz offset is ${results[0].tz_offset} for the first sorted member`);
+
 			var num_tz = 0; var members_by_tz = {};
 			results.forEach(r => {
-				// console.log(`r is ${util.inspect(r, {depth: null})}`);
-				// var promise = web.users.getPresence({ user: r.uid.split('_')[1] })
-				// 	.then((resp) => {
-				r.presence = presence_snapshot[r.uid] ? presence_snapshot[r.uid] : "away";
+				// r.presence = presence_snapshot[r.uid] ? presence_snapshot[r.uid] : "away";
 				if (r.tz_offset in members_by_tz) members_by_tz[r.tz_offset].push(r);
 				else {
 					members_by_tz[r.tz_offset] = [];
+					r.tz_offset = parseInt(r.tz_offset);
 					members_by_tz[r.tz_offset].push(r);
 				}
-				// })
-				// .catch(err => console.error(err));;
-				// promiseArray.push(promise);
+
 			});
-			// await Promise.all(promiseArray).then(res => {
-			// 	// console.log(promiseArray)
-			// 	console.log(`the total time zones are ${Object.keys(members_by_tz)}`)
+			console.log(`the total time zones are ${Object.keys(members_by_tz)}`)
 
-			// })
+			// Create items array
+			var items = Object.keys(members_by_tz).map(function (key) {
+				return [parseInt(key), members_by_tz[key]];
+			});
 
+			// Sort the array based on the key 
+			items.sort(function (first, second) {
+				return first[0] - second[0];
+			});
 			var obj = {
-				tz_members: members_by_tz,
-				members_total: results.length
-			}
-			return Promise.resolve(obj);
-			// res.render('index', { layout: 'default', template: 'home-template', tz_members: members_by_tz });
-		}
-	});
-	to_be_rendered.channels_info = await DB.collection('channels').find({ team_id: 'T0A286J8K' }).toArray().then((results, err) => {
-		if (err) console.error(err);
-		if (results.length != 0) { //this is current all the channels of the team, but perhaps it is good to differentiate which ones the logged user belongs to vs not
-			var TopSizeChannels = [], TopActiveChannels = [], msg_total = 0, limit = 3, c_list = []; //LIMIT is the number of Top X channels
-			results.sort((a, b) => { //from big to small
-				return b.num_members - a.num_members;
-			});
-
-			for (var i = 0; i < limit; i++) {
-				msg_total += results[i].msgs.length;
-				TopSizeChannels.push(results[i]);
-			}
-			results.sort((a, b) => { //from active to inactive
-				return a.msgs.length - b.msgs.length;
-			});
-			for (var i = 0; i < limit; i++) {
-				TopActiveChannels.push(results[i]);
-			};
-			results.forEach(r => {
-				c_list.push({
-					cid: r.cid,
-					cname: r.cname
-				});
-			})
-			var obj = {
-				TopSizeChannels: TopSizeChannels,
-				TopActiveChannels: TopActiveChannels,
-				channels_total: results.length,
-				msg_total: msg_total,
-				channel_list: c_list
+				tz_members: items
 			}
 			return Promise.resolve(obj);
 		}
 	});
-	// console.log(util.inspect(to_be_rendered, { depth: 2 }));
-	await res.render('temporal', to_be_rendered);
+	console.log(`rendered temporal content is ${util.inspect(to_be_rendered.members.tz_members[0], { depth: 2 })}`);
+	res.render('temporal', to_be_rendered);
 
-	next();
 
 });
 
-app.get('/temporal', async (req, res) => {
-	console.log('will the part be executed?');
-	if (typeof ws == 'undefined' || ws.readyState != WebSocket.OPEN) web.rtm.connect({
-		token: process.env.BOT_USER_OAUTH_ACCESS_TOKEN,
-		batch_presence_aware: 1
-	}).then(c_result => {
-		if (c_result.ok) {
+app.post('/rtmconnect', (req, res) => {
+	rtmConnectFn(req);
+});
 
-			var obj = {};
-			console.log(`The bot is successfully calling RTM.connect`);
-			const ws = new WebSocket(c_result.url);;
-			ws.on('event', function (e) {
-				console.log(`event contained is ${util.inspect(e, { depth: null })}`);
-			});
-			ws.on('open', function open() {
-				ws.send(JSON.stringify({
-					type: 'presence_sub',
-					ids: req.user_list.map(u => u.uid.split('_')[1])
-				}), function incoming(data) {
-					// console.log(`the response from prsence_sub is ${util.inspect(data, {depth: 2})}`)
+async function rtmConnectFn(req) {
+
+	if (typeof ws == 'undefined' || ws.readyState != WebSocket.OPEN) {
+		if (typeof snapshot_db['users'] == 'undefined') snapshot_db['users'] = await DB.collection('users').find({}).toArray();
+		console.log('Connecting rtm.connect now:');
+		console.log(`snapshot users length is ${snapshot_db['users'].length}`);
+		Promise.resolve(snapshot_db['users'])
+		await web.rtm.connect({
+			token: process.env.BOT_USER_OAUTH_ACCESS_TOKEN,
+			batch_presence_aware: 1
+		}).then(c_result => {
+			if (c_result.ok) {
+
+				var obj = {};
+				console.log(`The bot is successfully calling RTM.connect`);
+				const ws = new WebSocket(c_result.url);;
+				ws.on('event', function (e) {
+					console.log(`event contained is ${util.inspect(e, { depth: null })}`);
 				});
-			});
+				ws.on('open', function open() {
+					ws.send(JSON.stringify({
+						type: 'presence_sub',
+						ids: snapshot_db['users'].map(u => u.uid.split('_')[1])
+					}), function incoming(data) {
+						// console.log(`the response from prsence_sub is ${util.inspect(data, {depth: 2})}`)
+					});
+				});
 
-			ws.on('message', function incoming(data) {
-				console.log(`the data from message is : ${data}`);
-				var obj_data = JSON.parse(data);
+				ws.on('message', async function incoming(data) {
+					var obj_data = JSON.parse(data);
 
-				// var promise = results.filter(x => x.uid == obj_data.team + '_' + obj_data.user)
-				if (obj_data.type != "hello") {
-					obj_data.team = req.session.team.team_id;
-					// var foundIndex = results.findIndex(x => x.uid == obj_data.team + '_' + obj_data.user);
-					// results[foundIndex].presence = obj_data.presence;
-					switch (obj_data.type) {
-						case 'presence_change':
-							presence_snapshot[obj_data.team+'_'+obj_data.user] = obj_data.presence;
-							aWss.clients.forEach(function (client) {
-								console.log(`sending to client the presence is : ${obj_data.presence}`);
-								client.send(JSON.stringify(obj_data));
-							});
-							break;
-						case 'text':
-							aWss.clients.forEach(function (client) {
-								console.log(`sending to client the message is : ${obj_data}`);
-								client.send(JSON.stringify(obj_data));
-							});
-						default:
-							console.log('not cased in the obj_data type for rtm.connect');
+					// var promise = results.filter(x => x.uid == obj_data.team + '_' + obj_data.user)
+					if (obj_data.type != "hello") {
+						obj_data.team = req.session.team.team_id;
+
+						// console.log(`data message type is ${obj_data.type}`)
+						switch (obj_data.type) {
+							case 'presence_change':
+								let aWss = expressWs.getWss('/temporal/presenceUpdate');
+								presence_snapshot[obj_data.team + '_' + obj_data.user] = obj_data.presence;
+								var foundIndex = snapshot_db['users'].findIndex(x => x.uid == obj_data.team + '_' + obj_data.user);
+								snapshot_db['users'][foundIndex].presence = obj_data.presence;
+								// console.log(`the clients in the browsers includes ${util.inspect(aWss.clients, {depth: 3})} in total; and the presence status is ${obj_data.presence}`);
+								aWss.clients.forEach(function (client) {
+									// console.log(`sending to client the presence is : ${obj_data.presence}`);
+									client.send(JSON.stringify(obj_data));
+								});
+								break;
+							case 'text':
+								aWss.clients.forEach(function (client) {
+									console.log(`sending to client the message is : ${obj_data}`);
+									client.send(JSON.stringify(obj_data));
+								});
+							default:
+								console.log('not cased in the obj_data type for rtm.connect');
+						}
+
 					}
+				});
+				ws.on('close', function close() {
+					console.log('----------------disconnected---------------------');
 
-				}
-			});
-			ws.on('close', function close() {
-				console.log('----------------disconnected---------------------');
+				});
+			}
+		});
+	}
+	else console.log('Already connected');
+	// next();
 
-			});
-			// promiseArray.push(promise);
-		}
-	});
-
-	// await Promise.all(promiseArray).then(res => {
-	// 	// console.log(promiseArray)
-	// 	console.log(`first result after adding presence are ${results[0]}`)
-
-	// });
-})
+}
 //calculate similar users here
 async function InitTeamMembers(team_id, token, limit = null) {
 	var first = true, cursor = "fake", counter = 0;
