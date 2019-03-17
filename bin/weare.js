@@ -1130,9 +1130,17 @@ app.post('/editProfile', async function (req, res) {
 
 app.get('/profile/:uid', async function (req, res) {
 	let to_be_rendered = {};
+	const { uid } = req.params;
 	to_be_rendered.layout = 'default';
 	to_be_rendered.template = 'profile-template';
-	to_be_rendered.userInfo = req.session.user;
+	const queryResult = await DB.collection('users').find({uid});
+	const doc = await queryResult.toArray();
+	if(doc.length === 0){
+		console.error(`No results found for uid ${uid}`);
+	}
+	else{
+		to_be_rendered.userInfo = doc[0];
+	}
 	res.render('profileview', to_be_rendered);
 });
 
