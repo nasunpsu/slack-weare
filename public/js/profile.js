@@ -17,6 +17,8 @@
 
 // $('#start, #end').calendar(); //instead of start and end; make it normal to choose a start date and time, and specify duration
 
+const profileUrl = window.location.origin + '/editProfile';
+
 let ls_wd = $('.week-day');
 for(let i = 0 ; i < ls_wd.length; i+=1) {
     const element = ls_wd[i];
@@ -29,11 +31,6 @@ $('.ui.checkbox')
   .checkbox()
 ;
 
-function submitForm(event){
-    // event.preventDefault()
-    console.log(event);
-    return false;
-}
 
 var validationRules = {
     major: {
@@ -115,14 +112,26 @@ function getFieldValue(fieldId) {
 
 $(document).ready(() => {
     const form = $('form');
-    form.form({fields: validationRules, onSuccess: submitForm, onFailure: submitForm});//, { onSuccess: submitForm });
-    // const button = $('#submit-button');
-    // button.click(() => {
-    //     const array = form.serializeArray();
-    //     const json = array.reduce((obj, current) => {
-    //         obj[current.name] = current.value;
-    //         return obj;
-    //     }, {})
+    form.form({fields: validationRules, onSuccess: submitForm.bind(this, form), onFailure: failure});//, { onSuccess: submitForm });
     //     console.log(json);
     // })
 });
+
+function submitForm(form, event){
+    const array = form.serializeArray();
+    const json = array.reduce((obj, current) => {
+        obj[current.name] = current.value;
+        return obj;
+    }, {})
+    $.post(profileUrl, json)
+        .done(data => console.log(data))
+        .fail(data => {
+            console.warn(data);
+        });
+    return false;
+}
+
+function failure(messages){
+    console.log(messages);
+    return false;
+}
