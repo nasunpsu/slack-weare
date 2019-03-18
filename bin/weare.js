@@ -1019,7 +1019,8 @@ app.get('/tablelist', async function (req, res) {
 	// generate the basic table for the logged in user to check who is closet to him/her
 	let to_be_rendered = {};
 	to_be_rendered.layout = 'default';
-	to_be_rendered.template = 'home-template';
+	to_be_rendered.template = 'table-template';
+	to_be_rendered.userInfo = req.session.user;
 	const numUsers = 80;
 	const fields = ['real_name', 'channels', 'major', 'local_area', 'affiliation', 'campus'];
 	let users = await similarity.getSimilarUsers(req.session.user.uid, DB, numUsers, fields);
