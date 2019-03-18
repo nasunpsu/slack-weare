@@ -435,24 +435,100 @@ p{
   width: 100%;
 }
 
-.profile-wrapper {
-  /* display: grid;
- grid-template: auto/repeat(24,1fr); */
-  padding-bottom: 100px;
-  margin-top: 100px;
-  margin-left:50px;
-  margin-right:50px;
-}
-.basic-info, .instrumental-info, .personal-info{
-  /* grid-column: 3/23;
+.profile-header{
   display: flex;
-  margin: auto;
-  flex-wrap: wrap; */
-  height: auto;
-  /* border: 1px rgba(0,0,0,.1) solid;
-  border-radius: 5px; */
-  /* padding: 40px; */
+  flex-direction: row;
+  flex-wrap: wrap;
+  padding: 40px;
+  width: 100%;
+  background: #2185D0;
+  padding-top: 100px;
   position: relative;
+}
+
+.profile-name{
+  color: white;
+  align-self: flex-end;
+  margin-bottom: 20px;
+  line-height: .5!important;
+}
+
+.header-info .ui.list{
+  margin-top: -20px!important;
+  margin-right: 10px;
+}
+
+
+.profile-header .ui.green.button{
+  position: absolute;
+  bottom: 15px;
+  right: 15px;
+}
+
+.profile-name h2{
+  font-size: 35px;
+  font-weight: 200;
+}
+
+
+.profile-wrapper {
+ /* display: grid;
+ grid-template: auto/repeat(24,1fr);*/
+  padding-bottom: 100px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  padding: 10px;
+}
+
+.profile-edit-wrapper {
+  /* display: grid;
+  grid-template: auto/repeat(24,1fr);*/
+   padding-bottom: 100px;
+   display: flex;
+   flex-direction: row;
+   flex-wrap: wrap;
+   justify-content: space-around;
+   margin-top: 100px;
+ }
+
+.basic-info-edit{
+  display: flex;
+  flex-direction: column;
+  border-radius: 5px;
+  position: relative;
+}
+
+.personal-info-edit{
+  display: flex;
+  flex-direction: column;
+  border-radius: 5px;
+  position: relative;
+}
+
+.basic-info-text{
+  display: flex!important;
+  flex-direction: column;
+}
+
+.basic-info, .personal-info{
+  display: flex;
+  flex-direction: column;
+  border: 1px rgba(0,0,0,.1) solid;
+  border-radius: 5px;
+  padding: 50px 20px;
+  position: relative;
+  margin-bottom: 40px;
+  margin-top: 40px;
+  max-width: 320px;
+  min-width: 120px;
+}
+
+.header-info{
+  display: flex;
+  flex-direction: row;
+  color: white;
 }
 
 .basic-info.availability {
@@ -491,14 +567,16 @@ p{
 
 .profile-img-wrapper{
   position: relative;
-  margin-right: 40px;
+  display: inline;
+  margin-right: 50px!important;
+
 }
 
 .item p{
   margin-bottom: auto;
   display: inline;
   margin-right: 50px;
-  line-height: 2;
+  font-size: 100%;
 }
 
 .profile-img-wrapper-lg{
@@ -592,6 +670,8 @@ div.ui.dropdown.weekday.selection {
   width: 10em!important;
 }
 
-.profile-wrapper .ui.horizontal.divider.header, .meeting-form h3 {
+.profile-wrapper .ui.horizontal.divider.header, .meeting-form h3,  .profile-edit-wrapper .ui.horizontal.divider.header{
   color: #FBBD08;
+  margin-top: 60px!important;
+  margin-bottom: 40px!important;
 }
