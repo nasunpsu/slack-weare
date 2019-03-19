@@ -154,7 +154,7 @@
     /* display: inline-block !important; */
 }
 
-#tz-wrapper, #nw-wrapper{
+#tz-wrapper{
   overflow-x: auto;
   display: flex;
   display: -webkit-flex;
@@ -164,6 +164,20 @@
   margin-top: 50px;
   margin-bottom: 20px;
   /* white-space: nowrap; */
+}
+
+#nw-wrapper{
+  display: grid;
+  grid-template: auto / repeat(1fr/24);
+}
+
+.network{
+  padding-top: 250px;
+  grid-column: 10/23; 
+}
+
+svg:not(:root){
+  overflow: visible!important;
 }
 
 /* #tz-wrapper .timezone-container {
