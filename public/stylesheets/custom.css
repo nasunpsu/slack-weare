@@ -461,11 +461,13 @@ p{
   grid-column: 3/22;
   font-family: 'Proxima Nova'!important;
   color: rgb(49, 120, 196);
+  font-size: 1.2em;
   margin-bottom: -20px;margin-top: 25px;
 }
 
 .channel-title{
   grid-column: 3/22;
+  font-size: 1.2em;
   font-family: 'Proxima Nova'!important;
   color: rgb(49, 120, 196);
   margin-top: 85px;
