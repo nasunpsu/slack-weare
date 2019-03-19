@@ -141,6 +141,11 @@
     font-weight: 100;
     padding: 10px;
     display: flex;
+    flex-wrap: wrap;
+  }
+
+  .emoji-label{
+    margin-bottom: 3px;
   }
 
   #timezone-main {
