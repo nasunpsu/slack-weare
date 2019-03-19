@@ -180,19 +180,14 @@
 
 #nw-wrapper{
   display: grid;
-  grid-template: auto / repeat(1fr/24);
+  grid-template: auto / repeat(12,1fr);
 }
 
-.view-title{
-  padding-top: 100px;
-  color: black;
-  grid-column: 16;
-  font-size: 2em;
-}
 
 .network{
-  padding-bottom: 150px;
-  grid-column: 18/23; 
+  padding-top: 100px;
+  padding-bottom: 200px;
+  grid-column: 3; 
 }
 
 svg:not(:root){
@@ -200,7 +195,9 @@ svg:not(:root){
 }
 
 .nw-filter-wrapper{
-  grid-column: 16;
+  grid-column: 2/3;
+  padding-top: 100px;
+  width: 300px;
 }
 
 .filters{
@@ -213,17 +210,18 @@ svg:not(:root){
   font-family: 'Proxima Nova', sans-serif!important;
 }
 
-.search-table, .sort-dropdown{
+.nw-search, .nw-sort-dropdown{
   margin-top: 20px;
 }
 
-.search-table{
+.nw-search{
   margin-top: 40px;
   margin-left: 0px;
 }
 
-.search-box{
+.nw-search-box{
   margin-right: 25px;
+  width: 100px;
 }
 
 .filters .checkbox{
