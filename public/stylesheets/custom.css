@@ -130,6 +130,18 @@
     text-align: center!important;
   }
 
+  .message{
+    margin-bottom: 0px!important;
+    overflow-wrap: break-word;
+  }
+
+  .ui.basic.label.react-emoji-count{
+    font-size: 1.5em;
+    border: none;
+    font-weight: 100;
+    padding: 10px;
+    display: flex;
+  }
 
   #timezone-main {
     font-family: 'Open Sans', sans-serif;
@@ -154,7 +166,7 @@
     /* display: inline-block !important; */
 }
 
-#tz-wrapper, #nw-wrapper{
+#tz-wrapper{
   overflow-x: auto;
   display: flex;
   display: -webkit-flex;
@@ -164,6 +176,58 @@
   margin-top: 50px;
   margin-bottom: 20px;
   /* white-space: nowrap; */
+}
+
+#nw-wrapper{
+  display: grid;
+  grid-template: auto / repeat(1fr/24);
+}
+
+.view-title{
+  padding-top: 100px;
+  color: black;
+  grid-column: 16;
+  font-size: 2em;
+}
+
+.network{
+  padding-bottom: 150px;
+  grid-column: 18/23; 
+}
+
+svg:not(:root){
+  overflow: visible!important;
+}
+
+.nw-filter-wrapper{
+  grid-column: 16;
+}
+
+.filters{
+  margin-top: 20px;
+  border: 1px solid #e2efff;
+  padding: 20px;
+}
+
+.filters p{
+  font-family: 'Proxima Nova', sans-serif!important;
+}
+
+.search-table, .sort-dropdown{
+  margin-top: 20px;
+}
+
+.search-table{
+  margin-top: 40px;
+  margin-left: 0px;
+}
+
+.search-box{
+  margin-right: 25px;
+}
+
+.filters .checkbox{
+  margin-left: 25px;
 }
 
 /* #tz-wrapper .timezone-container {
@@ -397,11 +461,13 @@ p{
   grid-column: 3/22;
   font-family: 'Proxima Nova'!important;
   color: rgb(49, 120, 196);
+  font-size: 1.2em;
   margin-bottom: -20px;margin-top: 25px;
 }
 
 .channel-title{
   grid-column: 3/22;
+  font-size: 1.2em;
   font-family: 'Proxima Nova'!important;
   color: rgb(49, 120, 196);
   margin-top: 85px;
