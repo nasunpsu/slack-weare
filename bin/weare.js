@@ -133,6 +133,18 @@ app.engine('hbs', hbs({
 		},
 		get_UserID: function (uid) {
 			return uid.split('_')[1];
+		},
+		timeConverter: function (UNIX_timestamp) {
+			var a = new Date(UNIX_timestamp * 1000);
+			var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+			var year = a.getFullYear();
+			var month = months[a.getMonth()];
+			var date = a.getDate();
+			var hour = a.getHours();
+			var min = a.getMinutes();
+			var sec = a.getSeconds();
+			var time = date + ' ' + month + ' ' + year + ' ' + hour + ':' + min + ':' + sec;
+			return time;
 		}
 	}
 }));
@@ -334,13 +346,13 @@ app.get('/auth', (req, res) => {
 app.get('/test', (req, res) => {
 	res.send('haha');
 	res.status(200).end();
-	(async () => {									//TODO: MOVE this Block to the Init Module
-		await InitTeamMembers('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200);
-	})();
+	// (async () => {									//TODO: MOVE this Block to the Init Module
+	// 	await InitTeamMembers('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200);
+	// })();
 	(async () => {
 		await InitTeamChannels('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, null);
-		snapshot_db['users'] = await DB.collection('users').find({}).toArray();
 	})();
+	UpdateChannelRecentMsgs(null, 'general', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200); //cid example:"T0A286J8K_C0A28BAHG"
 
 
 
@@ -367,15 +379,29 @@ app.post('/slack/events', (req, res, next) => {
 			console.log(`within event callback: ${event}`);
 
 			// `team_join` is fired whenever a new user (incl. a bot) joins the team
-			if (event.type === 'member_joined_channel' && !event.is_bot) {
-				console.log(`the event body is ${util.inspect(event, { depth: null })}`)
-				const { user, channel } = event;
-				onboard.initialMessage(user, channel);
+			switch (event.type) {
+				case 'member_joined_channel':
+					if (!event.is_bot) {
+						console.log(`the event body is ${util.inspect(event, { depth: null })}`)
+						const { user, channel } = event;
+						onboard.initialMessage(user, channel);
+					}
+					res.sendStatus(200);
+					break;
+				case 'member_left_channel':
+					res.sendStatus(200);
+					if (!event.is_bot) {
+						console.log(`the event body is ${util.inspect(event, { depth: null })}`)
+						const { user, channel } = event;
+
+					}
+
+					break;
+				default:
+					console.log(`unknown event type`);
 			}
-			res.sendStatus(200);
-			// next();
-			break;
 		}
+			break;
 		default: {
 			console.error('nothing cased events');
 			res.sendStatus(500); next();
@@ -965,36 +991,7 @@ app.get('/', async function (req, res) {
 					cname: r.cname
 				});
 			})
-			var msgs = [], activeChannelIds = TopActiveChannels.map(c => c.cid);
-			for (var i = 0; i < limit; i++) {
-				var temp = TopActiveChannels[i].msgs;
-				for (var j = 0; j < temp.length; j++) {
-					temp[j].cname = TopActiveChannels[i].cname;
-					// await UpdateChannelRecentMsgs(cid, token, limit);
-				}
-				msgs = msgs.concat(temp);
-			}
-			for (var i = 0; i < msgs.length; i++) {
-				if (msgs[i].reactions == null) msgs[i].reactions = [];
-			}
-			msgs.sort((a, b) => { //from most reacted to least reacted, popular to small
-				// return b.reactions.length - a.reactions.length; //reactions.length is the number of different type of reactions
-				var a_reaction_number = 0, b_reaction_number = 0;
-				for (var i = 0; i < a.reactions.length; i++) {
-					a_reaction_number += a.reactions[i].count;
-				}
-				for (var i = 0; i < b.reactions.length; i++) {
-					b_reaction_number += b.reactions[i].count;
-				}
-				// console.log(`reaction number is ${a_reaction_number}`);
-				// console.log(`reaction number is ${b_reaction_number}`);
-				return b_reaction_number - a_reaction_number;
-			});
 
-			// console.log(`reaction number is ${util.inspect(msgs, {depth:null})}`);
-			for (var i = 0; i < 10; i++) {
-				reacted_msgs.push(msgs[i]);
-			}
 			var obj = {
 				TopSizeChannels: TopSizeChannels,
 				TopActiveChannels: TopActiveChannels,
@@ -1006,6 +1003,37 @@ app.get('/', async function (req, res) {
 			return Promise.resolve(obj);
 		}
 	});
+	let sub_c = req.session.user.channels.map(c => c.cid);
+	console.log(`the logged user subscribed channels are ${sub_c}`);
+	to_be_rendered.msgs = await DB.collection("msgs").find({
+		cid: {
+			"$in": sub_c
+		}
+	}).toArray().then(async (msgs, err) => {
+		let reacted_msgs = [];
+		console.log(`the length of the msgs are ${msgs.length}`);
+		for (var i = 0; i < msgs.length; i++) {
+			if (msgs[i].reactions == null) msgs[i].reactions = [];
+		}
+		await msgs.sort((a, b) => { //from most reacted to least reacted, popular to small
+			// return b.reactions.length - a.reactions.length; //reactions.length is the number of different type of reactions
+			var a_reaction_number = 0, b_reaction_number = 0;
+			for (var i = 0; i < a.reactions.length; i++) {
+				a_reaction_number += a.reactions[i].count;
+			}
+			for (var i = 0; i < b.reactions.length; i++) {
+				b_reaction_number += b.reactions[i].count;
+			}
+			// console.log(`reaction number is ${a_reaction_number}`);
+			// console.log(`reaction number is ${b_reaction_number}`);
+			return b_reaction_number - a_reaction_number;
+		});
+
+		// console.log(`reaction number is ${util.inspect(msgs, {depth:null})}`);
+		
+		return Promise.resolve(msgs.splice(0, 7));
+
+	})
 	res.render('index', to_be_rendered);
 });
 app.get('/cardview', async function (req, res) {
@@ -1019,7 +1047,8 @@ app.get('/tablelist', async function (req, res) {
 	// generate the basic table for the logged in user to check who is closet to him/her
 	let to_be_rendered = {};
 	to_be_rendered.layout = 'default';
-	to_be_rendered.template = 'home-template';
+	to_be_rendered.template = 'table-template';
+	to_be_rendered.userInfo = req.session.user;
 	const numUsers = 80;
 	const fields = ['real_name', 'channels', 'major', 'local_area', 'affiliation', 'campus'];
 	let users = await similarity.getSimilarUsers(req.session.user.uid, DB, numUsers, fields);
@@ -1131,13 +1160,13 @@ app.get('/editProfile', async function (req, res) {
 
 app.post('/editProfile', async function (req, res) {
 	const uid = req.session.user.uid;
-	const query = {uid};
+	const query = { uid };
 	const insertObj = req.body;
 	const dbResponse = await DB.collection('users').updateOne(query, { $set: insertObj });
 	if (!dbResponse.result.ok) {
 		console.warn(`Error with update query ${JSON.stringify(query)}, inserting object ${JSON.stringify(insertObj)}`);
 	}
-	res.send({received: req.body});
+	res.send({ received: req.body });
 	// let to_be_rendered = {};
 	// to_be_rendered.layout = 'default';
 	// to_be_rendered.template = 'editprofile-template';
@@ -1156,12 +1185,12 @@ app.get('/profile/:uid', async function (req, res) {
 	const { uid } = req.params;
 	to_be_rendered.layout = 'default';
 	to_be_rendered.template = 'profile-template';
-	const queryResult = await DB.collection('users').find({uid});
+	const queryResult = await DB.collection('users').find({ uid });
 	const doc = await queryResult.toArray();
-	if(doc.length === 0){
+	if (doc.length === 0) {
 		console.error(`No results found for uid ${uid}`);
 	}
-	else{
+	else {
 		to_be_rendered.userInfo = doc[0];
 	}
 	res.render('profileview', to_be_rendered);
@@ -1650,7 +1679,7 @@ async function rtmConnectFn(req) {
 		if (typeof snapshot_db['users'] == 'undefined') snapshot_db['users'] = await DB.collection('users').find({}).toArray();
 		console.log('Connecting rtm.connect now:');
 		console.log(`snapshot users length is ${snapshot_db['users'].length}`);
-		Promise.resolve(snapshot_db['users'])
+		// Promise.resolve(snapshot_db['users'])
 		await web.rtm.connect({
 			token: process.env.BOT_USER_OAUTH_ACCESS_TOKEN,
 			batch_presence_aware: 1
@@ -1870,8 +1899,9 @@ async function InitTeamChannels(team_id, token, limit = null) {
 				cursor = res.response_metadata.next_cursor;
 				counter += 1;
 				// console.log(`cursor is ${cursor} and counter is ${counter}`)
-				res.channels.forEach(m => {
+				res.channels.forEach(async m => {
 					var cid = team_id + '_' + m.id;
+					let cmembers = await ChannelMembers(cid, m.name);
 
 					DB.collection('channels').updateOne(
 						{ cid: cid },
@@ -1883,16 +1913,13 @@ async function InitTeamChannels(team_id, token, limit = null) {
 								topic: m.topic.value,
 								purpose: m.purpose.value,
 								num_members: m.num_members,
+								cmembers: cmembers,
 								msgs: []
 							}
 						},
 						{ upsert: true },
 						function (err, res) {
 							if (err) console.error(err);
-							(async () => {
-								await UpdateChannelRecentMsgs(cid, token, limit);
-								console.log('channel updated succesfully');
-							})();
 						});
 				})
 			});
@@ -1910,9 +1937,10 @@ async function InitTeamChannels(team_id, token, limit = null) {
 				cursor = res.response_metadata.next_cursor;
 				counter += 1;
 				// console.log(`cursor is ${cursor} and counter is ${counter}`)
-				res.channels.forEach(m => {
+				res.channels.forEach(async m => {
 					// console.log(`the m value inside res.channels are (from conversations.list): ${util.inspect(m, { depth: null })}`)
 					var cid = team_id + '_' + m.id;
+					let cmembers = await ChannelMembers(cid, m.name);
 					DB.collection('channels').updateOne(
 						{ cid: cid },
 						{
@@ -1923,16 +1951,12 @@ async function InitTeamChannels(team_id, token, limit = null) {
 								topic: m.topic.value,
 								purpose: m.purpose.value,
 								num_members: m.num_members,
-								msgs: []
+								cmembers: cmembers
 							}
 						},
 						{ upsert: true },
 						function (err, res) {
 							if (err) console.error(err);
-							(async () => {
-								await UpdateChannelRecentMsgs(cid, token, limit);
-								console.log('channel updated succesfully');
-							})();
 						});
 				});
 			});
@@ -1942,83 +1966,216 @@ async function InitTeamChannels(team_id, token, limit = null) {
 
 }
 
-async function UpdateChannelRecentMsgs(c_id, token, limit = 200) {
-	//init the channel info with the msgs from real users in the past month from now
-	let local_slack = new SlackWebClient(token);
-	console.log(`channel id passed in is ${c_id}`)
+async function UpdateChannelRecentMsgs(c_id, cname, token, limit = 200) {
+	var local_slack = new SlackWebClient(token);
+	if (c_id) console.log(`channel id passed in is ${c_id}`);
+	else console.log(`channel id passed in is EMPTY; I going to update messages in the subscribed channels only`);
 
-	var x = new Date();
-	x.setDate(1);
-	x.setMonth(x.getMonth() - 1);
-	local_slack.channels.history({ // pay attention the user token (for reading history from channel/groups) but the bot is used to write
-		channel: c_id.split('_')[1], //#test-bot (left) #learning-tech C0A34HJVA
-		count: limit | 200,
-		latest: new Date().getTime(),
-		// oldest: x.getTime() //since previous month
-	}).then(async res => {
-		const msgs = res.messages;
-		var recent_msgs = [];
-		var promiseArray = [];
-
-		// console.log(`msg in the Update func is ${util.inspect(msgs, {depth: 2})}`);
-		// console.log(`there are ${msgs.length} results from a channel history \n the first one is ${util.inspect(msgs[0], { depth: 2 })}`)
-
-		msgs.forEach(msg => {
-			if (msg.type == 'message' && !msg.bot_id && !msg.subtype) { // only look at the plain text msgs from real users
-				// console.log(`Real msg from user in the Update func is ${util.inspect(msg, {depth: 2})}`);
-				var promise = DB.collection('users')
-					.find({ uid: c_id.split('_')[0] + '_' + msg.user }
-					).toArray()
-					.then((docs, err) => {
-						if (err) console.error(err);
-						if (docs.length != 0) {
-							console.log(`real_name for the message creator is ${docs[0].real_name}`);
-							return Promise.resolve(docs[0]);
-						}
-						else console.error(`Member ${msg.user} does not exist`);
-					}).then(user => {
-						const msg_obj = {
-							mid: msg.client_msg_id,
-							uid: msg.user,
-							username: user.real_name,
-							user_avatar: user.image_48,
-							text: msg.text,
-							ts: timeConverter(msg.ts),
-							is_starred: msg.is_starred,
-							reactions: msg.reactions
-						}
-						recent_msgs.push(msg_obj);
-					});
-				promiseArray.push(promise);
-			}
+	if (typeof snapshot_db['users'] == 'undefined') snapshot_db['users'] = await DB.collection('users').find({}).toArray();
+	if (!c_id) { //c_id is not defined, pull all the channels msgs
+		if (typeof snapshot_db['channels'] == 'undefined') snapshot_db['channels'] = await DB.collection('channels').find({}).toArray();
+		await snapshot_db['channels'].forEach(c => {
+			Go_through_channel_mgs(c.cid, c.cname);
 		});
+	}
+	else await Go_through_channel_mgs(c_id, cname); //once
+	async function Go_through_channel_mgs(c_id, cname) {
+		var first = true, cursor = "fake", count = 0;
+		while (cursor) {
+			// (async () => {
+			console.log(`while loop: ${count++}; cursor is ${cursor}`);
+			if (first) {
+				console.log(`First `);
+				await local_slack.conversations.history({ // pay attention the user token (for reading history from channel/groups) but the bot is used to write
+					channel: c_id.split('_')[1], //#test-bot (left) #learning-tech C0A34HJVA
+					limit: limit | 200,
+					// cursor: cursor
+				}).then(res => {
+					const msgs = res.messages;
+					// console.log(`${util.inspect(res, { depth: 2 })}`);
+					if (res.response_metadata) cursor = res.response_metadata.next_cursor;
+					else cursor = null;
 
-		await Promise.all(promiseArray).then(res => {
-			console.log(promiseArray)
-			console.log(`recent msgs array inside Promise array is ${util.inspect(recent_msgs, { depth: null })}`)
+					console.log(`cursor is ${cursor} from object ${util.inspect(res, { depth: null })}`);
+					var promiseArray = [];
+					// console.log(`msg in the Update func is ${util.inspect(msgs, {depth: 2})}`);
+					// console.log(`there are ${msgs.length} results from a channel history \n the first one is ${util.inspect(msgs[0], { depth: 2 })}`)
 
-		})
-		console.log(`recent msgs array is ${util.inspect(recent_msgs, { depth: null })}`)
-		return recent_msgs;
+					msgs.forEach(msg => {
+						var user = snapshot_db['users'].filter(u => u.uid.split('_')[1] == msg.user)[0];
+						if (msg.type == 'message' && !msg.bot_id && !msg.subtype) { // only look at the plain text msgs from real users
+							// console.log(`Real msg from user in the Update func is ${util.inspect(msg, {depth: 2})}`);
+							const msg_obj = {
+								uid: msg.user,
+								username: user.real_name,
+								user_avatar: user.image_48,
+								cid: c_id,
+								cname: cname,
+								text: msg.text,
+								ts: msg.ts,
+								thread_ts: msg.thread_ts,
+								is_starred: msg.is_starred,
+								reactions: msg.reactions
+							}
+							DB.collection('msgs').updateOne(
+								{ mid: msg.client_msg_id },
+								{
+									$set: msg_obj
+								},
+								{ upsert: true },
+								function (err, res) {
+									if (err) console.error(err);
+									// else console.log(`msgs entered with DB transaction ${res}`)
+								});
 
+							// promiseArray.push(promise);
+						}
+					});
+					// await Promise.all(promiseArray).then(res => {
+					// 	console.log(promiseArray);
+					// 	console.log(`last msg obj is ${util.inspect(msg_obj, { depth: null })}`)
+					// 	first = false;
+					// });
+				})
+					.catch(err => console.error(err));
+				first = false;
+			}
+			else {
+				console.log(`Non-First`);
+				await local_slack.conversations.history({ // pay attention the user token (for reading history from channel/groups) but the bot is used to write
+					channel: c_id.split('_')[1], //#test-bot (left) #learning-tech C0A34HJVA
+					limit: limit | 200,
+					cursor: cursor
+				}).then(res => {
+					const msgs = res.messages;
+					if (res.response_metadata) cursor = res.response_metadata.next_cursor;
+					else cursor = null;
+					console.log(`cursor is ${cursor}}`);
+					// var promiseArray = [];
+					// console.log(`msg in the Update func is ${util.inspect(msgs, {depth: 2})}`);
+					// console.log(`there are ${msgs.length} results from a channel history \n the first one is ${util.inspect(msgs[0], { depth: 2 })}`)
+					msgs.forEach(msg => {
+						var user = snapshot_db['users'].filter(u => u.uid.split('_')[1] == msg.user)[0];
+						if (msg.type == 'message' && !msg.bot_id && !msg.subtype) { // only look at the plain text msgs from real users
+							// console.log(`Real msg from user in the Update func is ${util.inspect(msg, {depth: 2})}`);
+							const msg_obj = {
+								uid: msg.user,
+								username: user.real_name,
+								user_avatar: user.image_48,
+								cid: c_id,
+								cname: cname,
+								text: msg.text,
+								ts: msg.ts,
+								thread_ts: msg.thread_ts,
+								is_starred: msg.is_starred,
+								reactions: msg.reactions
+							}
+							DB.collection('msgs').updateOne(
+								{ mid: msg.client_msg_id },
+								{
+									$set: msg_obj
+								},
+								{ upsert: true },
+								function (err, res) {
+									if (err) console.error(err);
+									// else console.log(`msgs entered with DB transaction ${res}`)
+								});
 
-	})
-		.then(recent_msgs => {
-			console.log(`recent msgs array is ${util.inspect(recent_msgs, { depth: null })}`)
-			DB.collection('channels').updateOne(
-				{ cid: c_id },
-				{
-					$set: {
-						msgs: recent_msgs
-					}
-				},
-				function (err, res) {
-					if (err) console.error(err);
-					// else console.log(`msgs entered with DB transaction ${res}`)
-				});
-		})
-		.catch(err => console.error(err));
+							// promiseArray.push(promise);
+						}
+					});
+					// await Promise.all(promiseArray).then(res => {
+					// 	console.log(promiseArray);
+					// 	console.log(`last msg obj is ${util.inspect(msg_obj, { depth: null })}`)
+					// 	first = false;
+					// });
+				})
+					.catch(err => {
+						console.error(err);
+					});
+			}
+			// })();
+		}
+	}
 }
+
+// async function UpdateChannelRecentMsgs(c_id, token, limit = 200) {
+// 	//init the channel info with the msgs from real users in the past month from now
+// 	let local_slack = new SlackWebClient(token);
+// 	console.log(`channel id passed in is ${c_id}`)
+
+// 	var x = new Date();
+// 	x.setDate(1);
+// 	x.setMonth(x.getMonth() - 1);
+// 	local_slack.channels.history({ // pay attention the user token (for reading history from channel/groups) but the bot is used to write
+// 		channel: c_id.split('_')[1], //#test-bot (left) #learning-tech C0A34HJVA
+// 		count: limit | 200,
+// 		latest: new Date().getTime(),
+// 		// oldest: x.getTime() //since previous month
+// 	}).then(async res => {
+// 		const msgs = res.messages;
+// 		var recent_msgs = [];
+// 		var promiseArray = [];
+
+// 		// console.log(`msg in the Update func is ${util.inspect(msgs, {depth: 2})}`);
+// 		// console.log(`there are ${msgs.length} results from a channel history \n the first one is ${util.inspect(msgs[0], { depth: 2 })}`)
+
+// 		msgs.forEach(msg => {
+// 			if (msg.type == 'message' && !msg.bot_id && !msg.subtype) { // only look at the plain text msgs from real users
+// 				// console.log(`Real msg from user in the Update func is ${util.inspect(msg, {depth: 2})}`);
+// 				var promise = DB.collection('users')
+// 					.find({ uid: c_id.split('_')[0] + '_' + msg.user }
+// 					).toArray()
+// 					.then((docs, err) => {
+// 						if (err) console.error(err);
+// 						if (docs.length != 0) {
+// 							console.log(`real_name for the message creator is ${docs[0].real_name}`);
+// 							return Promise.resolve(docs[0]);
+// 						}
+// 						else console.error(`Member ${msg.user} does not exist`);
+// 					}).then(user => {
+// 						const msg_obj = {
+// 							mid: msg.client_msg_id,
+// 							uid: msg.user,
+// 							username: user.real_name,
+// 							user_avatar: user.image_48,
+// 							text: msg.text,
+// 							ts: msg.ts,
+// 							is_starred: msg.is_starred,
+// 							reactions: msg.reactions
+// 						}
+// 						recent_msgs.push(msg_obj);
+// 					});
+// 				promiseArray.push(promise);
+// 			}
+// 		});
+
+// 		await Promise.all(promiseArray).then(res => {
+// 			console.log(promiseArray)
+// 			console.log(`recent msgs array inside Promise array is ${util.inspect(recent_msgs, { depth: null })}`)
+
+// 		})
+// 		console.log(`recent msgs array is ${util.inspect(recent_msgs, { depth: null })}`)
+// 		return recent_msgs;
+
+
+// 	})
+// 		.then(recent_msgs => {
+// 			console.log(`recent msgs array is ${util.inspect(recent_msgs, { depth: null })}`)
+// 			DB.collection('channels').updateOne(
+// 				{ cid: c_id },
+// 				{
+// 					$set: {
+// 						msgs: recent_msgs
+// 					}
+// 				},
+// 				function (err, res) {
+// 					if (err) console.error(err);
+// 					// else console.log(`msgs entered with DB transaction ${res}`)
+// 				});
+// 		})
+// 		.catch(err => console.error(err));
+// }
 
 async function ActiveWho(channel_id, user_id) {
 	var members = [], activeMembers = [], activeProfiles = [];
@@ -2053,7 +2210,7 @@ async function ActiveWho(channel_id, user_id) {
 						// promiseArray.push(inner_promise);
 
 					});
-				promiseArray.push(promise);
+				ç
 
 			});
 			await Promise.all(promiseArray).then(res => {
