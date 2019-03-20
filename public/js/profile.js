@@ -32,77 +32,32 @@ $('.ui.checkbox')
 ;
 
 
-var validationRules = {
-    major: {
+const fields = ['fullname', 'major', 'city', 'email', 'campus', 'courses', 'goals', 'recommended-courses', 'recommended-instructor', 'profession', 'military', 'fun', 'unique', 'goal', 'past-cities', 'places', 'marital', 'kids', 'career', 'start', 'to'];
+
+const validationRules = fields.reduce((obj, field) => {
+    obj[field] = {
         rules: [
             {
                 type: 'empty',
-                prompt: 'Please enter your major.'
+                prompt: 'Please enter your {name}.'
             },
             {
                 type: 'maxLength[150]',
                 prompt: 'Your major must be at most {ruleValue} characters.'
             }
         ]
-
     }
+    return obj;
+}, {});
+validationRules.email.rules.push({
+    type: 'email',
+    prompt: 'Invalid Email'
+});
+validationRules.kids.rules.push({
+    type: 'integer[0..30]',
+    prompt: 'Kids must be a whole number'
 
-    // fields: {
-    //     "purpose": {
-    //         identifier: "purpose",
-    //         rules: [
-    //             {
-    //                 type: 'empty',
-    //                 prompt: 'Please enter your purpose.'
-    //             },
-    //             {
-    //                 type: 'maxLength[150]',
-    //                 prompt: 'Your purpose must be at most {ruleValue} characters.'
-    //             }
-    //         ]
-
-    //     },
-    //     "topic": {
-    //         identifier: "topic",
-    //         rules: [
-    //             {
-    //                 type: 'empty',
-    //                 prompt: 'Please select a topic.'
-    //             }
-    //         ]
-    //     },
-    //     "date": {
-    //         identifier: "date",
-    //         rules: [
-    //             {
-    //                 type: 'empty',
-    //                 prompt: 'Please enter the meeting date.'
-    //             }
-    //         ]
-    //     },
-    //     "time": {
-    //         identifier: "time",
-    //         rules: [
-    //             {
-    //                 type: 'empty',
-    //                 prompt: 'Please enter the meeting time.'
-    //             }
-    //         ]
-    //     },
-    //     duration: {
-    //         identifier: 'duration',
-    //         rules: [
-    //             {
-    //                 type: 'integer[1..100]',
-    //                 prompt: 'Please enter an integer value for duration in minutes'
-    //             }
-    //         ]
-    //     },
-    //     password: ['minLength[6]', 'empty'],
-    //     skills: ['minCount[2]', 'empty'],
-    //     terms: 'checked'
-    // }
-}
+});
 //Get value from an input field
 function getFieldValue(fieldId) {
     // 'get field' is part of Semantics form behavior API
@@ -112,7 +67,7 @@ function getFieldValue(fieldId) {
 
 $(document).ready(() => {
     const form = $('form');
-    form.form({fields: validationRules, onSuccess: submitForm.bind(this, form), onFailure: failure});//, { onSuccess: submitForm });
+    form.form({fields: validationRules, onSuccess: submitForm.bind(this, form)});//, { onSuccess: submitForm });
     //     console.log(json);
     // })
 });

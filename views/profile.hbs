@@ -181,7 +181,7 @@
       </div>
       <div class="six wide field">
         <label>Email</label>
-        <input type="email" name="fullname" placeholder="An email peers can contact you with."
+        <input type="email" name="email" placeholder="An email peers can contact you with."
           value="">
       </div>
     </div>
@@ -238,7 +238,7 @@
       Educational Info
     </h4>
     <div class="fields instrumental-info courses">
-      <div class="field">
+      <div class="field error">
         <label>Major</label>
         <div class="field">
           <input type="text" name="major" placeholder="{{userInfo.major}} {{userInfo.title}}">
@@ -319,7 +319,7 @@
     <div class="fields personal-info-edit facts">
       <div class="eight wide field">
         <label for="">Career Goals</label>
-        <textarea name="fun" id="fun" cols="30" rows="5" placeholder="Any future career you'd like to have or goals you have within your current career." >{{userInfo.fun}}</textarea>
+        <textarea name="career" id="fun" cols="30" rows="5" placeholder="Any future career you'd like to have or goals you have within your current career." >{{userInfo.fun}}</textarea>
       </div>
       <div class="eight wide field">
         <label for="">Past Careers</label>
@@ -334,12 +334,12 @@
       <div class="eight wide field">
         <label>Places I've Lived</label>
 
-        <input type="text" name="goal" placeholder="Your city. E.g. State College, PA" value="{{userInfo.city}}">
+        <input type="text" name="past-cities" placeholder="Your city. E.g. State College, PA" value="{{userInfo.city}}">
 
       </div>
       <div class="eight wide field">
         <label>Places I'd Like to Visit</label>
-        <input type="text" name="goal" placeholder="E.g. Paris, France" value="{{userInfo.likeplaces}}">
+        <input type="text" name="places" placeholder="E.g. Paris, France" value="{{userInfo.likeplaces}}">
       </div>
     </div>
     <div class="fields personal-info-edit family">
@@ -364,5 +364,6 @@
       </div>
     </div>
     <div id="submit-button" class="ui submit button save-profile-changes">Save Changes</div>
+    <div class="ui error message"></div>
   </form>
 </section>
