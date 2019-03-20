@@ -39,6 +39,13 @@ function getFieldValue(fieldId) {
     return $('.ui.form').form('get field', fieldId).val();
 }
 
+function addTime(){
+    const av = window.available;
+    const clone = av.cloneNode(true);
+    const available = $('#available')[0]; 
+    const parent = available.parentNode;
+    parent.insertBefore(clone, available.nextSibling);
+}
 
 $(document).ready(() => {
     const validationRules = fields.reduce((obj, fieldObj) => {
@@ -61,6 +68,7 @@ $(document).ready(() => {
     }, {});
     const form = $('form');
     form.form({fields: validationRules, onSuccess: submitForm.bind(this, form)});//, { onSuccess: submitForm });
+    window.available = $('#available')[0].cloneNode(true);
 });
 
 function submitForm(form, event){
