@@ -48,6 +48,10 @@ function addTime(){
     reloadCalendar();
 }
 
+function removeTime(target){
+    $(target).closest('.availability').remove();
+}
+
 $(document).ready(() => {
     reloadCalendar();
     const validationRules = fields.reduce((obj, fieldObj) => {
