@@ -134,17 +134,24 @@ app.engine('hbs', hbs({
 		get_UserID: function (uid) {
 			return uid.split('_')[1];
 		},
-		timeConverter: function (UNIX_timestamp) {
+		timeConverter: function (UNIX_timestamp, userInfo) {
+			console.log(userInfo)
 			var a = new Date(UNIX_timestamp * 1000);
 			var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 			var year = a.getFullYear();
 			var month = months[a.getMonth()];
 			var date = a.getDate();
-			var hour = a.getHours();
-			var min = a.getMinutes();
-			var sec = a.getSeconds();
-			var time = date + ' ' + month + ' ' + year + ' ' + hour + ':' + min + ':' + sec;
-			return time;
+			// var hour = a.getHours();
+			// var min = "0" + a.getMinutes();
+			// var sec = "0" + a.getSeconds();
+			// var time = date + ' ' + month + ' ' + year + ' ' + hour + ':' + min.substr(-2) + ':' + sec.substr(-2);
+			var time = new Date(a).toLocaleTimeString(userInfo.locale, 
+            {
+                timeZone: userInfo.tz, 
+                hour: '2-digit', 
+                minute:'2-digit'
+            });
+			return date + ' ' + month + ' ' + year + ' ' + time;
 		}
 	}
 }));
@@ -307,6 +314,8 @@ app.get('/api/oauth', function (req, res, next) {
 						console.log(`team id is ${result.team_id}, and token is ${result.access_token}`);
 						await InitTeamMembers(result.team_id, result.access_token, null);
 						await InitTeamChannels(result.team_id, result.access_token, null);
+						await UpdateChannelRecentMsgs(null, 'general', result.access_token, 200); //cid example:"T0A286J8K_C0A28BAHG"
+
 						// (async () => {									//TODO: MOVE this Block to the Init Module
 						// 	await InitTeamMembers(result.team_id, result.access_token, null);
 						// })();
@@ -349,9 +358,9 @@ app.get('/test', (req, res) => {
 	// (async () => {									//TODO: MOVE this Block to the Init Module
 	// 	await InitTeamMembers('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200);
 	// })();
-	(async () => {
-		await InitTeamChannels('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, null);
-	})();
+	// (async () => {
+	// 	await InitTeamChannels('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, null);
+	// })();
 	UpdateChannelRecentMsgs(null, 'general', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200); //cid example:"T0A286J8K_C0A28BAHG"
 
 
@@ -966,44 +975,48 @@ app.get('/', async function (req, res) {
 			// res.render('index', { layout: 'default', template: 'home-template', tz_members: members_by_tz });
 		}
 	});
-
-	to_be_rendered.channels_info = await DB.collection('channels').find({ team_id: req.session.team ? req.session.team.team_id : 'T0A286J8K' }).toArray().then((results, err) => {
-		if (err) console.error(err);
-		if (results.length != 0) { //this is current all the channels of the team, but perhaps it is good to differentiate which ones the logged user belongs to vs not
-			var TopSizeChannels = [], TopActiveChannels = [], reacted_msgs = [], msg_total = 0, limit = 3, c_list = []; //LIMIT is the number of Top X channels
-			results.sort((a, b) => { //from big to small
-				return b.num_members - a.num_members;
-			});
-			if (limit > results.length) limit = results.length;
-			for (var i = 0; i < limit; i++) {
-				msg_total += results[i].msgs.length;
-				TopSizeChannels.push(results[i]);
-			}
-			results.sort((a, b) => { //from active to inactive, large to small
-				return b.msgs.length - a.msgs.length;
-			});
-			for (var i = 0; i < limit; i++) {
-				TopActiveChannels.push(results[i]);
-			};
-			results.forEach(r => {
-				c_list.push({
-					cid: r.cid,
-					cname: r.cname
-				});
-			})
-
-			var obj = {
-				TopSizeChannels: TopSizeChannels,
-				TopActiveChannels: TopActiveChannels,
-				channels_total: results.length,
-				msg_total: msg_total,
-				channel_list: c_list,
-				reacted_msgs: reacted_msgs
-			}
-			return Promise.resolve(obj);
-		}
-	});
+	
 	let sub_c = req.session.user.channels.map(c => c.cid);
+	to_be_rendered.channels_info = await DB.collection('channels').find({ 
+		cid: {
+			"$in": sub_c
+		}
+	})
+		.toArray().then(async (results, err) => {
+			if (err) console.error(err);
+			if (results.length != 0) { //this is current all the channels of the team, but perhaps it is good to differentiate which ones the logged user belongs to vs not
+				var TopSizeChannels = [], TopActiveChannels = [], limit = 3, c_list = []; //LIMIT is the number of Top X channels
+				
+				results.sort((a, b) => { //from big to small
+					return b.num_members - a.num_members;
+				});
+				if (limit > results.length) limit = results.length;
+				for (var i = 0; i < limit; i++) {
+					TopSizeChannels.push(results[i]);
+				}
+				results.sort((a, b) => { //from active to inactive, large to small
+					return b.num_msgs - a.num_msgs;
+				});
+				for (var i = 0; i < limit; i++) {
+					TopActiveChannels.push(results[i]);
+				};
+				results.forEach(r => {
+					c_list.push({
+						cid: r.cid,
+						cname: r.cname
+					});
+				})
+
+
+				var obj = {
+					TopSizeChannels: TopSizeChannels,
+					TopActiveChannels: TopActiveChannels,
+					channels_total: results.length,
+					channel_list: c_list
+				}
+				return Promise.resolve(obj);
+			}
+		});
 	console.log(`the logged user subscribed channels are ${sub_c}`);
 	to_be_rendered.msgs = await DB.collection("msgs").find({
 		cid: {
@@ -1030,10 +1043,13 @@ app.get('/', async function (req, res) {
 		});
 
 		// console.log(`reaction number is ${util.inspect(msgs, {depth:null})}`);
-		
-		return Promise.resolve(msgs.splice(0, 7));
+
+		return Promise.resolve(msgs.splice(0, 6));
 
 	})
+	to_be_rendered.msgs_total = await DB.collection('msgs').find({}).toArray().then(res=>{
+		return Promise.resolve(res.length);
+	});
 	res.render('index', to_be_rendered);
 });
 app.get('/cardview', async function (req, res) {
@@ -1335,7 +1351,6 @@ app.post('/meeting/:mid', async function (req, res) {
 		duration: req.body.duration
 	};
 	(async () => {
-
 		if (req.body.who == "custom") {
 			updateObj.attendees = await cmembers.filter(member => req.body.attendees.includes(
 				member.uid
@@ -1508,7 +1523,8 @@ function similarTo(list, user) {
 app.get('/network', async function (req, res) {
 	let to_be_rendered = {};
 	to_be_rendered.layout = 'default';
-	to_be_rendered.template = 'home-template';
+	to_be_rendered.template = 'network-template';
+	to_be_rendered.userInfo = req.session.user;
 	to_be_rendered.data = await DB.collection('users').find({ team_id: req.session.team.team_id }).toArray().then(async (results, err) => {
 		if (err) console.error(err);
 		else if (results.length != 0) {
@@ -1914,7 +1930,8 @@ async function InitTeamChannels(team_id, token, limit = null) {
 								purpose: m.purpose.value,
 								num_members: m.num_members,
 								cmembers: cmembers,
-								msgs: []
+								num_msgs: 0,
+								latest_msg_ts: null
 							}
 						},
 						{ upsert: true },
@@ -1951,7 +1968,9 @@ async function InitTeamChannels(team_id, token, limit = null) {
 								topic: m.topic.value,
 								purpose: m.purpose.value,
 								num_members: m.num_members,
-								cmembers: cmembers
+								cmembers: cmembers,
+								num_msgs: 0,
+								latest_msg_ts: null
 							}
 						},
 						{ upsert: true },
@@ -1970,41 +1989,74 @@ async function UpdateChannelRecentMsgs(c_id, cname, token, limit = 200) {
 	var local_slack = new SlackWebClient(token);
 	if (c_id) console.log(`channel id passed in is ${c_id}`);
 	else console.log(`channel id passed in is EMPTY; I going to update messages in the subscribed channels only`);
-
 	if (typeof snapshot_db['users'] == 'undefined') snapshot_db['users'] = await DB.collection('users').find({}).toArray();
 	if (!c_id) { //c_id is not defined, pull all the channels msgs
 		if (typeof snapshot_db['channels'] == 'undefined') snapshot_db['channels'] = await DB.collection('channels').find({}).toArray();
-		await snapshot_db['channels'].forEach(c => {
-			Go_through_channel_mgs(c.cid, c.cname);
+		snapshot_db['channels'].forEach(async c => {
+			const obj = await Go_through_channel_msgs(c.cid, c.cname);
+			DB.collection('channels').updateOne(
+				{ cid: c.cid },
+				{
+					$set: {
+
+						num_msgs: obj.num_msgs,
+						latest_msg_ts: obj.latest_msg_ts
+					}
+				},
+				{ upsert: true },
+				function (err, res) {
+					if (err) console.error(err);
+				});
+			return Promise.resolve(obj.num_msgs);
 		});
 	}
-	else await Go_through_channel_mgs(c_id, cname); //once
-	async function Go_through_channel_mgs(c_id, cname) {
-		var first = true, cursor = "fake", count = 0;
-		while (cursor) {
-			// (async () => {
-			console.log(`while loop: ${count++}; cursor is ${cursor}`);
+	else {
+		const obj = await Go_through_channel_msgs(c_id, cname); //once
+		DB.collection('channels').updateOne(
+			{ cid: c_id },
+			{
+				$set: {
+
+					num_msgs: obj.num_msgs,
+					latest_msg_ts: obj.latest_msg_ts
+				}
+			},
+			{ upsert: true },
+			function (err, res) {
+				if (err) console.error(err);
+			});
+	}
+	async function Go_through_channel_msgs(c_id, cname) {
+		let first = true, count = 0, num_msgs = 0, latest = null;
+		var check_cursor = "fake";
+		while (check_cursor) {
+			console.log(`while loop: ${count++}; cursor is ${check_cursor}`);
 			if (first) {
-				console.log(`First `);
-				await local_slack.conversations.history({ // pay attention the user token (for reading history from channel/groups) but the bot is used to write
+				console.log(`First`);
+				check_cursor = await local_slack.conversations.history({ // pay attention the user token (for reading history from channel/groups) but the bot is used to write
 					channel: c_id.split('_')[1], //#test-bot (left) #learning-tech C0A34HJVA
 					limit: limit | 200,
 					// cursor: cursor
 				}).then(res => {
 					const msgs = res.messages;
+					latest = msgs[0].ts;
+					// num_msgs += msgs.length;
+					console.log(`is the first messsage the latest one: ${timeConverter(res.messages[0].ts)}`)
+					console.log(`is the last messsage the latest one: ${timeConverter(res.messages[msgs.length - 1].ts)}`)
 					// console.log(`${util.inspect(res, { depth: 2 })}`);
-					if (res.response_metadata) cursor = res.response_metadata.next_cursor;
-					else cursor = null;
-
-					console.log(`cursor is ${cursor} from object ${util.inspect(res, { depth: null })}`);
-					var promiseArray = [];
-					// console.log(`msg in the Update func is ${util.inspect(msgs, {depth: 2})}`);
-					// console.log(`there are ${msgs.length} results from a channel history \n the first one is ${util.inspect(msgs[0], { depth: 2 })}`)
-
-					msgs.forEach(msg => {
+					if (res.response_metadata) {
+						check_cursor = res.response_metadata.next_cursor;
+					}
+					else {
+						check_cursor = null;
+						console.log(`oops!!!!!!!!!!!!! cursor is null`);
+					}
+					// console.log(`cursor is ${cursor} from object ${util.inspect(res, { depth: null })}`);
+					msgs.forEach(async msg => {
 						var user = snapshot_db['users'].filter(u => u.uid.split('_')[1] == msg.user)[0];
 						if (msg.type == 'message' && !msg.bot_id && !msg.subtype) { // only look at the plain text msgs from real users
-							// console.log(`Real msg from user in the Update func is ${util.inspect(msg, {depth: 2})}`);
+							if (msg.ts > latest) latest = msg.ts;
+							num_msgs += 1;
 							const msg_obj = {
 								uid: msg.user,
 								username: user.real_name,
@@ -2017,7 +2069,7 @@ async function UpdateChannelRecentMsgs(c_id, cname, token, limit = 200) {
 								is_starred: msg.is_starred,
 								reactions: msg.reactions
 							}
-							DB.collection('msgs').updateOne(
+							await DB.collection('msgs').updateOne(
 								{ mid: msg.client_msg_id },
 								{
 									$set: msg_obj
@@ -2025,17 +2077,12 @@ async function UpdateChannelRecentMsgs(c_id, cname, token, limit = 200) {
 								{ upsert: true },
 								function (err, res) {
 									if (err) console.error(err);
-									// else console.log(`msgs entered with DB transaction ${res}`)
+									else console.log('msg updated!');
 								});
-
-							// promiseArray.push(promise);
 						}
 					});
-					// await Promise.all(promiseArray).then(res => {
-					// 	console.log(promiseArray);
-					// 	console.log(`last msg obj is ${util.inspect(msg_obj, { depth: null })}`)
-					// 	first = false;
-					// });
+					console.log(`-------------first time while loop: the next cursor is ${check_cursor}--------------`);
+					return Promise.resolve(check_cursor);
 				})
 					.catch(err => console.error(err));
 				first = false;
@@ -2045,19 +2092,25 @@ async function UpdateChannelRecentMsgs(c_id, cname, token, limit = 200) {
 				await local_slack.conversations.history({ // pay attention the user token (for reading history from channel/groups) but the bot is used to write
 					channel: c_id.split('_')[1], //#test-bot (left) #learning-tech C0A34HJVA
 					limit: limit | 200,
-					cursor: cursor
+					cursor: check_cursor
 				}).then(res => {
 					const msgs = res.messages;
-					if (res.response_metadata) cursor = res.response_metadata.next_cursor;
-					else cursor = null;
-					console.log(`cursor is ${cursor}}`);
-					// var promiseArray = [];
-					// console.log(`msg in the Update func is ${util.inspect(msgs, {depth: 2})}`);
+					// num_msgs += msgs.length;
+					if (res.response_metadata) {
+						check_cursor = res.response_metadata.next_cursor;
+						console.log(`cursor is ${check_cursor}}`);
+					}
+					else {
+						check_cursor = null;
+						console.log(`oops!!!!!!!!!!!!! cursor is null`);
+					}
 					// console.log(`there are ${msgs.length} results from a channel history \n the first one is ${util.inspect(msgs[0], { depth: 2 })}`)
 					msgs.forEach(msg => {
 						var user = snapshot_db['users'].filter(u => u.uid.split('_')[1] == msg.user)[0];
 						if (msg.type == 'message' && !msg.bot_id && !msg.subtype) { // only look at the plain text msgs from real users
 							// console.log(`Real msg from user in the Update func is ${util.inspect(msg, {depth: 2})}`);
+							if (msg.ts > latest) latest = msg.ts;
+							num_msgs += 1;
 							const msg_obj = {
 								uid: msg.user,
 								username: user.real_name,
@@ -2080,22 +2133,22 @@ async function UpdateChannelRecentMsgs(c_id, cname, token, limit = 200) {
 									if (err) console.error(err);
 									// else console.log(`msgs entered with DB transaction ${res}`)
 								});
-
-							// promiseArray.push(promise);
 						}
 					});
-					// await Promise.all(promiseArray).then(res => {
-					// 	console.log(promiseArray);
-					// 	console.log(`last msg obj is ${util.inspect(msg_obj, { depth: null })}`)
-					// 	first = false;
-					// });
+					console.log(`-------------Next time while loop: the next cursor is ${check_cursor}--------------`);
+					return Promise.resolve(check_cursor);
 				})
 					.catch(err => {
 						console.error(err);
 					});
 			}
-			// })();
+			if (!check_cursor) break;
+			else console.log(`before finishing this while loop, the cursor is ${check_cursor}`);
 		}
+		return Promise.resolve({
+			num_msgs: num_msgs,
+			latest_msg_ts: latest
+		});
 	}
 }
 

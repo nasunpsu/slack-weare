@@ -20,7 +20,7 @@
             </div>
             <div class="statistic blue">
                 <div class="value">
-                    <i class="comments small icon"></i>{{channels_info.msg_total}}
+                    <i class="comments small icon"></i>{{msgs_total}}
                 </div>
                 <div class="label">
                     Messages
@@ -44,7 +44,7 @@
             </div>
             <div class="ui basic label react-emoji-count">
                 {{#each msg.reactions as |react|}} 
-                :{{react.name}}: <span class="ui blue left pointing basic mini label">{{react.count}}</span>&nbsp;;
+                :{{react.name}}: <span class="ui blue left pointing basic mini label">{{react.count}}</span>&nbsp;
                 {{/each}}
             </div>
             <div class="post-img-wrapper">
@@ -54,7 +54,7 @@
                 <div class="header"><a href="https://slack.com/app_redirect?channel={{msg.cname}}"
                             target="_blank"><i class="slack hash small icon"></i>{{msg.cname}}</a></div>
                 <div class="meta">
-                    <span class="left floated time">{{{timeConverter msg.ts}}}</span>
+                    <span class="left floated time">{{{timeConverter msg.ts ../userInfo}}}</span>
                 </div>
                 <div class="right floated author">
                     <img class="ui avatar image" src="{{msg.user_avatar}}"> {{msg.username}}
@@ -62,20 +62,6 @@
             </div>
         </div>
         {{/each}}
-        <div class="ui card">
-            <div class="image">
-                <img src="images/reactions.png">
-            </div>
-            <div class="extra content">
-                <div class="header"><a><i class="slack hash small icon"></i>general</a></div>
-                <div class="meta">
-                    <span class="left floated time">2 days ago</span>
-                </div>
-                <div class="right floated author">
-                    <img class="ui avatar image" src="images/placeholder-img.png"> Aaron
-                </div>
-            </div>
-        </div>
     </div>
     <p class="channel-title">Most Active Channels You're Subscribed to</p>
     <div class="channel-wrapper">
@@ -94,8 +80,8 @@
                     <td><a href="https://slack.com/app_redirect?channel={{channel.cname}}"
                             target="_blank">#{{channel.cname}}</a></td>
                     <td>{{channel.num_members}}</td>
-                    <td>{{channel.msgs.length}}</td>
-                    <td>Today, 5:30pm</td>
+                    <td>{{channel.num_msgs}}</td>
+                    <td>{{{timeConverter channel.latest_msg_ts ../userInfo}}}</td>
                 </tr>
                 {{/each}}
 
