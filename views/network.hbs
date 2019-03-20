@@ -102,10 +102,39 @@
 			</ul>
 		</div> --}}
 		<div id="nw-wrapper">
-		<label><input style="width:240px;" id = "strength" type="range" min="0" max="1" step="any" value="0.5"> Link Strength</label>
-
-		<div id="chart" visdata='{{{json data}}}' class="network canvas draw fullwidth">
-		</div>
+		<!-- <label><input style="width:240px;" id = "strength" type="range" min="0" max="1" step="any" value="0.5"> Link Strength</label> -->
+			<div class="nw-filter-wrapper">
+            <h3>Filter Peers By</h3>
+				<div class="filters">
+					<form id="checkboxes">
+						<div class="ui checkbox">
+							<input type="checkbox" id="locationCheck">
+							<label class="form-check-label" for="locationCheck"><a class="ui red empty circular label mini"></a> Location</label>
+						</div>
+						<div class="ui checkbox">
+							<input type="checkbox" id="majorCheck">
+							<label for="majorCheck"><a class="ui orange empty circular label mini"></a> Major</label>
+						</div>
+						{{#each this.channelNames}}
+							<div class="ui checkbox">
+								<input type="checkbox">
+								<label>{{this}}</label>
+							</div>
+						{{/each}}
+					</form>
+				</div>
+				<div class="ui category search nw-search">
+					<div class="ui icon right labeled input nw-search-box">
+						<input class="prompt" type="text" id="search" placeholder="search">
+						<select id="searchby-dropdown" class="ui dropdown nw-search-by-dropdown label">
+							<option value="0">Search By</option>
+						</select>
+					</div>
+					<div class="results"></div>
+				</div> 
+			</div>
+			<div id="chart" visdata='{{{json data}}}' class="network canvas draw fullwidth">
+			</div>
 		</div>
 	</div>
 	{{!--

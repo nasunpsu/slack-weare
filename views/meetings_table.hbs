@@ -28,7 +28,8 @@
                 <th scope="col">Meeting Purpose</th>
                 <th scope="col">Date & Time</th>
                 <th scope="col">Topic</th>
-                <th scope="col">Attendees</th>
+                <th scope="col">Organizer</th>
+                <th scope="col">Guests</th>
                 <th scope="col">Action</th>
             </tr>
         </thead>
@@ -41,7 +42,15 @@
                 </td>
                 <td> {{meeting.start_time}}</td>
                 <td> {{meeting.topic}}</td>
-                <td> {{#each meeting.attendees as |attendee|}} {{attendee.real_name}} {{#if (eq attendee.attend "accept")}}<i class="check attendance-status icon"></i>{{else if (eq attendee.attend "reject")}}<i class="close attendance-status icon"></i>{{else}}<i class="question circle outline attendance-status icon"></i>{{/if}};{{/each}}</td>
+                <td>Organier placeholder</td>
+                <td> {{#each meeting.attendees as |attendee|}} 
+                    {{#unless (eq attendee.uid ../../userInfo.uid)}}
+                    {{attendee.real_name}} 
+                    {{#if (eq attendee.attend "accept")}}<i class="check attendance-status icon"></i>
+                    {{else if (eq attendee.attend "reject")}}<i class="close attendance-status icon"></i>
+                    {{else}}<i class="question circle outline attendance-status icon"></i>{{/if}};
+                    {{/unless}}
+                    {{/each}}</td>
                 <td>
                     {{!-- |creator is {{meeting.creator_uid}}|uid is {{../userInfo.uid}} --}}
                     {{#if (eq meeting.creator_uid ../userInfo.uid)}}

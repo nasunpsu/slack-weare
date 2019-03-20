@@ -1,27 +1,31 @@
 <div id="tz-wrapper">
-    {{#each members.tz_members as |members tz|}}
+    {{#each members.tz_members as |tz_members|}}
     <div class="ui item timezone-container">
         <div class="ui fluid card tz-header">
             <div class="content">
                 <div class="header"></div>
                 <div class="meta">
-                    <span>{{tz}} hours</span>
+                    <span>{{tz_members.[0]}} hours</span>
+                    {{#if (eq tz_members.[0] ../userInfo.tz_offset)}}<div class="ui teal label clock" locale='{{tz_members.[1].0.locale}}' tz='{{tz_members.[1].0.tz}}'></div>
+                    {{else}}
+                    <div class="ui label clock" locale='{{tz_members.[1].0.locale}}' tz='{{tz_members.[1].0.tz}}'></div>
+                    {{/if}}
                 </div>
                 <div class="meta">
-                    <span>{{members.0.tz_label}}</span>
+                    <span>{{tz_members.[1].0.tz_label}}</span>
                 </div>
-                <div class="description">{{members.0.local_area}}</div>
+                <div class="description">{{tz_members.[1].0.local_area}}</div>
             </div>
 
         </div>
 
         <div class="ui horizontal list">
-            {{#each members as |member|}}
+            {{#each tz_members.[1] as |member|}}
             <div class="item user" id="{{member.uid}}">
-                {{!-- <div class="user-detail" style="z-index: 1; opacity: 0;">
+                <div class="user-detail" style="z-index: 1; opacity: 0;">
 
                     <div style="margin-top: 60px; font-weight: bold">
-                        {{member.real_name}}
+                        <a href="/profile/{{member.uid}}">{{member.real_name}}</a>
                     </div>
                     <div style="margin-top: 0px; font-weight: bold">
 
@@ -33,30 +37,31 @@
 
                     <!---->
 
-                    <div class="user-email">
+                    {{!-- <div class="user-email">
                         <a href="mailto:{{member.email}}">{{member.email}}</a>
                     </div>
                     <div class="user-phone">
                         <a href="tel:"></a>
-                    </div>
+                    </div> --}}
+                    {{!-- <div class="user-profile-page">
+                        
+                    </div>  --}}
                     <div class="user-dm">
-                        <a href="slack://user?team={{member.tid}}&amp;id={{member.uid}}">Slack DM</a>
+                        <a href="slack://user?team={{member.team_id}}&amp;id={{{get_UserID member.uid}}}">Slack DM</a>
                     </div>
-                </div> --}}
+                </div>
                 <div class="user-img" style="background-image: url('{{member.image_48}}')"></div>  
                 <div class="user-presence {{#if (eq member.presence "away")}}user-presence-away{{/if}}" >
                     
                 </div>
                 <div class="content">
                     <div class="ui sub header user-name">{{member.first_name}}</div>
-                    <div class="ui sub header">{{member.presence}}</div>
-                    {{member.status_text}}
+                    <div class="ui sub header">{{member.status_text}}</div>
+                    
                 </div>
             </div>
             {{/each}}
         </div>
     </div>
     {{/each}}
-
-    <div id="update" class="ui label"></div>
 </div>
