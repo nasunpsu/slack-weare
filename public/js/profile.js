@@ -61,8 +61,6 @@ $(document).ready(() => {
     }, {});
     const form = $('form');
     form.form({fields: validationRules, onSuccess: submitForm.bind(this, form)});//, { onSuccess: submitForm });
-    //     console.log(json);
-    // })
 });
 
 function submitForm(form, event){
@@ -85,18 +83,9 @@ function failure(messages){
 }
 
 const fields = [
-   {
-       name: 'fullname',
-       identifier: 'full name'
-   },
-   {
-      name: 'major',
-      identifier: 'major'
-   },
-   {
-      name: 'city',
-      identifier: 'city'
-   },
+   { name: 'fullname', identifier: 'full name' },
+   { name: 'major', identifier: 'major' },
+   { name: 'city', identifier: 'city' },
    {
       name: 'email',
       identifier: 'email',
@@ -105,58 +94,19 @@ const fields = [
        prompt: 'Invalid Email'
       }]
    },
-   {
-      name: 'campus',
-      identifier: 'campus'
-   },
-   {
-      name: 'courses',
-      identifier: 'courses'
-   },
-   {
-      name: 'goals',
-      identifier: 'goals'
-   },
-   {
-      name: 'recommended-courses',
-      identifier: 'recommended courses'
-   },
-   {
-      name: 'recommended-instructor',
-      identifier: 'recommended instructor'
-   },
-   {
-      name: 'profession',
-      identifier: 'profession'
-   },
-   {
-      name: 'military',
-      identifier: 'military'
-   },
-   {
-      name: 'fun',
-      identifier: 'fun'
-   },
-   {
-      name: 'unique',
-      identifier: 'unique'
-   },
-   {
-      name: 'goal',
-      identifier: 'goal'
-   },
-   {
-      name: 'past-cities',
-      identifier: 'past cities'
-   },
-   {
-      name: 'places',
-      identifier: 'places'
-   },
-   {
-      name: 'marital',
-      identifier: 'marital'
-   },
+   { name: 'campus', identifier: 'campus' },
+   { name: 'courses', identifier: 'courses' },
+   { name: 'goals', identifier: 'goals' },
+   { name: 'recommended-courses', identifier: 'recommended courses' },
+   { name: 'recommended-instructor', identifier: 'recommended instructor' },
+   { name: 'profession', identifier: 'profession' },
+   { name: 'military', identifier: 'military' },
+   { name: 'fun', identifier: 'fun' },
+   { name: 'unique', identifier: 'unique' },
+   { name: 'goal', identifier: 'goal' },
+   { name: 'past-cities', identifier: 'past cities' },
+   { name: 'places', identifier: 'places' },
+   { name: 'marital', identifier: 'marital' },
    {
       name: 'kids',
       identifier: 'kids',
@@ -166,16 +116,7 @@ const fields = [
 
       }]
    },
-   {
-      name: 'career',
-      identifier: 'career'
-   },
-   {
-      name: 'start',
-      identifier: 'start'
-   },
-   {
-      name: 'to',
-      identifier: 'to'
-   }
+   { name: 'career', identifier: 'career' },
+   { name: 'start', identifier: 'start' },
+   { name: 'to', identifier: 'to' }
 ];
