@@ -19,19 +19,19 @@
 
 const profileUrl = window.location.origin + '/editProfile';
 
-let ls_wd = $('.week-day');
-for(let i = 0 ; i < ls_wd.length; i+=1) {
-    const element = ls_wd[i];
-    $(element).calendar({
-        type: 'time'
-    });
+function reloadCalendar(){
+    let ls_wd = $('.week-day');
+    for(let i = 0 ; i < ls_wd.length; i+=1) {
+        const element = ls_wd[i];
+        $(element).calendar({
+            type: 'time'
+        });
+    }
+
+    $('.ui.checkbox')
+    .checkbox()
+    ;
 }
-
-$('.ui.checkbox')
-  .checkbox()
-;
-
-
 
 //Get value from an input field
 function getFieldValue(fieldId) {
@@ -42,12 +42,14 @@ function getFieldValue(fieldId) {
 function addTime(){
     const av = window.available;
     const clone = av.cloneNode(true);
-    const available = $('#available')[0]; 
+    const available = $('.availability').last()[0];
     const parent = available.parentNode;
     parent.insertBefore(clone, available.nextSibling);
+    reloadCalendar();
 }
 
 $(document).ready(() => {
+    reloadCalendar();
     const validationRules = fields.reduce((obj, fieldObj) => {
         obj[fieldObj.name] = {
             rules: [
