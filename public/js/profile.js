@@ -39,11 +39,16 @@ function getFieldValue(fieldId) {
     return $('.ui.form').form('get field', fieldId).val();
 }
 
+let numDates = 0;
 function addTime(){
     const av = window.available;
     const clone = av.cloneNode(true);
     const available = $('.availability').last()[0];
     const parent = available.parentNode;
+    $(clone).find('input').attr('name', function(){
+        return $(this).attr('name') + numDates;
+    });
+    numDates += 1;
     parent.insertBefore(clone, available.nextSibling);
     reloadCalendar();
 }
