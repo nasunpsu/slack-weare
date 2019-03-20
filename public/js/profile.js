@@ -32,32 +32,7 @@ $('.ui.checkbox')
 ;
 
 
-const fields = ['fullname', 'major', 'city', 'email', 'campus', 'courses', 'goals', 'recommended-courses', 'recommended-instructor', 'profession', 'military', 'fun', 'unique', 'goal', 'past-cities', 'places', 'marital', 'kids', 'career', 'start', 'to'];
 
-const validationRules = fields.reduce((obj, field) => {
-    obj[field] = {
-        rules: [
-            {
-                type: 'empty',
-                prompt: 'Please enter your {name}.'
-            },
-            {
-                type: 'maxLength[150]',
-                prompt: 'Your major must be at most {ruleValue} characters.'
-            }
-        ]
-    }
-    return obj;
-}, {});
-validationRules.email.rules.push({
-    type: 'email',
-    prompt: 'Invalid Email'
-});
-validationRules.kids.rules.push({
-    type: 'integer[0..30]',
-    prompt: 'Kids must be a whole number'
-
-});
 //Get value from an input field
 function getFieldValue(fieldId) {
     // 'get field' is part of Semantics form behavior API
@@ -66,6 +41,24 @@ function getFieldValue(fieldId) {
 
 
 $(document).ready(() => {
+    const validationRules = fields.reduce((obj, fieldObj) => {
+        obj[fieldObj.name] = {
+            rules: [
+                {
+                    type: 'empty',
+                    prompt: `Please enter your ${fieldObj.identifier}.`
+                },
+                {
+                    type: 'maxLength[150]',
+                    prompt: `Your ${fieldObj.identifier} must be at most {ruleValue} characters.`
+                },
+            ]
+        };
+        if(!!fieldObj.rules) {
+            obj[fieldObj.name].rules.unshift(...fieldObj.rules);
+        }
+        return obj;
+    }, {});
     const form = $('form');
     form.form({fields: validationRules, onSuccess: submitForm.bind(this, form)});//, { onSuccess: submitForm });
     //     console.log(json);
@@ -90,3 +83,99 @@ function failure(messages){
     console.log(messages);
     return false;
 }
+
+const fields = [
+   {
+       name: 'fullname',
+       identifier: 'full name'
+   },
+   {
+      name: 'major',
+      identifier: 'major'
+   },
+   {
+      name: 'city',
+      identifier: 'city'
+   },
+   {
+      name: 'email',
+      identifier: 'email',
+      rules: [{
+       type: 'email',
+       prompt: 'Invalid Email'
+      }]
+   },
+   {
+      name: 'campus',
+      identifier: 'campus'
+   },
+   {
+      name: 'courses',
+      identifier: 'courses'
+   },
+   {
+      name: 'goals',
+      identifier: 'goals'
+   },
+   {
+      name: 'recommended-courses',
+      identifier: 'recommended courses'
+   },
+   {
+      name: 'recommended-instructor',
+      identifier: 'recommended instructor'
+   },
+   {
+      name: 'profession',
+      identifier: 'profession'
+   },
+   {
+      name: 'military',
+      identifier: 'military'
+   },
+   {
+      name: 'fun',
+      identifier: 'fun'
+   },
+   {
+      name: 'unique',
+      identifier: 'unique'
+   },
+   {
+      name: 'goal',
+      identifier: 'goal'
+   },
+   {
+      name: 'past-cities',
+      identifier: 'past cities'
+   },
+   {
+      name: 'places',
+      identifier: 'places'
+   },
+   {
+      name: 'marital',
+      identifier: 'marital'
+   },
+   {
+      name: 'kids',
+      identifier: 'kids',
+      rules: [{
+         type: 'integer[0..30]',
+         prompt: 'Kids must be a whole number'
+
+      }]
+   },
+   {
+      name: 'career',
+      identifier: 'career'
+   },
+   {
+      name: 'start',
+      identifier: 'start'
+   },
+   {
+      name: 'to',
+      identifier: 'to'
+   }
+];
