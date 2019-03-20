@@ -1,25 +1,25 @@
-
+{{#with user}}
 <div class="profile-header">
   <div class="profile-img-wrapper">
     <img class="ui small image profile-img" src="../images/placeholder-img.png">
   </div>
   
   <div class="profile-name">
-    <h2>{{userInfo.real_name}}<i class="ui female icon" style="opacity: .5; font-size: 70%"></i></h2>
+    <h2>{{real_name}}<i class="ui female icon" style="opacity: .5; font-size: 70%"></i></h2>
     <div class="header-info">
       <div class="ui list">
         <div class="item">
-            <br><p><i class="ui map marker alternate icon" style="opacity: .75;"></i> State College, PA</p>
+            <br><p><i class="ui map marker alternate icon" style="opacity: .75;"></i> {{city}}</p>
         </div>
       </div>
       <div class="ui list">
         <div class="item">
-            <br><p><i class="ui globe icon" style="opacity: .75;"></i> Eastern Standard Time (EST)</p>
+            <br><p><i class="ui globe icon" style="opacity: .75;"></i> {{tz_label}})</p>
         </div>
       </div>
       <div class="ui list">
         <div class="item">
-            <br><p><i class="ui envelope icon" style="opacity: .75;"></i> abc1234@psu.edu</p>
+            <br><p><i class="ui envelope icon" style="opacity: .75;"></i> {{email}} </p>
         </div>
       </div>
     </div>
@@ -68,13 +68,13 @@
             <div class="ui list">
               <div class="large item">
                 <div class="ui blue small horizontal label">Major</div>
-                  <br><p>{{userInfo.major}} {{userInfo.title}}</p>
+                  <br><p>{{major}}</p>
               </div>
             </div>
             <div class="ui list">
               <div class="item">
                 <div class="ui blue small horizontal label">Penn State Campus</div>
-                  <br><p>{{userInfo.campus}}</p>
+                  <br><p>{{campus}}</p>
               </div>
             </div>
             
@@ -184,3 +184,4 @@
             </div>
     </div>
 </section>
+{{/with}}
