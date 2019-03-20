@@ -48,18 +48,26 @@ function addTime(){
     $(clone).find('input').attr('name', function(){
         return $(this).attr('name') + numDates;
     });
-    numDates += 1;
     parent.insertBefore(clone, available.nextSibling);
     reloadCalendar();
+    fields.push( { name: `start${numDates}`, identifier: `start${numDates}` },)
+    fields.push( { name: `to${numDates}`, identifier: `to${numDates}` },)
+    reloadForm();
+    numDates += 1;
 }
 
 function removeTime(target){
+    const inputs = [...$(target).find('.input')];
+    inputs.forEach(input => {
+        const name = $(input).attr('name');
+        fields = fields.filter(field => field.name !== name);
+    });
     $(target).closest('.availability').remove();
+    reloadForm();
 }
 
-$(document).ready(() => {
-    reloadCalendar();
-    const validationRules = fields.reduce((obj, fieldObj) => {
+function reloadForm(){
+    validationRules = fields.reduce((obj, fieldObj) => {
         obj[fieldObj.name] = {
             rules: [
                 {
@@ -79,15 +87,35 @@ $(document).ready(() => {
     }, {});
     const form = $('form');
     form.form({fields: validationRules, onSuccess: submitForm.bind(this, form)});//, { onSuccess: submitForm });
+}
+
+let validationRules = {};
+$(document).ready(() => {
+    reloadCalendar();
     window.available = $('#available')[0].cloneNode(true);
 });
 
 function submitForm(form, event){
     const array = form.serializeArray();
-    const json = array.reduce((obj, current) => {
+    let json = array.reduce((obj, current) => {
         obj[current.name] = current.value;
         return obj;
     }, {})
+    json.availability = [];
+    for(const key in json){
+        if(key.startsWith('start')){
+            const num = key.slice(5);
+            const otherKey = `to${num}`;
+            const newVal = {
+                start: json[key],
+                to: json[otherKey]
+            }
+            json.availability.push(newVal);
+            delete json[key];
+            delete json[otherKey];
+        }
+    }
+    console.log(json);
     $.post(profileUrl, json)
         .done(data => console.log(data))
         .fail(data => {
@@ -101,7 +129,7 @@ function failure(messages){
     return false;
 }
 
-const fields = [
+let fields = [
    { name: 'fullname', identifier: 'full name' },
    { name: 'major', identifier: 'major' },
    { name: 'city', identifier: 'city' },
