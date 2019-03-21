@@ -1327,7 +1327,7 @@ app.get('/profile/:uid', async function (req, res) {
 		console.error(`No results found for uid ${uid}`);
 	}
 	else {
-		to_be_rendered.userInfo = doc[0];
+		to_be_rendered.user = doc[0];
 	}
 	res.render('profileview', to_be_rendered);
 });
