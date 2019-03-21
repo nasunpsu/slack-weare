@@ -1186,7 +1186,7 @@ app.get('/tablelist', async function (req, res) {
 	to_be_rendered.template = 'table-template';
 	to_be_rendered.userInfo = req.session.user;
 	const numUsers = 80;
-	const fields = ['real_name', 'channels', 'major', 'local_area', 'affiliation', 'campus'];
+	const fields = ['uid', 'real_name', 'channels', 'major', 'local_area', 'affiliation', 'campus'];
 	let users = await similarity.getSimilarUsers(req.session.user.uid, DB, numUsers, fields);
 	to_be_rendered.users = similarity.createSimilarityField(req.session.user, users, fields);
 	to_be_rendered.users = similarity.createIsSharedField(req.session.user, users, fields);
@@ -1557,9 +1557,10 @@ app.post('/reactmeeting', async function (req, res) {
 					}
 				},
 				{ upsert: false },
-				function (err, res) {
+				function (err, doc) {
 					if (err) console.error(err);
 					console.log(`Meeting information updated succesfully, new attendees are: ${util.inspect(newAttendees, { depth: 2 })}`);
+					res.json({ success: true });
 				});
 			return Promise.resolve(attendees_info);
 		}
@@ -1568,7 +1569,7 @@ app.post('/reactmeeting', async function (req, res) {
 
 
 
-	res.sendStatus(200);
+	// res.sendStatus(200);
 });
 
 app.post('/remindmeeting', async (req, res) => {

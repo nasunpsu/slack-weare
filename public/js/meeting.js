@@ -146,7 +146,7 @@ window.addEventListener("DOMContentLoaded", function () {
         console.log('delete clicked');
         e.preventDefault();
         const Origobj = {};
-        
+
         $.ajax({
             type: 'POST', url: '/deletemeeting',
             data: {
@@ -167,18 +167,27 @@ window.addEventListener("DOMContentLoaded", function () {
         console.log('reject clicked');
         e.preventDefault();
         $.ajax({
-            type: 'POST', url: '/reactmeeting', data: {
+            type: 'POST',
+            url: '/reactmeeting',
+            data: {
                 mid: meeting.mid,
                 react: "reject",
                 who_react: document.getElementById("profile_uid").getAttribute("data-uid"),
                 attendees: $(".ui.form").form('get value', 'attendees')
-            }, success: function (data) {
-                console.log(data);
-                console.log('successfully reject');
             }
-        });
-
+        })
+            .done(function (res) {
+                if (res.success) {
+                    console.log('id from ajax call is', res);
+                    location.href = "/meetings";
+                    // window.location.reload();
+                } else {
+                    console.log('error...ajax');
+                };
+            })
     });
+
+
 
     document.getElementById("accept").addEventListener("click", function (e) {
         console.log('save clicked');
