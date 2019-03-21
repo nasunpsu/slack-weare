@@ -34,7 +34,7 @@
     <p class="post-title">Most Reacted Posts on the World Campus Slack</p>
     <div class="post-wrapper">
         {{#each msgs as |msg|}}
-        <div class="ui card">
+        <div class="ui card message-card">
             {{!-- <div class="image">
                 <img src="images/reactions.png">
             </div> --}}
@@ -44,7 +44,7 @@
             </div>
             <div class="ui basic label react-emoji-count">
                 {{#each msg.reactions as |react|}} 
-                :{{react.name}}: <span class="ui blue left pointing basic mini label">{{react.count}}</span>&nbsp;
+                :{{react.name}}: <span class="ui blue left pointing mini label emoji-label">{{react.count}}</span>
                 {{/each}}
             </div>
             <div class="post-img-wrapper">
