@@ -145,7 +145,13 @@
   }
 
   .emoji-label{
-    margin-bottom: 3px;
+    margin-bottom: 7px!important;
+    margin-right: 15px!important;
+    margin-left: 4px!important;
+  }
+
+  .message-card{
+    height: fit-content;
   }
 
   #timezone-main {
