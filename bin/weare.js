@@ -19,7 +19,7 @@ const { sanitizeBody } = require('express-validator/filter');
 const bodyParser = require("body-parser");
 const request = require('request');
 const apiUrl = 'https://slack.com/api';
-const base_url = 'https://ad4a5c00.ngrok.io/';
+const base_url = 'https://41664914.ngrok.io/';
 const presence_snapshot = {};
 const snapshot_db = {};
 // const methodUril = 'https://slack.com/api/';
@@ -145,13 +145,13 @@ app.engine('hbs', hbs({
 			// var min = "0" + a.getMinutes();
 			// var sec = "0" + a.getSeconds();
 			// var time = date + ' ' + month + ' ' + year + ' ' + hour + ':' + min.substr(-2) + ':' + sec.substr(-2);
-			var time = new Date(a).toLocaleTimeString(userInfo.locale, 
-            {
-                timeZone: userInfo.tz, 
-                hour: '2-digit', 
-                minute:'2-digit'
-            });
-			return date + ' ' + month + ' ' + year + ' ' + time;
+			var time = new Date(a).toLocaleTimeString(userInfo.locale,
+				{
+					timeZone: userInfo.tz,
+					hour: '2-digit',
+					minute: '2-digit'
+				});
+			return month + ' ' + date + ' ' + year + ' ' + time;
 		}
 	}
 }));
@@ -455,8 +455,10 @@ app.post('/slack/commands/discuss', urlencodedParser, (req, res) => {
 					}
 				]
 			}
-		]
+		],
+
 	}
+
 	sendMessageToSlackResponseURL(responseURL, message);
 
 });
@@ -539,7 +541,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 						{
 							title: 'Welcome to the World Campus Students Community! We Are!',
 							text: 'Penn State is where learning gains and your career takes off. If this is your first time using Slack, take some time to read the help docs at get.slack.help and our internal <https://docs.google.com/document/d/1-nCasqUcPrLYbhDuAm9SmuvY0S5ZOevPLbp52-PpZLM/edit?usp=sharing|wiki>. If you have any questions, jump into #help-slack and we\'ll help you out',
-							callback_id: 'intro',
+							callback_id: 'consent',
 							color: '#74c8ed',
 							actions: [{
 								name: 'introduce',
@@ -567,6 +569,37 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 					)
 				}).catch(err => console.error(err));
 				break;
+			case 'decline':
+				web.chat.postEphemeral({
+					as_user: false,
+					channel: body.channel.id,
+					user: body.user.id,
+					text: `Oops! It looks like you are not sure to participate in our research activities.`,
+					attachments: JSON.stringify([
+						{
+							title: `Not sure about the potential gains and risks of using the Slack service of WeAre! and <${base_url}|community space>?`,
+							text: 'Email nzs162@psu.edu for concerns and questions you have about the study. If you have any technical questions, jump into #help-slack and we\'ll help you out. \n :exclamation: Note that if you do not concent :point_down:, you will not be able to use our services in WeAre! and WeConnect tools.',
+							callback_id: 'consent',
+							color: '#74c8ed',
+							actions: [{
+								name: 'accept',
+								text: 'Accept now',
+								type: 'button',
+								value: 'accept',
+								style: 'primary'
+							},
+							{
+								name: 'later',
+								text: 'Decline and leave the space',
+								type: 'button',
+								value: 'leave-weare',
+								style: 'default'
+							}
+							],
+						},]
+					)
+				}).catch(err => console.error(err));
+				break;
 			case 'now': console.log('now selected');
 				OnlineNow(body.channel.id, body.user.id, body.response_url);//body.response_url
 				break;
@@ -585,7 +618,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 								label: 'Purpose',
 								type: 'text',
 								name: 'purpose',
-								value: 'Blah blah is it there', //TODO: support command paramters later
+								// value: 'Blah blah is it there', //TODO: support command paramters later
 								hint: '150 characters summary of meeting purpose',
 							},
 							{
@@ -611,10 +644,11 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 								name: 'who',
 								options: [
 									{ label: 'All the channel members', value: 'all' },
-									{ label: 'Specify individuals (in the next page)', value: 'custom' }, //TODO, custom
+									{ label: 'Specify individuals (in the dashboard)', value: 'custom' }, //TODO, custom
 								],
 							}
 						],
+						replace_original: true,
 					}),
 				}, uri = `${apiUrl}/dialog.open`;
 
@@ -658,6 +692,90 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 			case 'mention':
 				console.log('mention selected');
 				sendMessageToSlackResponseURL(body.response_url, { text: '@here', as_user: true, replace_original: false });
+				break;
+			case 'attend':
+				// console.log(`yeah, I want to attend this meeting! Sure! the body is ${util.inspect(body, { depth: null })}`);
+				// DB.collection('meetings').updateOne({mid: body.callback_id})
+				(async () => {
+					console.log(`the callback id for attend is ${body.callback_id}`);
+					await DB.collection('meetings').findOne({ mid: body.callback_id }
+						, async function (err, doc) {
+							if (err) console.error(err);
+							else {
+
+								console.log(`meeting info is ${util.inspect(doc, { depth: null })}`);
+								console.log(`the returned meeting info is ${doc.purpose}`)
+								console.log(`body is ${util.inspect(body, { depth: 2 })}`);
+								let newAttendees = doc.attendees.map(atd => {
+									if (atd.uid == body.team.id + '_' + body.user.id) {
+										atd.attend = 'accept';
+										return atd;
+									}
+									else return atd;
+								});
+								console.log(`new attendees are: ${util.inspect(newAttendees, { depth: 2 })}`);
+								if (newAttendees.length) await DB.collection('meetings').updateOne({ mid: body.callback_id },
+									{
+										$set: {
+											attendees: newAttendees
+										}
+									},
+									{ upsert: true },
+									function (err, res) {
+										if (err) console.error(err);
+										console.log(`Meeting information updated succesfully, new attendees are: ${util.inspect(newAttendees, { depth: 2 })}`);
+									});
+								web.chat.postMessage({
+									as_user: false,
+									channel: body.channel.id,
+									user: body.user.id,
+									text: `You just confirmed your attendence to the meeting :point_up:.`,
+									replace_original: false
+								}).catch(err => console.error(err));
+
+							}
+						})
+
+				})();
+				break;
+			case 'notattend':
+				console.log(`No I am not attending this meeting! The body is ${util.inspect(body, { depth: null })}`);
+				(async () => {
+					const meeting_info = await DB.collection('meetings').findOne({ mid: body.callback_id }, async function (err, doc) {
+						if (err) console.error(err);
+						else {
+							console.log(`meeting info is ${util.inspect(doc, { depth: null })}`);
+							console.log(`the returned meeting info is ${doc.purpose}`)
+							console.log(`body is ${util.inspect(body, { depth: 2 })}`);
+							let newAttendees = doc.attendees.map(atd => {
+								if (atd.uid == body.team.id + '_' + body.user.id) {
+									atd.attend = 'reject';
+									return atd;
+								}
+								else return atd;
+							});
+							console.log(`new attendees are: ${util.inspect(newAttendees, { depth: 2 })}`);
+							if (newAttendees.length) await DB.collection('meetings').updateOne({ mid: body.callback_id },
+								{
+									$set: {
+										attendees: newAttendees
+									}
+								},
+								{ upsert: true },
+								function (err, res) {
+									if (err) console.error(err);
+									console.log(`Meeting information updated succesfully, new attendees are: ${util.inspect(newAttendees, { depth: 2 })}`);
+								});
+							web.chat.postMessage({
+								as_user: false,
+								channel: body.channel.id,
+								user: body.user.id,
+								text: `You just decline your attendence to the meeting :point_up:.`,
+								replace_original: false
+							}).catch(err => console.error(err));
+						}
+					})
+				})();
 				break;
 			case 'intro':
 				const msg2 = {
@@ -849,6 +967,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 						{
 							$set: {
 								creator_uid: body.team.id + '_' + body.user.id,
+								creator_name: body.user.name,
 								cid: body.team.id + '_' + body.channel.id,
 								cname: body.channel.name,
 								purpose: body.submission.purpose,
@@ -893,7 +1012,8 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 								// }
 								// ],
 							}
-						])
+						]),
+						replace_original: true,
 					}).catch(err => console.error(err));
 				})();
 				// (async () => {
@@ -975,9 +1095,9 @@ app.get('/', async function (req, res) {
 			// res.render('index', { layout: 'default', template: 'home-template', tz_members: members_by_tz });
 		}
 	});
-	
+
 	let sub_c = req.session.user.channels.map(c => c.cid);
-	to_be_rendered.channels_info = await DB.collection('channels').find({ 
+	to_be_rendered.channels_info = await DB.collection('channels').find({
 		cid: {
 			"$in": sub_c
 		}
@@ -986,7 +1106,7 @@ app.get('/', async function (req, res) {
 			if (err) console.error(err);
 			if (results.length != 0) { //this is current all the channels of the team, but perhaps it is good to differentiate which ones the logged user belongs to vs not
 				var TopSizeChannels = [], TopActiveChannels = [], limit = 3, c_list = []; //LIMIT is the number of Top X channels
-				
+
 				results.sort((a, b) => { //from big to small
 					return b.num_members - a.num_members;
 				});
@@ -1047,7 +1167,7 @@ app.get('/', async function (req, res) {
 		return Promise.resolve(msgs.splice(0, 6));
 
 	})
-	to_be_rendered.msgs_total = await DB.collection('msgs').find({}).toArray().then(res=>{
+	to_be_rendered.msgs_total = await DB.collection('msgs').find({}).toArray().then(res => {
 		return Promise.resolve(res.length);
 	});
 	res.render('index', to_be_rendered);
@@ -1294,6 +1414,7 @@ app.get('/meeting/:mid', async function (req, res) {
 				time: results[0].start_time,
 				duration: results[0].duration,
 				creator_uid: results[0].creator_uid,
+				creator_name: results[0].creator_name,
 				cmembers: results[0].cmembers,
 				cname: results[0].cname,
 				cid: results[0].cid,
@@ -1309,6 +1430,7 @@ app.get('/meeting/:mid', async function (req, res) {
 				mid: makeid(),
 				new: true,
 				creator_uid: req.session.user.uid,
+				creator_name: req.session.user.name,
 				cmembers: members,
 				attendees: [],
 				cid: 'T0A286J8K_C0A28BAHG',
@@ -1345,6 +1467,7 @@ app.post('/meeting/:mid', async function (req, res) {
 		start_time: req.body.time,
 		date: req.body.date,
 		creator_uid: req.session.user.uid,
+		creator_name: req.session.user.name,
 		cid: req.body.cid,
 		cname: req.body.cname,
 		cmembers: cmembers,
@@ -1415,7 +1538,7 @@ app.post('/reactmeeting', async function (req, res) {
 	await DB.collection('meetings').find({ mid: req.body.mid }).toArray().then(async (results, err) => {
 		if (err) console.error(err);
 		else if (results.length != 0) {
-			var attendees_info = await results[0].cmembers.filter(member => req.body.attendees.includes(
+			const attendees_info = await results[0].cmembers.filter(member => req.body.attendees.includes(
 				member.uid
 			));
 			console.log(`find the attendee info is ${util.inspect(attendees_info, { depth: null })}`);
@@ -1455,43 +1578,46 @@ app.post('/remindmeeting', async (req, res) => {
 			user: attendee.uid.split('_')[1]
 		}).then(dm => {
 			console.log(`the returned channel id is ${dm.channel.id}`);
-			if (attendee.attend == undefined) web.chat.postMessage({
-				as_user: false,
-				channel: dm.channel.id,
-				text: `Would you like to join the meeting invited by XXX?`,
-				attachments: JSON.stringify([
-					{
-						title: 'Purpose: aaa; Time: aaa',
-						text: 'Visit here<>wik',
-						callback_id: 'meeting_react',
-						color: '#74c8ed',
-						actions: [{
-							name: 'accept',
-							text: 'Sure',
-							type: 'button',
-							value: 'accept',
-							style: 'primary'
-						},
-						{
-							name: 'reject',
-							text: 'No, thanks',
-							type: 'button',
-							value: 'reject',
-							style: 'default'
-						}
-						],
-					},]
-				)
-			}).catch(err => console.error(err));
-			else if (attendee.attend == "accept") {
+			// if (attendee.attend == undefined) web.chat.postMessage({
+			// 	as_user: false,
+			// 	channel: dm.channel.id,
+			// 	text: `Would you like to join the meeting invited by ${req.session.user.real_name}?`,
+			// 	attachments: JSON.stringify([
+			// 		{
+			// 			title: `Purpose: ${req.body.purpose}; \n When: ${req.body.date} ${req.body.start_time}`,
+			// 			text: `See the <${base_url}meeting/${req.body.mid}|meeting details>`,
+			// 			callback_id: `${req.body.mid}`,
+			// 			color: '#74c8ed',
+			// 			actions: [{
+			// 				id: `${req.body.mid}`,
+			// 				name: 'accept',
+			// 				text: 'Sure',
+			// 				type: 'button',
+			// 				value: 'attend',
+			// 				style: 'primary'
+			// 			},
+			// 			{
+			// 				id: `${req.body.mid}`,
+			// 				name: 'reject',
+			// 				text: 'No, thanks',
+			// 				type: 'button',
+			// 				value: 'notattend',
+			// 				style: 'default'
+			// 			}
+			// 			],
+			// 		},]
+			// 	)
+			// }).catch(err => console.error(err));
+			// else 
+			if (attendee.attend == "accept") {
 				web.chat.postMessage({
 					as_user: false,
 					channel: dm.channel.id,
 					// text: `Would you like to join the meeting?`,
 					attachments: JSON.stringify([
 						{
-							title: 'Reminder: the meeting with XXX',
-							text: `Visit <${base_url}meeting/${req.body.mid}> for more details. `,
+							title: `${req.session.user.real_name} would like to remind you of meeting for ${req.body.purpose}! \n When: ${req.body.date} ${req.body.start_time}`,
+							text: `See the <${base_url}meeting/${req.body.mid}|meeting details>. `,
 							callback_id: 'meeting_react',
 							color: '#74c8ed'
 						},]
@@ -1503,6 +1629,75 @@ app.post('/remindmeeting', async (req, res) => {
 	)
 	res.sendStatus(200);
 });
+
+app.post('/invitemeeting', async (req, res) => {
+	// var attendeeIDs = req.body.attendees.map(x => x.uid);
+	req.body.attendees.forEach(attendee => {
+		web.im.open({
+			user: attendee.uid.split('_')[1]
+		}).then(dm => {
+			console.log(`the returned channel id is ${dm.channel.id}`);
+			if (attendee.attend == undefined) web.chat.postMessage({
+				as_user: false,
+				channel: dm.channel.id,
+				text: `Would you like to join the meeting invited by ${req.session.user.real_name}?`,
+				attachments: JSON.stringify([
+					{
+						title: `Purpose: ${req.body.purpose} \n When: ${req.body.date} ${req.body.start_time}`,
+						text: `See the <${base_url}meeting/${req.body.mid}|meeting details>`,
+						callback_id: `${req.body.mid}`,
+						color: '#74c8ed',
+						actions: [{
+							id: `${req.body.mid}`,
+							name: 'accept',
+							text: 'Sure',
+							type: 'button',
+							value: 'attend',
+							style: 'primary'
+						},
+						{
+							id: `${req.body.mid}`,
+							name: 'reject',
+							text: 'No, thanks',
+							type: 'button',
+							value: 'notattend',
+							style: 'default'
+						}
+						],
+					},]
+				)
+			}).catch(err => console.error(err));
+			// else if (attendee.attend == "accept") {
+			// 	web.chat.postMessage({
+			// 		as_user: false,
+			// 		channel: dm.channel.id,
+			// 		// text: `Would you like to join the meeting?`,
+			// 		attachments: JSON.stringify([
+			// 			{
+			// 				title: `${req.session.user.real_name}reminded you about the meeting! \n When: ${req.body.date} ${req.body.start_time}`,
+			// 				text: `See the <${base_url}meeting/${req.body.mid}|meeting details>. `,
+			// 				callback_id: 'meeting_react',
+			// 				color: '#74c8ed'
+			// 			},]
+			// 		)
+			// 	}).catch(err => console.error(err));
+			// }
+		}).catch(err => console.error(err));
+	}
+	)
+	res.sendStatus(200);
+});
+
+app.post('/deletemeeting', async function (req, res) {
+	let mid = req.body.mid;
+	DB.collection('meetings').remove({ mid: mid }, function (err, result) {
+		if (err) console.error(err);
+		else {
+			console.log(`removed successfully: ${util.inspect(result.result)}`);
+			res.json({ success: true });
+		}
+	});
+})
 
 function similarTo(list, user) {
 	console.log(`the list in similarTo is ${util.inspect(list, { depth: 3 })}`);
@@ -2483,7 +2678,7 @@ function timeConverter(UNIX_timestamp) {
 	var hour = a.getHours();
 	var min = a.getMinutes();
 	var sec = a.getSeconds();
-	var time = date + ' ' + month + ' ' + year + ' ' + hour + ':' + min + ':' + sec;
+	var time = month + ' ' + date + ' ' + year + ' ' + hour + ':' + min + ':' + sec;
 	return time;
 }
 

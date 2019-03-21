@@ -706,6 +706,10 @@ p{
   clear: right;
 }
 
+.meetings-wrapper .ui.button {
+  margin: 0.2em 0.02em 0.2em 0.05em;
+  padding: 0.78571429em .5em 0.78571429em;
+}
 .ui.button > a.accept {
   color: #00B5AD;
 }
@@ -718,6 +722,9 @@ p{
   color: #FBBD08;
 }
 
+.ui.button > a.invite{
+  color: #FBBD08;
+}
 
 .edit.ui.button {
   color: #4183C4!important;

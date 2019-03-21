@@ -16,7 +16,11 @@ window.addEventListener("DOMContentLoaded", function () {
         $.ajax({
             type: 'POST', url: '/remindmeeting', data: {
                 mid: e.target.getAttribute("data-mid"),
-                attendees: attendees
+                purpose: e.target.getAttribute("data-purpose"),
+                attendees: attendees,
+                creator_name: e.target.getAttribute("data-creator"),
+                start_time: e.target.getAttribute("data-time"),
+                date: e.target.getAttribute("data-date")
             }, success: function (data) {
                 console.log(data);
                 console.log('successfully remind');
@@ -25,7 +29,36 @@ window.addEventListener("DOMContentLoaded", function () {
     };
     Array.from(remind_list).forEach(function (element) {
         element.addEventListener('click', updateRemind);
+        $(element).popup();
     });
+
+    var invite_list = Array.prototype.slice.call(document.getElementsByClassName("button invite"));
+    console.log(remind_list);
+    
+    var updateInvite = function (e) {
+        console.log('invite clicked');
+        e.preventDefault();
+        const attendees = JSON.parse(e.target.getAttribute("data-attendees"));
+        $.ajax({
+            type: 'POST', url: '/invitemeeting', data: {
+                mid: e.target.getAttribute("data-mid"),
+                purpose: e.target.getAttribute("data-purpose"),
+                attendees: attendees,
+                creator_name: e.target.getAttribute("data-creator"),
+                start_time: e.target.getAttribute("data-time"),
+                date: e.target.getAttribute("data-date")
+            }, success: function (data) {
+                console.log(data);
+                console.log('successfully invite');
+            }
+        });
+    };
+    Array.from(invite_list).forEach(function (element) {
+        element.addEventListener('click', updateInvite);
+        $(element).popup();
+
+    });
+
     var react_list = Array.prototype.slice.call(document.getElementsByClassName("reject")).concat(Array.prototype.slice.call(document.getElementsByClassName("accept")));//[...Array.from(document.getElementsByClassName("reject")), ...Array.from(document.getElementsByClassName("accept"))];
     console.log(react_list);
     var reactUpdate = function (e) {

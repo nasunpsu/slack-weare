@@ -142,6 +142,27 @@ window.addEventListener("DOMContentLoaded", function () {
 
     });
 
+    document.getElementById("delete").addEventListener("click", function (e) {
+        console.log('delete clicked');
+        e.preventDefault();
+        const Origobj = {};
+        
+        $.ajax({
+            type: 'POST', url: '/deletemeeting',
+            data: {
+                mid: meeting.mid
+            }
+        }).done(function (res) {
+            if (res.success) {
+                console.log('id from ajax call is', res);
+                location.href = "/meetings";
+                // window.location.reload();
+            } else {
+                console.log('error...ajax');
+            };
+        });
+    });
+
     document.getElementById("reject").addEventListener("click", function (e) {
         console.log('reject clicked');
         e.preventDefault();
