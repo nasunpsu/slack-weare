@@ -406,6 +406,16 @@ app.post('/slack/events', (req, res, next) => {
 					}
 
 					break;
+				case 'team_join':
+					break;
+				case 'channel_created':
+					break;
+				case 'channel_deleted':
+					break;
+				case 'channel_rename':
+					break;
+				case 'channel_archive':
+					break;
 				default:
 					console.log(`unknown event type`);
 			}
