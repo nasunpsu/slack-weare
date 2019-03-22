@@ -172,12 +172,12 @@ const logEvent = (body, req) => {
 		const updateDoc = { $set: { isActive } }
 		DB.collection('users').updateOne({ uid: body.uid }, updateDoc);
 	}
-	if ('uid' in body && 'ipInfo' in body) {
+	if ('user' in req.session && 'uid' in req.session.user && 'ipInfo' in body) {
 		const updateDoc = {
 			$push: { ipInfo: body.ipInfo },
 			$set: body.ipInfo
 		}
-		DB.collection('users').updateOne({ uid: body.uid }, updateDoc);
+		DB.collection('users').updateOne({ uid: req.session.user.uid }, updateDoc);
 	}
 	return DB.collection('logging').insertOne(body);
 }
