@@ -40,14 +40,15 @@ function getFieldValue(fieldId) {
     return $('.ui.form').form('get field', fieldId).val();
 }
 
-let numDates = 0;
+let numDates = 100;
 function addTime(){
     const av = window.available;
     const clone = av.cloneNode(true);
+    clone.style.display = null;
     const available = $('.availability').last()[0];
     const parent = available.parentNode;
     $(clone).find('input, select').attr('name', function(){
-        return $(this).attr('name') + numDates;
+        return $(this).attr('name').slice(0, -1) + numDates;
     });
     parent.insertBefore(clone, available.nextSibling);
     reloadCalendar();
@@ -104,6 +105,13 @@ function submitForm(form, event){
         return obj;
     }, {})
     json.availability = [];
+
+    if('to0' in json){
+        delete json.to0;
+        delete json.start0;
+        delete json.weekday0;
+        delete json.available0;
+    }
     for(const key in json){
         if(key.startsWith('start')){
             const num = key.slice(5);
@@ -123,6 +131,10 @@ function submitForm(form, event){
             delete json[weekdayKey];
         }
     }
+    if(!json.availability){
+        json.availability = [];
+    }
+    json.availability = JSON.stringify(json.availability);
     console.log(json);
     $.post(profileUrl, json)
         .done(data => console.log(data))
@@ -173,5 +185,6 @@ let fields = [
    },
    { name: 'career', identifier: 'career' },
    { name: 'start', identifier: 'start' },
-   { name: 'to', identifier: 'to' }
+   { name: 'start1', identifier: 'start1' },
+   { name: 'to1', identifier: 'to1' },
 ];

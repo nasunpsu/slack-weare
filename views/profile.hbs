@@ -185,12 +185,15 @@
           value="{{user.email}}">
       </div>
     </div>
-    <div id="available" class="availability basic-info-edit inline fields">
+    {{#each user.availability}}
+    <div id="available" {{#if_eq @index 0}}style="display:none"{{/if_eq}} class="availability basic-info-edit inline fields">
           <div class="field centered middle aligned">
             <label> I am </label>
-            <select class="ui dropdown" name="available">
+            <select class="ui dropdown" name="available{{@index}}">
+              {{#select this.available}}
               <option value="available">available online</option>
               <option value="unavailable">unavailable online</option>
+              {{/select}}
             </select>
           </div>
             
@@ -198,7 +201,8 @@
         
       <div class="field centered middle aligned">
         <label> on </label>
-        <select class="ui dropdown weekday" name="weekday">
+        <select class="ui dropdown weekday" name="weekday{{@index}}">
+          {{#select this.weekday}}
           <option value="sun">Sunday</option>
           <option value="mon">Monday</option>
           <option value="tue">Tuesday</option>
@@ -206,6 +210,7 @@
           <option value="thur">Thursday</option>
           <option value="fri">Friday</option>
           <option value="sat">Saturday</option>
+          {{/select}}
         </select>
       </div>
       <div class="field" style="display: flex;">
@@ -213,7 +218,7 @@
         <div class="ui calendar week-day" id="pop-time">
           <div class="ui input weekday-time left icon">
             <i class="time icon"></i>
-            <input type="text" name="start" placeholder="Start time" value="{{user.Avail.start_time}}">
+            <input type="text" name="start{{@index}}" placeholder="Start time" value="{{this.start}}">
           </div>
         </div>
         <label style="margin-left: 15px; margin-right: 10px; align-items: center;display:flex;"> till </label>
@@ -223,7 +228,7 @@
         <div class="ui calendar week-day" id="pop-time">
           <div class="ui input weekday-timeleft icon">
             <i class="time icon"></i>
-            <input type="text" name="to" placeholder="End time" value="{{user.Avail.end_time}}">
+            <input type="text" name="to{{@index}}" placeholder="End time" value="{{this.to}}">
           </div>
         </div>
       </div>
@@ -234,11 +239,12 @@
         </div>
       </div>
     </div>
+    {{/each}}
     <h4 class="ui horizontal divider header">
       Educational Info
     </h4>
     <div class="fields instrumental-info courses">
-      <div class="field error">
+      <div class="field">
         <label>Major</label>
         <div class="field">
           <input type="text" name="major" value="{{user.major}} {{user.title}}">
@@ -277,7 +283,8 @@
       <div class="six wide field">
         <label for="">Current profession</label>
         <select class="ui fluid dropdown" name="profession" id="profession">
-          <option value="17" selected="">Architecture and Engineering</option>
+          {{#select user.profession}}
+          <option value="17">Architecture and Engineering</option>
           <option value="27">Arts, Design, Entertainment, Sports, and Media</option>
           <option value="37">Building and Grounds Cleaning and Maintenance</option>
           <option value="13">Business and Financial Operations</option>
@@ -301,17 +308,20 @@
           <option value="41">Sales and Related</option>
           <option value="53">Transportation and Material Moving</option>
           <option value="0">All Occupations</option>
+          {{/select}}
         </select>
       </div>
       <div class="ten wide field">
         <label for="">Current military status</label>
         <select class="ui dropdown military" name="military" id="military" class="military">
+          {{#select user.military}}
           <option value="ad">Active Duty</option>
           <option value="re">Reserves</option>
           <option value="ng">National Guard</option>
           <option value="vt">Veteran (No reserve service obligation remaining, individual Ready Reserve)</option>
           <option value="fm">Family member/dependent of a member of the U.S. Armed Forces or Veteran</option>
           <option value="none">None of the above</option>
+          {{/select}}
         </select>
       </div>
     </div>

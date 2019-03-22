@@ -152,7 +152,20 @@ app.engine('hbs', hbs({
                 minute:'2-digit'
             });
 			return date + ' ' + month + ' ' + year + ' ' + time;
+		},
+		if_eq: function(a, b, opts) {
+			if (a == b) {
+				return opts.fn(this);
+			} else {
+				return opts.inverse(this);
+			}
+		},
+		select: function (value, options) {
+			return options.fn(this)
+				.replace(new RegExp(' value=\"' + value + '\"'), '$& selected="selected"')
+				.replace(new RegExp('>' + value + '</option>'), ' selected="selected"$&');
 		}
+
 	}
 }));
 
@@ -1178,6 +1191,13 @@ app.get('/editProfile', async function (req, res) {
 	}
 	else {
 		to_be_rendered.user = doc[0];
+		//add in template for creation later
+		if(!to_be_rendered.user.availability || to_be_rendered.user.availability.length === 0 || !Array.isArray(to_be_rendered.user.availability)){
+			to_be_rendered.user.availability = [{}, {}];
+		}
+		else{
+			to_be_rendered.user.availability.unshift({});
+		}
 	}
 	res.render('profile', to_be_rendered);
 });
@@ -1186,6 +1206,7 @@ app.post('/editProfile', async function (req, res) {
 	const uid = req.session.user.uid;
 	const query = { uid };
 	const insertObj = req.body;
+	insertObj.availability = JSON.parse(insertObj.availability)
 	const dbResponse = await DB.collection('users').updateOne(query, { $set: insertObj });
 	if (!dbResponse.result.ok) {
 		console.warn(`Error with update query ${JSON.stringify(query)}, inserting object ${JSON.stringify(insertObj)}`);
