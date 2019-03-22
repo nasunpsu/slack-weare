@@ -355,12 +355,12 @@ app.get('/auth', (req, res) => {
 app.get('/test', (req, res) => {
 	res.send('haha');
 	res.status(200).end();
-	// (async () => {									//TODO: MOVE this Block to the Init Module
-	// 	await InitTeamMembers('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200);
-	// })();
-	// (async () => {
-	// 	await InitTeamChannels('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, null);
-	// })();
+	(async () => {									//TODO: MOVE this Block to the Init Module
+		await InitTeamMembers('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200);
+	})();
+	(async () => {
+		await InitTeamChannels('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, null);
+	})();
 	UpdateChannelRecentMsgs(null, 'general', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200); //cid example:"T0A286J8K_C0A28BAHG"
 
 
@@ -1216,75 +1216,6 @@ app.get('/tablelist', async function (req, res) {
 	to_be_rendered.usersString = JSON.stringify(to_be_rendered.users);
 	res.render('table', to_be_rendered);
 });
-app.get('/network_balloon', async function (req, res) {
-	let to_be_rendered = {};
-	to_be_rendered.layout = 'default';
-	to_be_rendered.template = 'home-template';
-	to_be_rendered.data = await DB.collection('users').find({ team_id: req.session.team.team_id }).toArray().then(async (results, err) => {
-		if (err) console.error(err);
-		else if (results.length != 0) {
-			var nodes = results, direct_nodes = [], simiL = [], links = [], c_node = req.session.user, self_channels = req.session.user.channels;
-			// var dist = await DB.collection('usersDistance').find({ "": c_node.uid });//.limit(10)
-			// console.log(`the dist are ${util.inspect(dist, {depth: null})}`);
-			console.log(`the self_channels are ${util.inspect(self_channels, { depth: null })}`);
-			nodes.forEach(n => {
-				if (n.uid == c_node.uid) {
-					// console.error("now this is the logged user in the nodes loop");
-					n.fixed = true;
-					n.x = 400;//half of the canvas width/height
-					n.y = 300;
-					n.similarIdx = 1;
-					return;
-				}
-				n.similarIdx = similarIdx(n.channels, self_channels);
-				console.log(`similarity is ${util.inspect(n.similarIdx, { depth: null })}`);
-				simiL.push(n.similarIdx);
-
-				if (n.similarIdx >= 0.06) {
-					links.push({
-						source: n.uid,
-						target: c_node.uid,
-						value: n.similarIdx
-					});
-					direct_nodes.push(n);
-				}
-			});
-			var i = direct_nodes.length;
-			while (i--) {
-				c_node = direct_nodes.splice(i, 1)[0];
-				if (c_node.uid == undefined) console.log(`c_node is ${util.inspect(c_node, { depth: null })}`);
-				nodes.forEach(n => {
-
-					if (n.uid == c_node.uid) {
-						return;
-					};
-					var simi = similarIdx(n.channels, c_node.channels)
-					simiL.push(simi);
-					if (simi >= 0.3) {
-						links.push({
-							source: n.uid,
-							target: c_node.uid,
-							value: simi
-						});
-					}
-				})
-			}
-			console.log(`the third quantile similarity index is ${median(simiL)}; and the min is ${Math.min(...simiL)} and max is ${Math.max(...simiL)}`);
-			// jac_links = similarIdx.JaccardIdx(m_channels);
-			// console.log(`the jaclinks are ${util.inspect(jac_links, {depth: null})}`);
-			console.log(`the nodes are ${util.inspect(nodes[0], { depth: null })}`);
-			// console.log(`the total groups are ${Object.keys(link_ends)}`)
-			var obj = {
-				nodes: nodes,
-				links: links,
-				disL: [Math.min(...simiL), Math.max(...simiL)]
-			}
-			console.log(`links are ${util.inspect(links, { depth: 3 })}`);
-			return Promise.resolve(obj);
-		}
-	});
-	res.render('network', to_be_rendered);
-});
 
 app.get('/editProfile', async function (req, res) {
 	let to_be_rendered = {};
@@ -1701,13 +1632,13 @@ app.post('/deletemeeting', async function (req, res) {
 })
 
 function similarTo(list, user) {
-	console.log(`the list in similarTo is ${util.inspect(list, { depth: 3 })}`);
+	// console.log(`the list in similarTo is ${util.inspect(list, { depth: 3 })}`);
 	var dist = 'impossible value';
 	list.some(el => {
 
 		if (el.user == user) {
-			console.log(`the distance index inside similarTo func is ${JSON.stringify(el)}`);
-			console.log(el.distance);
+			// console.log(`the distance index inside similarTo func is ${JSON.stringify(el)}`);
+			// console.log(el.distance);
 			dist = el.distance;
 			return el.user === user;
 		}
@@ -1724,9 +1655,11 @@ app.get('/network', async function (req, res) {
 	to_be_rendered.data = await DB.collection('users').find({ team_id: req.session.team.team_id }).toArray().then(async (results, err) => {
 		if (err) console.error(err);
 		else if (results.length != 0) {
-			var nodes = results, direct_nodes = [], distL = [], links = [], c_node = req.session.user, self_channels = req.session.user.channels;
+			let nodes = results, set_nodes = [], direct_nodes = [], distL = [], distL_temp = [], links = [], c_node = req.session.user, self_channels = req.session.user.channels;
 			(async () => {
-				nodes.forEach(async (n) => {
+				links = [];
+				set_nodes = [];
+				await nodes.forEach(async (n) => {
 					if (n.uid == c_node.uid) {
 						// console.error("now this is the logged user in the nodes loop");
 						n.fixed = true;
@@ -1736,100 +1669,66 @@ app.get('/network', async function (req, res) {
 						return;
 					}
 					n.distIdx = await similarTo(n.similar_users, c_node.uid);
-					console.log(`distance is ${util.inspect(n.distIdx, { depth: null })}`);
-					distL.push(n.distIdx);
-
-					if (n.distIdx <= 0.4) {
-						links.push({
-							source: n.uid,
+					// console.log(`distance is ${util.inspect(n.distIdx, { depth: null })}`);
+					await distL.push({ uid: n.uid, distIdx: n.distIdx });
+				});
+				console.log(`the c_node third quartile is ${c_node.similar_users_dict.third_quartile}`);
+				await distL.forEach(async (l) => {
+					// console.log(`the distance is ${l.distIdx}`);
+					if (l.distIdx <= c_node.similar_users_dict.third_quartile) {
+						await links.push({
+							source: l.uid,
 							target: c_node.uid,
-							value: n.distIdx
+							value: l.distIdx
 						});
-						direct_nodes.push(n);
+						set_nodes.push(l.uid);
+						set_nodes.push(c_node.uid);
+						await direct_nodes.push(l);
 					}
 				});
-				var i = await direct_nodes.length;
+				let i = await direct_nodes.length;
 				console.log(`number of direct_nodes is ${direct_nodes.length}`)
 				while (i--) {
 					c_node = direct_nodes.splice(i, 1)[0];
-					console.log(`c_node is ${util.inspect(c_node, { depth: null })}`);
-					nodes.forEach(async (n) => {
-
+					// console.log(`c_node is ${util.inspect(c_node, { depth: null })}`);
+					distL_temp = [];
+					await nodes.forEach(async (n) => {
 						if (n.uid == c_node.uid) {
 							return;
 						};
-						dis = await similarTo(n.similar_users, c_node.uid);
-						console.log(`dist is ${util.inspect(dis, { depth: null })}`);
-						distL.push(dis);
-						if (dis <= 0.4) {
-							links.push({
-								source: n.uid,
+						let dis = await similarTo(n.similar_users, c_node.uid);
+						// console.log(`the distance within while is ${util.inspect(dis, { depth: null })}`);
+						await distL.push(dis);
+						await distL_temp.push({ uid: n.uid, distIdx: n.distIdx });
+					});
+					let len = await distL_temp.length;
+					console.log(`the length of distL_temp is ${distL_temp.length}`);
+					await distL_temp.forEach(async (l) => {
+						// console.log(`the distance of other nodes is ${l.distIdx}`);
+						if (typeof snapshot_db['users'] == 'undefined') snapshot_db['users'] = await DB.collection('users').find({}).toArray();
+						if (l.distIdx <= snapshot_db['users'].filter(u => u.uid == c_node.uid)[0].similar_users_dict.third_quartile) {
+							// console.log(`this met criteria and now is going to be put into link from ${l.uid} to ${c_node.uid}`);
+							await links.push({
+								source: l.uid,
 								target: c_node.uid,
-								value: dis
+								value: l.distIdx
 							});
+							set_nodes.push(l.uid);
+							set_nodes.push(c_node.uid);
 						}
-					})
+					});
 				}
 			})();
-			// console.log(`the third quantile similarity index is ${median(distL)}; and the min is ${Math.min(...distL)} and max is ${Math.max(...distL)}`);
-			// console.log(`the nodes are ${util.inspect(nodes[0], { depth: null })}`);
+
 			var obj = {
 				nodes: nodes,
 				links: links,
 				disL: [Math.min(...distL), Math.max(...distL)]
 			}
-			console.log(`links are ${util.inspect(links, { depth: 3 })}`);
 			return Promise.resolve(obj);
 		}
 	});
-	res.render('network', to_be_rendered);
-});
-
-
-app.get('/network11', async function (req, res) {
-	let to_be_rendered = {};
-	to_be_rendered.layout = 'default';
-	to_be_rendered.template = 'home-template';
-	to_be_rendered.data = await DB.collection('users').find({ team_id: req.session.team.team_id }).toArray().then((results, err) => {
-		if (err) console.error(err);
-		else if (results.length != 0) {
-			var nodes = [];
-			var groups = [];
-			var links = []
-			var link_ends = {};
-			results.forEach(r => {
-				obj = r;
-				obj.name = r.first_name;
-				obj.id = r.uid;
-				nodes.push(obj);
-				if (groups.indexOf(obj.group) == -1) {
-					groups.push(obj.group);
-					link_ends[obj.group] = [obj.id];
-				}
-				else {
-					console.log(`link_ends list is ${util.inspect(link_ends[obj.group], { depth: null })}`);
-					link_ends[obj.group].forEach(end => {//for (var end in link_ends[obj.group]) { loop through the index instead of array item
-						console.log(`the pushed source end is ${end}`)
-						console.log(`the pushed target end is ${r.uid}`)
-						links.push({
-							source: end,
-							target: r.uid,
-							value: Math.random()
-						});
-					});
-					link_ends[obj.group].push(obj.id);
-				}
-			});
-			console.log(`the total groups are ${Object.keys(link_ends)}`)
-			var obj = {
-				nodes: nodes,
-				links: links
-			}
-			console.log(`links are ${util.inspect(links, { depth: 3 })}`);
-			return Promise.resolve(obj);
-			// res.render('index', { layout: 'default', template: 'home-template', tz_members: members_by_tz });
-		}
-	});
+	console.log(`links length is ${to_be_rendered.data.links.length}`);
 	res.render('network', to_be_rendered);
 });
 
