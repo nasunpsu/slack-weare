@@ -31,6 +31,7 @@ function reloadCalendar(){
     $('.ui.checkbox')
     .checkbox()
     ;
+    $('.ui.dropdown').dropdown({});
 }
 
 //Get value from an input field
@@ -45,7 +46,7 @@ function addTime(){
     const clone = av.cloneNode(true);
     const available = $('.availability').last()[0];
     const parent = available.parentNode;
-    $(clone).find('input').attr('name', function(){
+    $(clone).find('input, select').attr('name', function(){
         return $(this).attr('name') + numDates;
     });
     parent.insertBefore(clone, available.nextSibling);
@@ -93,6 +94,7 @@ let validationRules = {};
 $(document).ready(() => {
     reloadCalendar();
     window.available = $('#available')[0].cloneNode(true);
+    reloadForm();
 });
 
 function submitForm(form, event){
@@ -105,14 +107,20 @@ function submitForm(form, event){
     for(const key in json){
         if(key.startsWith('start')){
             const num = key.slice(5);
-            const otherKey = `to${num}`;
+            const toKey = `to${num}`;
+            const availableKey = `available${num}`;
+            const weekdayKey = `weekday${num}`;
             const newVal = {
                 start: json[key],
-                to: json[otherKey]
+                to: json[toKey],
+                available: json[availableKey],
+                weekday: json[weekdayKey]
             }
             json.availability.push(newVal);
             delete json[key];
-            delete json[otherKey];
+            delete json[toKey];
+            delete json[availableKey];
+            delete json[weekdayKey];
         }
     }
     console.log(json);

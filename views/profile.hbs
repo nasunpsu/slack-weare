@@ -20,7 +20,7 @@
       </div>
       <div class="two wide field">
         <label for=""> Gender</label>
-        <select class="ui dropdown gender" type="text" placeholder="Gender" value="{{userInfo.gender}}">
+        <select name="gender" class="ui dropdown gender" type="text" placeholder="Gender" value="{{userInfo.gender}}">
           <option value="female" class="value">Male</option>
           <option value="male" class="value">Female</option>
           <option value="other" class="value">Other</option>
@@ -31,7 +31,7 @@
     <div class="tz basic-info-edit fields">
       <div class="eight wide field">
         <label>Time Zone</label>
-        <select class="ui fluid dropdown">
+        <select name="timezone" class="ui fluid dropdown">
           <option timeZoneId="1" gmtAdjustment="GMT-12:00" useDaylightTime="0" value="-12">(GMT-12:00) International
             Date Line West</option>
           <option timeZoneId="2" gmtAdjustment="GMT-11:00" useDaylightTime="0" value="-11">(GMT-11:00) Midway Island,
@@ -188,7 +188,7 @@
     <div id="available" class="availability basic-info-edit inline fields">
           <div class="field centered middle aligned">
             <label> I am </label>
-            <select class="ui dropdown" name="availability">
+            <select class="ui dropdown" name="available">
               <option value="available">available online</option>
               <option value="unavailable">unavailable online</option>
             </select>
