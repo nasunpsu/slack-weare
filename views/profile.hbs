@@ -5,22 +5,22 @@
     Basic Info
     </h4>
     <div class="profile-img-wrapper">
-      <img class="ui small right floated image profile-img" src={{userInfo.image_512}}>
+      <img class="ui small right floated image profile-img" src={{user.image_512}}>
     </div>
     <div class="fields basic-info-edit">
       <div class="six wide field">
         <label>Full Name</label>
         <input type="text" name="fullname" placeholder="Your name as you would like it to appear on your profile."
-          value="{{userInfo.real_name}}">
+          value="{{user.real_name}}">
       </div>
       <div class="six wide field">
         <label>City, Province I live in</label>
         <input type="text" name="city" placeholder="E.g. Pittsburgh, PA"
-          value="{{#if userInfo.city}}{{userInfo.city}}, {{userInfo.province}}{{/if}}">
+          value="{{#if user.city}}{{user.city}}, {{user.province}}{{/if}}">
       </div>
       <div class="two wide field">
         <label for=""> Gender</label>
-        <select name="gender" class="ui dropdown gender" type="text" placeholder="Gender" value="{{userInfo.gender}}">
+        <select name="gender" class="ui dropdown gender" type="text" placeholder="Gender" value="{{user.gender}}">
           <option value="female" class="value">Male</option>
           <option value="male" class="value">Female</option>
           <option value="other" class="value">Other</option>
@@ -182,7 +182,7 @@
       <div class="six wide field">
         <label>Email</label>
         <input type="email" name="email" placeholder="An email peers can contact you with."
-          value="">
+          value="{{user.email}}">
       </div>
     </div>
     <div id="available" class="availability basic-info-edit inline fields">
@@ -213,7 +213,7 @@
         <div class="ui calendar week-day" id="pop-time">
           <div class="ui input weekday-time left icon">
             <i class="time icon"></i>
-            <input type="text" name="start" placeholder="Start time" value="{{userInfo.Avail.start_time}}">
+            <input type="text" name="start" placeholder="Start time" value="{{user.Avail.start_time}}">
           </div>
         </div>
         <label style="margin-left: 15px; margin-right: 10px; align-items: center;display:flex;"> till </label>
@@ -223,7 +223,7 @@
         <div class="ui calendar week-day" id="pop-time">
           <div class="ui input weekday-timeleft icon">
             <i class="time icon"></i>
-            <input type="text" name="to" placeholder="End time" value="{{userInfo.Avail.end_time}}">
+            <input type="text" name="to" placeholder="End time" value="{{user.Avail.end_time}}">
           </div>
         </div>
       </div>
@@ -241,33 +241,32 @@
       <div class="field error">
         <label>Major</label>
         <div class="field">
-          <input type="text" name="major" placeholder="{{userInfo.major}} {{userInfo.title}}">
+          <input type="text" name="major" value="{{user.major}} {{user.title}}">
         </div>
       </div>
       <div class="field">
         <label>Penn State Campus</label>
         <div class="field">
-          <input type="text" name="campus" placeholder="{{userInfo.campus}}">
+          <input type="text" name="campus" value="{{user.campus}}">
         </div>
       </div>
       <div class="nine wide field">
         <label>Current Courses</label>
-        <input type="text" name="courses" placeholder="e.g. IST 110;" value="{{userInfo.courses}}">
+        <input type="text" name="courses" placeholder="e.g. IST 110;" value="{{user.courses}}">
       </div>
     </div>
     <div class="basic-info-edit field">
       <label>What I want to gain from World Campus</label>
-      <textarea name="goals" id="" cols="30" rows="5" placeholder="Anything you would like to gain from this experience (academic or not).">{{userInfo.goals}}</textarea>
+      <textarea name="goals" id="" cols="30" rows="5" placeholder="Anything you would like to gain from this experience (academic or not).">{{user.goals}}</textarea>
     </div>
     <div class="two inline recommendation fields">
       <div class="nine wide field">
         <label>Courses I Recommend</label>
-        <input type="text" name="recommended-courses" placeholder="e.g. IST 110;" value="{{userInfo.reccourses}}">
+        <input type="text" name="reccourses" placeholder="e.g. IST 110;" value="{{user.reccourses}}">
       </div>
       <div class="seven wide field">
         <label>Instructors I Recommend</label>
-        <input type="text" name="recommended-instructor" placeholder="e.g. InstructorName;" value=""
-          {{userInfo.instructors}}>
+        <input type="text" name="instructors" placeholder="e.g. InstructorName;" value="{{user.instructors}}">
       </div>
     </div>
     
@@ -319,11 +318,11 @@
     <div class="fields personal-info-edit facts">
       <div class="eight wide field">
         <label for="">Career Goals</label>
-        <textarea name="career" id="fun" cols="30" rows="5" placeholder="Any future career you'd like to have or goals you have within your current career." >{{userInfo.fun}}</textarea>
+        <textarea name="career" id="fun" cols="30" rows="5" placeholder="Any future career you'd like to have or goals you have within your current career." >{{user.fun}}</textarea>
       </div>
       <div class="eight wide field">
         <label for="">Past Careers</label>
-        <textarea id="unique" name="unique" cols="30" rows="5" placeholder="Companies and jobs you've worked in previously." >{{userInfo.unique}}</textarea>
+        <textarea id="unique" name="unique" cols="30" rows="5" placeholder="Companies and jobs you've worked in previously." >{{user.unique}}</textarea>
       </div>
     </div>
     
@@ -334,33 +333,33 @@
       <div class="eight wide field">
         <label>Places I've Lived</label>
 
-        <input type="text" name="past-cities" placeholder="Your city. E.g. State College, PA" value="{{userInfo.city}}">
+        <input type="text" name="pastCities" placeholder="Your city. E.g. State College, PA" value="{{user.pastCities}}">
 
       </div>
       <div class="eight wide field">
         <label>Places I'd Like to Visit</label>
-        <input type="text" name="places" placeholder="E.g. Paris, France" value="{{userInfo.likeplaces}}">
+        <input type="text" name="likeplaces" placeholder="E.g. Paris, France" value="{{user.likeplaces}}">
       </div>
     </div>
     <div class="fields personal-info-edit family">
 
       <div class="eight wide field">
         <label>Marital Status</label>
-        <input type="text" name="marital" placeholder="E.g. married" value="{{userInfo.married}}">
+        <input type="text" name="married" placeholder="E.g. married" value="{{user.married}}">
       </div>
       <div class="eight wide field">
         <label>Number of Kids</label>
-        <input type="text" name="kids" placeholder="E.g. 3" value="{{userInfo.kids}}">
+        <input type="text" name="kids" placeholder="E.g. 3" value="{{user.kids}}">
       </div>
     </div>
     <div class="fields personal-info-edit facts">
       <div class="eight wide field">
         <label for="">Fun fact</label>
-        <textarea name="fun" id="fun" cols="30" rows="5" placeholder="E.g. My father graduated from PSU 20 years ago." >{{userInfo.fun}}</textarea>
+        <textarea name="fun" id="fun" cols="30" rows="5" placeholder="E.g. My father graduated from PSU 20 years ago." >{{user.fun}}</textarea>
       </div>
       <div class="eight wide field">
         <label for="">Things my peers should know about me</label>
-        <textarea id="unique" name="unique" cols="30" rows="5" placeholder="E.g. I served in the military for 10 years, and I care a lot about punctuality." >{{userInfo.unique}}</textarea>
+        <textarea id="unique" name="unique" cols="30" rows="5" placeholder="E.g. I served in the military for 10 years, and I care a lot about punctuality." >{{user.unique}}</textarea>
       </div>
     </div>
     <div id="submit-button" class="ui submit button save-profile-changes">Save Changes</div>
