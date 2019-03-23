@@ -87,7 +87,7 @@
                 {{#each users}}
                 <tr style="display: none">
                     <td>
-                        <a href="/profile/{{this.uid}}" data-toggle="modal" data-target=".profile-modal">{{this.real_name}}</a>
+                        <a href="/profile/{{this.uid}}" target="_blank" data-tooltip="Click here to see my profile!">{{this.real_name}}</a>
                         {{!-- <a href="slack://user?team={{userInfo.team_id}}&amp;id={{{get_UserID this.uid}}}"><i class="envelope icon"></i></a> --}}
                     </td>
                     <td {{#if this.ismajorShared}} style="color: #f2711c" {{/if}}>{{this.major}}</td>

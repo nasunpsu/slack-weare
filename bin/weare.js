@@ -19,7 +19,7 @@ const { sanitizeBody } = require('express-validator/filter');
 const bodyParser = require("body-parser");
 const request = require('request');
 const apiUrl = 'https://slack.com/api';
-const base_url = 'https://41664914.ngrok.io/';
+const base_url = 'https://420520b7.ngrok.io';
 const presence_snapshot = {};
 const snapshot_db = {};
 // const methodUril = 'https://slack.com/api/';
@@ -47,7 +47,7 @@ app.use((req, res, next) => {
 });
 
 
-const SlackRTMClient = require('@slack/client').RTMClient;
+// const SlackRTMClient = require('@slack/client').RTMClient;
 const SlackWebClient = require('@slack/client').WebClient;
 
 const fs = require('fs');
@@ -152,7 +152,20 @@ app.engine('hbs', hbs({
 					minute: '2-digit'
 				});
 			return month + ' ' + date + ' ' + year + ' ' + time;
+		},
+		if_eq: function (a, b, opts) {
+			if (a == b) {
+				return opts.fn(this);
+			} else {
+				return opts.inverse(this);
+			}
+		},
+		select: function (value, options) {
+			return options.fn(this)
+				.replace(new RegExp(' value=\"' + value + '\"'), '$& selected="selected"')
+				.replace(new RegExp('>' + value + '</option>'), ' selected="selected"$&');
 		}
+
 	}
 }));
 
@@ -486,7 +499,7 @@ app.post('/slack/commands/intro', urlencodedParser, (req, res) => {
 	var msg = {
 		title: 'I am, We Are!',
 		callback_id: 'self_intro',
-		submit_label: 'Hello!',
+		submit_label: 'Done',
 		elements: [
 			{
 				label: 'Fun fact',
@@ -532,7 +545,6 @@ app.post('/slack/commands/intro', urlencodedParser, (req, res) => {
 });
 
 app.post('/slack/actions', urlencodedParser, (req, res) => {
-	res.status(200).end(); // best practice to respond with 200 status
 	var body = JSON.parse(req.body.payload); // parse URL-encoded payload JSON string
 	const { type, token, trigger_id } = body;
 	console.log(`the req body includes + ${util.inspect(req.body, { depth: null })}`);
@@ -788,83 +800,129 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 				})();
 				break;
 			case 'intro':
-				const msg2 = {
-					title: 'I am, We Are!',
-					callback_id: 'self_intro',
-					submit_label: 'Hello!',
-					elements: [
-						{
-							label: 'Fun fact',
-							type: 'text',
-							name: 'fun',
-							hint: 'Tell them something fun!'
-						},
-						{
-							label: 'I live in',
-							type: 'text',
-							name: 'city',
-							optional: true,
-							hint: 'Separate places with ";"! (e.g. Pittsburgh, PA; Victoria, BC)'
-						},
-						{
-							label: 'Current profession',
-							type: 'select',
-							name: 'profession',
-							options: [
-								{ label: 'Veteran/military', value: 'military' },
-								{ label: 'Industry sector', value: 'industry' },
-								{ label: 'Education sector', value: 'education' },
-								{ label: 'No job yet', value: 'unemployed' },
-							],
-						},
-						{
-							label: 'Things I want my peers here to know about me',
-							type: 'text',
-							name: 'unique',
-							optional: true,
-							hint: 'e.g. language, value systems, hobbies, minority roles, ethnicity'
-						},
-					],
-				};
-				console.log('before dialog web method');
-				console.log(util.inspect(msg2, { depth: 3 }));
-				web.dialog.open({
-					trigger_id: trigger_id,
-					dialog: msg2
-				}).then(res => console.log(`successfully opened intro dialog`)).catch(err => { console.error(err); console.log(util.inspect(err, { depth: 3 })) });
+				DB.collection('users').findOne({ uid: body.team.id + '_' + body.user.id }, async (err, user) => {
+					const msg2 = {
+						title: 'I am, We Are!',
+						callback_id: 'self_intro',
+						submit_label: 'Done',
+						elements: [
+							{
+								label: 'Fun fact',
+								type: 'text',
+								name: 'fun',
+								value: user.fun,
+								hint: 'Tell them something fun!'
+							},
+							{
+								label: 'I have lived in',
+								type: 'text',
+								name: 'pastCities',
+								optional: true,
+								value: user.pastCities,
+								hint: 'Separate places with ";"! (e.g. Pittsburgh, PA; Victoria, BC)'
+							},
+							{
+								label: 'Current profession',
+								type: 'select',
+								name: 'profession',
+								options: [
+									{ label: 'Architecture and Engineering', value: '17' },
+									{ label: 'Arts, Design, Entertainment, Sports, and Media', value: '27' },
+									{ label: 'Building and Grounds Cleaning and Maintenance', value: '37' },
+									{ label: 'Business and Financial Operations', value: '13' },
+									{ label: 'Community and Social Service', value: '21' },
+									{ label: 'Computer and Mathematical', value: '15' },
+									{ label: 'Construction and Extraction', value: '47' },
+									{ label: 'Education, Training, and Library', value: '25' },
+									{ label: 'Farming, Fishing, and Forestry', value: '45' },
+									{ label: 'Food Preparation and Serving Related', value: '35' },
+									{ label: 'Healthcare Practitioners and Technical', value: '29' },
+									{ label: 'Healthcare Support', value: '31' },
+									{ label: 'Installation, Maintenance, and Repair', value: '49' },
+									{ label: 'Legal', value: '23' },
+									{ label: 'Life, Physical, and Social Science', value: '19' },
+									{ label: 'Management', value: '11' },
+									{ label: 'Miltary Specific', value: '55' },
+									{ label: 'Office and Administrative Support', value: '43' },
+									{ label: 'Personal Care and Service', value: '39' },
+									{ label: 'Production', value: '51' },
+									{ label: 'Protective Service', value: '33' },
+									{ label: 'Sales and Related', value: '41' },
+									{ label: 'Transportation and Material Moving', value: '53' },
+									{ label: 'Other', value: '0' },
+								],
+								value: 0
+							},
+							{
+								label: 'Things I want my peers here to know about me',
+								type: 'text',
+								name: 'unique',
+								optional: true,
+								value: user.unique,
+								hint: 'e.g. language, value systems, hobbies, minority roles, ethnicity'
+							},
+						],
+					};
+					console.log('before dialog web method');
+					console.log(util.inspect(msg2, { depth: 3 }));
+					web.dialog.open({
+						trigger_id: trigger_id,
+						dialog: msg2
+					}).then(res => console.log(`successfully opened intro dialog`)).catch(err => { console.error(err); console.log(util.inspect(err, { depth: 3 })) });
+				});
 				break;
 			case 'hello':
-				console.log(`interactive message - hello!`);
-				(async () => {
-					await DB.collection('users').updateOne(
-						{ uid: body.team.id + '_' + body.user.id },
+				console.log('now you are saying hello!');
+				DB.collection('users').findOne({ uid: body.team.id + '_' + body.user.id }, async (err, user) => {
+					const attach = [
 						{
-							$set: {
-								fun_fact: submission.fun,
-								profession_type: submission.profession,
-								unique: submission.unique,
-								cities: submission.city
-							}
+							"title": `Let's welcome ${body.user.name} who has been to ${user.pastCities}.`,
+							"text": `Meet ${body.user.name} at <${base_url}/profile/${body.team.id}_${body.user.id}|profile page>.`,
+							"color": '#3AA3E3'
 						},
-						{ upsert: false },
-						function (err, res) {
-							if (err) console.error(err);
-						});
-					let edit_url = `editProfile/`;
-					web.chat.postEphemeral({
-						as_user: false,
+						{
+							"text": `Send ${body.user.name} some We Are! or some positive vibes! :fireworks: :tada: :wave: :clap:`,
+							"fallback": "Shame... buttons aren't supported in this land",
+							"callback_id": "hello_all",
+							"color": "#3AA3E3",
+							"actions": [
+								{
+									"name": "weare-welcome",
+									"text": "We Are!",
+									"type": "button",
+									"style": "primary",//093162 this is the PSU team color
+									"value": "weare-welcome"
+								},
+								{
+									"name": "heart",
+									"text": ":heart:",
+									"type": "button",
+									"value": "heart",
+									"style": "danger"
+								},
+								{
+									"name": "dismiss",
+									"text": "Dismiss",
+									"type": "button",
+									"value": "cancel",
+									"style": "default"
+								}
+							]
+						}
+					];
+					console.log(`interactive message - You confirmed to hello to the group!`);
+					console.log(`The user has confirmed to say hello and receive welcome! ${body.channel.id}`)
+					web.chat.postMessage({
 						channel: body.channel.id,
-						user: body.user.id,
-						attachments: JSON.stringify([
-							{
-								title: 'An interesting profile can help your compatible peers find you!',
-								text: 'Go to ' + base_url + edit_url + ' to edit your profile.',
-								color: '#74c8ed'
-							}
-						])
-					}).catch(err => console.error(err));
-				})();
+						text: `I'd like to introduce ${body.user.name}!`,
+						attachments: JSON.stringify(attach)
+					})
+						.catch(err => console.error(err));
+					console.log('now you finished hello and send the public message out');
+				});
+
 				break;
+
 			case 'specify-now':
 				const msg = {
 					title: 'Schedule a meeting',
@@ -923,49 +981,58 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 		console.log(`Someone submit a dialog form, inside body: ${util.inspect(body, { depth: null })}`);
 		console.log(`callback id is ${callback_id}`);
 		switch (callback_id) {
-			case 'self_intro':
-				console.log(`this is in self-intro, say hello and welcome! ${body.channel.id}`)
-				web.chat.postMessage({
+			case 'self_intro'://the action callback
+				console.log(`Would you like to broadcast your join of the channel?! ${body.channel.id}`)
+				DB.collection('users').updateOne(
+					{ uid: body.team.id + '_' + body.user.id },
+					{
+						$set: {
+							fun: submission.fun,
+							profession: submission.profession,
+							unique: submission.unique,
+							pastCities: submission.pastCities
+						}
+					},
+					{ upsert: false },
+					function (err, res) {
+						if (err) console.error(err);
+					});
+				let edit_url = `/editProfile/`;
+				web.chat.postEphemeral({
+					as_user: false,
 					channel: body.channel.id,
-					text: `I'd like to introduce ${body.user.name}!`,
-					attachments: [
+					user: body.user.id,
+					attachments: JSON.stringify([
 						{
-							"title": `Let's welcome ${body.user.name} from ${body.submission.city}.`,
-							"text": `Meet ${body.user.name} at <https://${base_url}/${body.team.id}_${body.user.id}|profile page>.`,
-							color: 'good'
+							title: 'An interesting profile can help your compatible peers find you!',
+							text: 'Go to ' + base_url + edit_url + ' to edit your profile.',
+							color: '#74c8ed'
 						},
 						{
-							"text": `Send ${body.user.name} some We Are! or some positive vibes! :fireworks: :tada: :wave: :clap:`,
-							"fallback": "Shame... buttons aren't supported in this land",
-							"callback_id": "hello_all",
-							"color": "#3AA3E3",
-							"attachment_type": "default",
-							"actions": [
-								{
-									"name": "weare-welcome",
-									"text": "We Are!",
-									"type": "button",
-									"style": "primary",//093162 this is the PSU team color
-									"value": "weare-welcome"
-								},
-								{
-									"name": "heart",
-									"text": ":heart:",
-									"type": "button",
-									"value": "heart",
-									"style": "danger"
-								},
-								{
-									"name": "dismiss",
-									"text": "Dismiss",
-									"type": "button",
-									"value": "cancel",
-									"style": "default"
-								}
-							]
+							title: `Would you like me to introduce you in #${body.channel.name}?`,
+							text: 'Go and get some :heart: and *We Are* from your peers!',
+							color: '#093162',
+							callback_id: 'hello',
+							actions: [{
+								name: 'accept',
+								text: 'Sure',
+								type: 'button',
+								value: 'hello',
+								style: 'primary'
+							},
+							{
+								name: 'reject',
+								text: 'No, thanks',
+								type: 'button',
+								value: 'no-hello',
+								style: 'default'
+							}
+							],
 						}
-					]
-				})
+					])
+				}).catch(err => console.error(err));
+
+				console.log('self_intro finished');
 				break;
 			case 'schedule_later':
 				console.log(`action type is ${type} and body content is ${util.inspect(body, { depth: null })}`);
@@ -988,7 +1055,8 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 								cmembers: members,
 								start_time: '',
 								end_time: '',
-								duration: 60 //minutes
+								duration: 60, //minutes
+								// tz: req.session.user.tz_offset
 							}
 						},
 						{ upsert: true },
@@ -996,7 +1064,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 							if (err) console.error(err);
 						});
 					// req.session.submission = body.submission;
-					let meeting_url = `meeting/` + meeting_id;
+					let meeting_url = `/meeting/` + meeting_id;
 					web.chat.postEphemeral({
 						as_user: false,
 						channel: body.channel.id,
@@ -1060,6 +1128,8 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 		}
 
 	}
+	res.status(200).end(); // best practice to respond with 200 status
+
 });
 
 expressWs.app.ws('/temporal/presenceUpdate', function (ws, req) {
@@ -1232,6 +1302,22 @@ app.get('/editProfile', async function (req, res) {
 	to_be_rendered.layout = 'default';
 	to_be_rendered.template = 'editprofile-template';
 	to_be_rendered.userInfo = req.session.user;
+	const uid = req.session.user.uid;
+	const queryResult = await DB.collection('users').find({ uid });
+	const doc = await queryResult.toArray();
+	if (doc.length === 0) {
+		console.error(`No results found for uid ${uid}`);
+	}
+	else {
+		to_be_rendered.user = doc[0];
+		//add in template for creation later
+		if (!to_be_rendered.user.availability || to_be_rendered.user.availability.length === 0 || !Array.isArray(to_be_rendered.user.availability)) {
+			to_be_rendered.user.availability = [{}, {}];
+		}
+		else {
+			to_be_rendered.user.availability.unshift({});
+		}
+	}
 	res.render('profile', to_be_rendered);
 });
 
@@ -1239,29 +1325,20 @@ app.post('/editProfile', async function (req, res) {
 	const uid = req.session.user.uid;
 	const query = { uid };
 	const insertObj = req.body;
+	insertObj.availability = JSON.parse(insertObj.availability)
 	const dbResponse = await DB.collection('users').updateOne(query, { $set: insertObj });
 	if (!dbResponse.result.ok) {
 		console.warn(`Error with update query ${JSON.stringify(query)}, inserting object ${JSON.stringify(insertObj)}`);
 	}
 	res.send({ received: req.body });
-	// let to_be_rendered = {};
-	// to_be_rendered.layout = 'default';
-	// to_be_rendered.template = 'editprofile-template';
-	// to_be_rendered.userInfo = await DB.collection('users').find({ uid: req.session.user.uid }).toArray().then(async (results, err) => {
-	// 	if (err) console.error(err);
-	// 	else if (results.length != 0) {
-
-	// 	};
-
-	// });
-	// res.render('profile', to_be_rendered);
 });
 
 app.get('/profile/:uid', async function (req, res) {
 	let to_be_rendered = {};
 	const { uid } = req.params;
 	to_be_rendered.layout = 'default';
-	to_be_rendered.template = 'profile-template';
+	to_be_rendered.template = 'profileview-template';
+	to_be_rendered.userInfo = req.session.user;
 	const queryResult = await DB.collection('users').find({ uid });
 	const doc = await queryResult.toArray();
 	if (doc.length === 0) {
@@ -1343,6 +1420,11 @@ app.get('/meeting/:mid', async function (req, res) {
 	to_be_rendered.meeting = await DB.collection('meetings').find({ mid: req.params.mid }).toArray().then(async (results, err) => {
 		if (err) console.error(err);
 		else if (results.length != 0) {
+			if (results[0].tz == undefined) {
+				if (results[0].creator_uid == req.session.user.uid) {
+					results[0].tz = req.session.user.tz_offset;
+				}
+			}
 			console.log(`the meeting info to be show is ${util.inspect(results, { depth: null })}`);
 			var obj = {
 				exist: true,
@@ -1359,7 +1441,8 @@ app.get('/meeting/:mid', async function (req, res) {
 				cmembers: results[0].cmembers,
 				cname: results[0].cname,
 				cid: results[0].cid,
-				attendees: results[0].attendees
+				attendees: results[0].attendees,
+				tz: results[0].tz
 			}
 			return Promise.resolve(obj);
 		}
@@ -1376,7 +1459,8 @@ app.get('/meeting/:mid', async function (req, res) {
 				attendees: [],
 				cid: 'T0A286J8K_C0A28BAHG',
 				cname: 'general',
-				who: 'custom'
+				who: 'custom',
+				tz: req.session.user.tz_offset
 			}
 
 			return Promise.resolve(obj);
@@ -1412,7 +1496,8 @@ app.post('/meeting/:mid', async function (req, res) {
 		cid: req.body.cid,
 		cname: req.body.cname,
 		cmembers: cmembers,
-		duration: req.body.duration
+		duration: req.body.duration,
+		tz: req.session.user.tz_offset
 	};
 	(async () => {
 		if (req.body.who == "custom") {
@@ -1520,37 +1605,6 @@ app.post('/remindmeeting', async (req, res) => {
 			user: attendee.uid.split('_')[1]
 		}).then(dm => {
 			console.log(`the returned channel id is ${dm.channel.id}`);
-			// if (attendee.attend == undefined) web.chat.postMessage({
-			// 	as_user: false,
-			// 	channel: dm.channel.id,
-			// 	text: `Would you like to join the meeting invited by ${req.session.user.real_name}?`,
-			// 	attachments: JSON.stringify([
-			// 		{
-			// 			title: `Purpose: ${req.body.purpose}; \n When: ${req.body.date} ${req.body.start_time}`,
-			// 			text: `See the <${base_url}meeting/${req.body.mid}|meeting details>`,
-			// 			callback_id: `${req.body.mid}`,
-			// 			color: '#74c8ed',
-			// 			actions: [{
-			// 				id: `${req.body.mid}`,
-			// 				name: 'accept',
-			// 				text: 'Sure',
-			// 				type: 'button',
-			// 				value: 'attend',
-			// 				style: 'primary'
-			// 			},
-			// 			{
-			// 				id: `${req.body.mid}`,
-			// 				name: 'reject',
-			// 				text: 'No, thanks',
-			// 				type: 'button',
-			// 				value: 'notattend',
-			// 				style: 'default'
-			// 			}
-			// 			],
-			// 		},]
-			// 	)
-			// }).catch(err => console.error(err));
-			// else 
 			if (attendee.attend == "accept") {
 				web.chat.postMessage({
 					as_user: false,
@@ -1559,7 +1613,7 @@ app.post('/remindmeeting', async (req, res) => {
 					attachments: JSON.stringify([
 						{
 							title: `${req.session.user.real_name} would like to remind you of meeting for ${req.body.purpose}! \n When: ${req.body.date} ${req.body.start_time}`,
-							text: `See the <${base_url}meeting/${req.body.mid}|meeting details>. `,
+							text: `See the <${base_url}/meeting/${req.body.mid}|meeting details>. `,
 							callback_id: 'meeting_react',
 							color: '#74c8ed'
 						},]
@@ -1586,7 +1640,7 @@ app.post('/invitemeeting', async (req, res) => {
 				attachments: JSON.stringify([
 					{
 						title: `Purpose: ${req.body.purpose} \n When: ${req.body.date} ${req.body.start_time}`,
-						text: `See the <${base_url}meeting/${req.body.mid}|meeting details>`,
+						text: `See the <${base_url}/meeting/${req.body.mid}|meeting details>`,
 						callback_id: `${req.body.mid}`,
 						color: '#74c8ed',
 						actions: [{
@@ -1609,21 +1663,6 @@ app.post('/invitemeeting', async (req, res) => {
 					},]
 				)
 			}).catch(err => console.error(err));
-			// else if (attendee.attend == "accept") {
-			// 	web.chat.postMessage({
-			// 		as_user: false,
-			// 		channel: dm.channel.id,
-			// 		// text: `Would you like to join the meeting?`,
-			// 		attachments: JSON.stringify([
-			// 			{
-			// 				title: `${req.session.user.real_name}reminded you about the meeting! \n When: ${req.body.date} ${req.body.start_time}`,
-			// 				text: `See the <${base_url}meeting/${req.body.mid}|meeting details>. `,
-			// 				callback_id: 'meeting_react',
-			// 				color: '#74c8ed'
-			// 			},]
-			// 		)
-			// 	}).catch(err => console.error(err));
-			// }
 		}).catch(err => console.error(err));
 	}
 	)
@@ -2366,10 +2405,7 @@ async function ActiveWho(channel_id, user_id) {
 
 							});
 						// promiseArray.push(inner_promise);
-
 					});
-				ç
-
 			});
 			await Promise.all(promiseArray).then(res => {
 				console.log(promiseArray)

@@ -1,25 +1,31 @@
 {{#with user}}
 <div class="profile-header">
   <div class="profile-img-wrapper">
-    <img class="ui small image profile-img" src="../images/placeholder-img.png">
+    <img class="ui small image profile-img" src="{{image_512}}">
   </div>
-  
+
   <div class="profile-name">
-    <h2>{{real_name}}<i class="ui female icon" style="opacity: .5; font-size: 70%"></i></h2>
+    <h2>{{real_name}}
+      {{#if (eq gender 'female')}}<i class="ui female icon" style="opacity: .5; font-size: 70%"></i>
+      {{else if (eq gender 'male')}}<i class="ui female icon" style="opacity: .5; font-size: 70%"></i>
+      {{/if}}
+    </h2>
     <div class="header-info">
       <div class="ui list">
         <div class="item">
-            <br><p><i class="ui map marker alternate icon" style="opacity: .75;"></i> {{city}}</p>
+          <br>
+          <p><i class="ui map marker alternate icon" style="opacity: .75;"></i> {{city}}</p>
         </div>
       </div>
       <div class="ui list">
         <div class="item">
-            <br><p><i class="ui globe icon" style="opacity: .75;"></i> {{tz_label}})</p>
+          <br>
+          <p><i class="ui globe icon" style="opacity: .75;"></i> {{tz_label}}</p>
         </div>
       </div>
       <div class="ui list">
         <div class="item">
-            <br><p><i class="ui envelope icon" style="opacity: .75;"></i> {{email}} </p>
+          <br><a href="mailto:{{email}}"><i class="ui envelope icon" style="opacity: .75;"></i> {{email}} </a>
         </div>
       </div>
     </div>
@@ -27,161 +33,214 @@
     <div class="ui yellow small label">Current Career</div>
     <div class="ui yellow small label">Major</div>
     <div class="ui yellow small label">Penn State Campus</div>
-    
+
   </div>
-  <button class="ui green labeled icon button">
+  <button class="ui green labeled icon button user-dm">
     <i class="slack hash icon"></i>
-    Message on Slack!
+    <a class="slackme" href="slack://user?team={{team_id}}&amp;id={{{get_UserID uid}}}">Message me on Slack!</a>
   </button>
-  
-      </div>
+
+</div>
 </div>
 <section class="profile-wrapper">
   <div class="basic-info">
     <div class="ui top attached big label">Availability</div>
-        <div class="basic-info-text">
-            <div class="ui list">
-              <div class="large item">
-                <div class="ui green small horizontal label">Available Times</div>
-                  <br><p>Monday: 5:30pm - 10:30pm</p>
-                  <br><p>Wednesday: 5:30pm - 10:30pm</p>
-                  <br><p>Friday: 5:30pm - 10:30pm</p>
-                  <br><p>Sunday: 5:30pm - 10:30pm</p>
-              </div>
-            </div>
-            <div class="ui list">
-              <div class="large item">
-                <div class="ui red small horizontal label">Unavailable Times</div>
-                  <br><p>Tuesday: 5:30pm - 10:30pm</p>
-                  <br><p>Thursday: 5:30pm - 10:30pm</p>
-                  <br><p>Saturday: 5:30pm - 10:30pm</p>
-                  <br><p>Sunday: 5:30pm - 10:30pm</p>
-              </div>
-            </div>
+    <div class="basic-info-text">
+      <div class="ui list">
+        <div class="large item">
+          <div class="ui green small horizontal label">Available Times</div>
+          {{#each availability as |a|}}
+          {{#if (eq a.available "available")}}<br>
+          <p>{{a.weekday}}: {{a.start}} - {{a.to}}</p>{{/if}}
+          {{/each}}
         </div>
-    </div>
-    
-    
-    <div class="personal-info">
-      <div class="ui top attached big label">Education Info</div>
-        <div class="basic-info-text">
-            <div class="ui list">
-              <div class="large item">
-                <div class="ui blue small horizontal label">Major</div>
-                  <br><p>{{major}}</p>
-              </div>
-            </div>
-            <div class="ui list">
-              <div class="item">
-                <div class="ui blue small horizontal label">Penn State Campus</div>
-                  <br><p>{{campus}}</p>
-              </div>
-            </div>
-            
-            <div class="ui list">
-              <div class="item">
-                <div class="ui blue small horizontal label">What I want to gain from World Campus</div>
-                  <br><p>Connections with peers</p>
-              </div>
-            </div>
-            <div class="ui list">
-              <div class="item">
-                <div class="ui blue small horizontal label">Current Courses</div>
-                  <br><p>IST110; IST110; IST110;</p>
-              </div>
-            </div>
-            <div class="ui list">
-              <div class="item">
-                <div class="ui blue small horizontal label">Courses I Recommend</div>
-                  <br><p>IST110; IST110; IST110;</p>
-              </div>
-            </div>
-            <div class="ui list">
-              <div class="item">
-                <div class="ui blue small horizontal label">Instructors I Recommend</div>
-                  <br><p>Instructor</p>
-              </div>
-            </div>
+      </div>
+      <div class="ui list">
+        <div class="large item">
+          <div class="ui red small horizontal label">Unavailable Times</div>
+          {{#each availability as |a|}}
+          {{#if (eq a.available "unavailable")}}<br>
+          <p>{{a.weekday}}: {{a.start}} - {{a.to}}</p>{{/if}}
+          {{/each}}
         </div>
+      </div>
     </div>
+  </div>
 
-    <div class="basic-info">
+
+  <div class="personal-info">
+    <div class="ui top attached big label">Education Info</div>
+    <div class="basic-info-text">
+      <div class="ui list">
+        <div class="large item">
+          <div class="ui blue small horizontal label">Major</div>
+          <br>
+          <p>{{major}}</p>
+        </div>
+      </div>
+      <div class="ui list">
+        <div class="item">
+          <div class="ui blue small horizontal label">Penn State Campus</div>
+          <br>
+          <p>{{campus}}</p>
+        </div>
+      </div>
+
+      <div class="ui list">
+        <div class="item">
+          <div class="ui blue small horizontal label">What I want to gain from World Campus</div>
+          <br>
+          <p>{{goals}}</p>
+        </div>
+      </div>
+      <div class="ui list">
+        <div class="item">
+          <div class="ui blue small horizontal label">Current Courses</div>
+          <br>
+          <p>{{courses}}</p>
+        </div>
+      </div>
+      <div class="ui list">
+        <div class="item">
+          <div class="ui blue small horizontal label">Courses I Recommend</div>
+          <br>
+          <p>{{reccourses}}</p>
+        </div>
+      </div>
+      <div class="ui list">
+        <div class="item">
+          <div class="ui blue small horizontal label">Instructors I Recommend</div>
+          <br>
+          <p>{{instructors}}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="basic-info">
     <div class="ui top attached big label">Professional Info</div>
-        <div class="basic-info-text">
-            <div class="ui list">
-              <div class="large item">
-                <div class="ui blue small horizontal label">Current Career</div>
-                  <br><p>Career</p>
-              </div>
-            </div>
-            <div class="ui list">
-              <div class="item">
-                <div class="ui blue small horizontal label">Military Status</div>
-                  <br><p>Active Duty</p>
-              </div>
-            </div>
-            <div class="ui list">
-              <div class="item">
-                <div class="ui blue small horizontal label">Career Goals</div>
-                  <br><p>I'd like to work in User Experience at a software company.</p>
-              </div>
-            </div>
-            <div class="ui list">
-              <div class="item">
-                <div class="ui blue small horizontal label">Past Careers</div>
-                  <br><p>Example past career</p>
-              </div>
-            </div>
+    <div class="basic-info-text">
+      <div class="ui list">
+        <div class="large item">
+          <div class="ui blue small horizontal label">Current Profession</div>
+          <select disabled class="ui fluid dropdown profession" name="profession" id="profession">
+            {{#select user.profession}}
+            <option value="17">Architecture and Engineering</option>
+            <option value="27">Arts, Design, Entertainment, Sports, and Media</option>
+            <option value="37">Building and Grounds Cleaning and Maintenance</option>
+            <option value="13">Business and Financial Operations</option>
+            <option value="21">Community and Social Service</option>
+            <option value="15">Computer and Mathematical</option>
+            <option value="47">Construction and Extraction</option>
+            <option value="25">Education, Training, and Library</option>
+            <option value="45">Farming, Fishing, and Forestry</option>
+            <option value="35">Food Preparation and Serving Related</option>
+            <option value="29">Healthcare Practitioners and Technical</option>
+            <option value="31">Healthcare Support</option>
+            <option value="49">Installation, Maintenance, and Repair</option>
+            <option value="23">Legal</option>
+            <option value="19">Life, Physical, and Social Science</option>
+            <option value="11">Management</option>
+            <option value="55">Military Specific</option>
+            <option value="43">Office and Administrative Support</option>
+            <option value="39">Personal Care and Service</option>
+            <option value="51">Production</option>
+            <option value="33">Protective Service</option>
+            <option value="41">Sales and Related</option>
+            <option value="53">Transportation and Material Moving</option>
+            <option value="0">Other</option>
+            {{/select}}
+          </select>
         </div>
+      </div>
+      <div class="ui list">
+        <div class="item">
+          <div class="ui blue small horizontal label">Military Status</div>
+          <select disabled class="ui dropdown military" name="military" id="military" class="military">
+          {{#select user.military}}
+          <option value="ad">Active Duty</option>
+          <option value="re">Reserves</option>
+          <option value="ng">National Guard</option>
+          <option value="vt">Veteran (No reserve service obligation remaining, individual Ready Reserve)</option>
+          <option value="fm">Family member/dependent of a member of the U.S. Armed Forces or Veteran</option>
+          <option value="none">None of the above</option>
+          {{/select}}
+        </select>
+        </div>
+      </div>
+      {{!-- <div class="ui list">
+        <div class="item">
+          <div class="ui blue small horizontal label">Career Goals</div>
+          <br>
+          <p>{{career}}</p>
+        </div>
+      </div>
+      <div class="ui list">
+        <div class="item">
+          <div class="ui blue small horizontal label">Past Careers</div>
+          <br>
+          <p>Example past career</p>
+        </div>
+      </div> --}}
+    </div>
+  </div>
+
+  <div class="personal-info">
+    <div class="ui top attached big label">Personal Info</div>
+    <div class="basic-info-text">
+      <div class="ui list">
+        <div class="large item">
+          <div class="ui blue small horizontal label">Places I've Lived</div>
+          <br>
+          <p>{{pastCities}}</p>
+
+        </div>
+      </div>
+      <div class="ui list">
+        <div class="item">
+          <div class="ui blue small horizontal label">Places I'd Like to Visit</div>
+          <br><p>{{likeplaces}}</p>
+          {{!-- <p>New Zealand</p>
+          <br>
+          <p>California</p>
+          <br>
+          <p>Ireland</p> --}}
+        </div>
+      </div>
+      <div class="ui list">
+        <div class="item">
+          <div class="ui blue small horizontal label">Marital Status</div>
+          <br>
+          <p>{{married}}</p>
+          </a>
+        </div>
+      </div>
+      <div class="ui list">
+        <div class="item">
+          <div class="ui blue small horizontal label">Number of Kids</div>
+          <br>
+          <p>{{kids}}</p>
+          </a>
+        </div>
+      </div>
+      <div class="ui list">
+        <div class="item">
+          <div class="ui blue small horizontal label">Fun Fact</div>
+          <br>
+          <p>{{fun}}</p>
+          </a>
+        </div>
+      </div>
+      <div class="ui list">
+        <div class="item">
+          <div class="ui blue small horizontal label">Things my peers should know about me</div>
+          <br>
+          <p>{{unique}}</p>
+          </a>
+        </div>
+      </div>
     </div>
 
-     <div class="personal-info">
-       <div class="ui top attached big label">Personal Info</div>
-        <div class="basic-info-text">
-            <div class="ui list">
-              <div class="large item">
-                <div class="ui blue small horizontal label">Places I've Lived</div>
-                  <br><p>State College, PA</p><br>
-                  <p>Pittsburgh, PA</p>
-                  
-              </div>
-            </div>
-            <div class="ui list">
-              <div class="item">
-                <div class="ui blue small horizontal label">Places I'd Like to Visit</div>
-                  <br><p>New Zealand</p>
-                  <br><p>California</p>
-                  <br><p>Ireland</p>
-              </div>
-            </div>
-            <div class="ui list">
-              <div class="item">
-                <div class="ui blue small horizontal label">Marital Status</div>
-                  <br><p>Married</p>
-              </a>
-              </div>
-            </div>
-            <div class="ui list">
-              <div class="item">
-                <div class="ui blue small horizontal label">Number of Kids</div>
-                  <br><p>3</p>
-              </a>
-              </div>
-            </div>
-            <div class="ui list">
-              <div class="item">
-                <div class="ui blue small horizontal label">Fun Fact</div>
-                  <br><p>My father graduated from PSU 20 years ago.</p>
-              </a>
-              </div>
-            </div>
-            <div class="ui list">
-              <div class="item">
-                <div class="ui blue small horizontal label">Things my peers should know about me</div>
-                  <br><p>I served in the military for 10 years, and I care a lot about punctuality.</p>
-              </a>
-              </div>
-            </div>
-    </div>
 </section>
 {{/with}}
+  <div class="data" id="data" style="display:None" data-attribute='{{{json user}}}'></div>   

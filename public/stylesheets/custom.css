@@ -735,6 +735,10 @@ p{
   color: #FBBD08;
 }
 
+.ui.button > a.slackme{
+  color: white;
+}
+
 .edit.ui.button {
   color: #4183C4!important;
 }
