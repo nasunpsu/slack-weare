@@ -181,16 +181,31 @@ const logEvent = (body, req) => {
 	}
 
 	if ('uid' in body && body.type === 'Activity') {
-		const isActive = body.content.type === 'Active';
-		const updateDoc = { $set: { isActive } }
-		DB.collection('users').updateOne({ uid: body.uid }, updateDoc);
+		(async () => {
+			const isActive = body.content.type === 'Active';
+			const updateDoc = { $set: { isActive } }
+			const newUser = await DB.collection('users').findOneAndUpdate({ uid: body.uid }, updateDoc,
+				{ returnOriginal: false }).then((user) => {
+					return Promise.resolve(user.value);
+				});
+			req.session.user = newUser;
+		})();
+
 	}
 	if ('user' in req.session && 'uid' in req.session.user && 'ipInfo' in body) {
-		const updateDoc = {
-			$push: { ipInfo: body.ipInfo },
-			$set: body.ipInfo
-		}
-		DB.collection('users').updateOne({ uid: req.session.user.uid }, updateDoc);
+		(async () => {
+
+			const updateDoc = {
+				$push: { ipInfo: body.ipInfo },
+				$set: body.ipInfo
+			}
+			const newUser = await DB.collection('users').findOneAndUpdate({ uid: req.session.user.uid }, updateDoc,
+				{ returnOriginal: false }).then((user) => {
+					return Promise.resolve(user.value);
+				});
+			req.session.user = newUser;
+		})();
+
 	}
 	return DB.collection('logging').insertOne(body);
 }
@@ -405,13 +420,57 @@ app.post('/slack/events', (req, res, next) => {
 				case 'member_joined_channel':
 					if (!event.is_bot) {
 						console.log(`the event body is ${util.inspect(event, { depth: null })}`)
-						const { user, channel } = event;
+						const { user, channel, team } = event;
 						onboard.initialMessage(user, channel);
+						// DB.collection('users').find({ uid: team + '_' + user }).toArray().then(async (docs, err)=>{
+						// 	if (err) console.error(err);
+						// 	else {
+						// 		DB.collection('channels').findOneAndUpdate(
+						// 			{ cid: team + '_' + channel },
+						// 			{
+						// 				$push: {
+						// 					cmembers: {
+						// 						real_name: docs[0].real_name,
+						// 						first_name: docs[0].first_name,
+						// 						last_name: docs[0].last_name,
+						// 						uid: docs[0].uid,
+						// 						email: docs[0].email
+						// 					}
+						// 				},
+						// 				$inc: {
+						// 					num_members: 1
+						// 				}
+						// 			},
+						// 			{ upsert: true, replace_original: false },
+						// 			function (err, updatedChannel) {
+						// 				if (err) console.error(err);
+						// 				else {
+						// 					DB.collection('users').updateOne(
+						// 						{ uid: team + '_' + user },
+						// 						{
+						// 							$push: {
+						// 								channels: {
+						// 									cid: updatedChannel.id,
+						// 									cname: updatedChannel.name
+						// 								}
+						// 							}
+						// 						},
+						// 						{ upsert: true },
+						// 						function (err, res) {
+						// 							if (err) console.error(err);
+						// 						});
+						// 				}
+						// 			});
+						// 	}
+
+						// });
+
+
 					}
-					res.sendStatus(200);
+					// res.sendStatus(200);
 					break;
 				case 'member_left_channel':
-					res.sendStatus(200);
+					// res.sendStatus(200);
 					if (!event.is_bot) {
 						console.log(`the event body is ${util.inspect(event, { depth: null })}`)
 						const { user, channel } = event;
@@ -420,6 +479,11 @@ app.post('/slack/events', (req, res, next) => {
 
 					break;
 				case 'team_join':
+					if (!event.is_bot) {
+						console.log(`the event body is ${util.inspect(event, { depth: null })}`)
+						const { user } = event;
+						onboard.initialMessage(user.id, null);
+					}
 					break;
 				case 'channel_created':
 					break;
@@ -433,6 +497,7 @@ app.post('/slack/events', (req, res, next) => {
 					console.log(`unknown event type`);
 			}
 		}
+			res.sendStatus(200);
 			break;
 		default: {
 			console.error('nothing cased events');
@@ -876,9 +941,9 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 				DB.collection('users').findOne({ uid: body.team.id + '_' + body.user.id }, async (err, user) => {
 					const attach = [
 						{
-							"title": `Let's welcome ${body.user.name} who has been to ${user.pastCities}.`,
-							"text": `Meet ${body.user.name} at <${base_url}/profile/${body.team.id}_${body.user.id}|profile page>.`,
-							"color": '#3AA3E3'
+							"title": `Let's welcome ${user.first_name} who has been to ${user.pastCities}.`,
+							"text": `Meet ${user.first_name} at <${base_url}/profile/${body.team.id}_${body.user.id}|profile page>.`,
+							"color": '#FBBD08'
 						},
 						{
 							"text": `Send ${body.user.name} some We Are! or some positive vibes! :fireworks: :tada: :wave: :clap:`,
@@ -914,7 +979,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 					console.log(`The user has confirmed to say hello and receive welcome! ${body.channel.id}`)
 					web.chat.postMessage({
 						channel: body.channel.id,
-						text: `I'd like to introduce ${body.user.name}!`,
+						text: `I'd like to introduce ${user.real_name}!`,
 						attachments: JSON.stringify(attach)
 					})
 						.catch(err => console.error(err));
@@ -982,57 +1047,69 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 		console.log(`callback id is ${callback_id}`);
 		switch (callback_id) {
 			case 'self_intro'://the action callback
-				console.log(`Would you like to broadcast your join of the channel?! ${body.channel.id}`)
-				DB.collection('users').updateOne(
-					{ uid: body.team.id + '_' + body.user.id },
-					{
-						$set: {
-							fun: submission.fun,
-							profession: submission.profession,
-							unique: submission.unique,
-							pastCities: submission.pastCities
-						}
-					},
-					{ upsert: false },
-					function (err, res) {
-						if (err) console.error(err);
-					});
-				let edit_url = `/editProfile/`;
-				web.chat.postEphemeral({
-					as_user: false,
-					channel: body.channel.id,
-					user: body.user.id,
-					attachments: JSON.stringify([
+				console.log(`Would you like to broadcast your join of the channel?! ${body.channel.id}`);
+
+				(async () => {
+					const newUser = await DB.collection('users').findOneAndUpdate(
+						{ uid: body.team.id + '_' + body.user.id },
 						{
-							title: 'An interesting profile can help your compatible peers find you!',
-							text: 'Go to ' + base_url + edit_url + ' to edit your profile.',
-							color: '#74c8ed'
+							$set: {
+								fun: submission.fun,
+								profession: submission.profession,
+								unique: submission.unique,
+								pastCities: submission.pastCities
+							}
 						},
-						{
-							title: `Would you like me to introduce you in #${body.channel.name}?`,
-							text: 'Go and get some :heart: and *We Are* from your peers!',
-							color: '#093162',
-							callback_id: 'hello',
-							actions: [{
-								name: 'accept',
-								text: 'Sure',
-								type: 'button',
-								value: 'hello',
-								style: 'primary'
+						{ upsert: true, returnOriginal: false }).then((res) => {
+
+							console.log(`after updating the user is ${util.inspect(res, { depth: null })}`);
+							return Promise.resolve({ newUser: res.value });
+
+						}).catch(err => {
+							console.log('the error caught is ...');
+							console.error(err);
+						});
+					console.log(`new user is ${util.inspect(newUser, { depth: null })}`);
+					console.log(`the req session user is ${util.inspect(req.session.user, { depth: null })}`);
+					req.session.user = newUser;
+					let edit_url = `/editProfile/`;
+					web.chat.postEphemeral({
+						as_user: false,
+						channel: body.channel.id,
+						user: body.user.id,
+						attachments: JSON.stringify([
+							{
+								title: 'An interesting profile can help your compatible peers find you!',
+								text: 'Go to ' + base_url + edit_url + ' to edit your profile.',
+								color: '#74c8ed'
 							},
 							{
-								name: 'reject',
-								text: 'No, thanks',
-								type: 'button',
-								value: 'no-hello',
-								style: 'default'
+								title: `Would you like me to introduce you in #${body.channel.name}?`,
+								text: 'Go and get some :heart: and *We Are* from your peers!',
+								color: '#18B87E',
+								callback_id: 'hello',
+								actions: [{
+									name: 'accept',
+									text: 'Sure',
+									type: 'button',
+									value: 'hello',
+									style: 'primary'
+								},
+								{
+									name: 'reject',
+									text: 'No, thanks',
+									type: 'button',
+									value: 'no-hello',
+									style: 'default'
+								}
+								],
 							}
-							],
-						}
-					])
-				}).catch(err => console.error(err));
+						])
+					}).catch(err => console.error(err));
+					console.log('self_intro finished');
+				})();
 
-				console.log('self_intro finished');
+
 				break;
 			case 'schedule_later':
 				console.log(`action type is ${type} and body content is ${util.inspect(body, { depth: null })}`);
@@ -1268,7 +1345,7 @@ app.get('/tablelist', async function (req, res) {
 	const numUsers = 80;
 	const fields = ['uid', 'real_name', 'channels', 'major', 'local_area', 'affiliation', 'campus'];
 	let users = await similarity.getSimilarUsers(req.session.user.uid, DB, numUsers, fields);
-	to_be_rendered.users = similarity.createSimilarityField(req.session.user, users, fields);
+	// to_be_rendered.users = similarity.createSimilarityField(req.session.user, users, fields);
 	to_be_rendered.users = similarity.createIsSharedField(req.session.user, users, fields);
 	const channelNames = req.session.user.channels.map(channel => channel.cname)
 		.filter(channel => channel !== 'general');
@@ -1303,6 +1380,7 @@ app.get('/editProfile', async function (req, res) {
 	to_be_rendered.template = 'editprofile-template';
 	to_be_rendered.userInfo = req.session.user;
 	const uid = req.session.user.uid;
+	console.log(`the user session id is ${uid}`)
 	const queryResult = await DB.collection('users').find({ uid });
 	const doc = await queryResult.toArray();
 	if (doc.length === 0) {
@@ -1326,11 +1404,22 @@ app.post('/editProfile', async function (req, res) {
 	const query = { uid };
 	const insertObj = req.body;
 	insertObj.availability = JSON.parse(insertObj.availability)
-	const dbResponse = await DB.collection('users').updateOne(query, { $set: insertObj });
-	if (!dbResponse.result.ok) {
-		console.warn(`Error with update query ${JSON.stringify(query)}, inserting object ${JSON.stringify(insertObj)}`);
-	}
-	res.send({ received: req.body });
+	await DB.collection('users').findOneAndUpdate(query, { $set: insertObj }, { returnOriginal: false }, function (err, updatedObj) {
+		if (err) {
+			console.warn(`Error with update query ${JSON.stringify(query)}, inserting object ${JSON.stringify(insertObj)}`);
+		}
+		else {
+			console.log(`the updated OBj before call back dbResponse is ${util.inspect(updatedObj, { depth: null })}`);
+			req.session.user = updatedObj.value;
+			// console.log(`the updated OBj from dbResponse is ${util.inspect(dbResponse, { depth: null })}`);
+			res.json({ success: true });
+			// return updatedObj;
+		}
+		// res.send({ received: req.body });
+
+	});
+
+
 });
 
 app.get('/profile/:uid', async function (req, res) {

@@ -3,14 +3,16 @@
     <i class="close icon"></i>
     <div class="header">
       To edit your profile, change any of the below information, and be sure to click save changes at the bottom of this
-      page.
+      page.&nbsp;&nbsp;&nbsp;&nbsp;
     </div>
     {{!-- <ul class="list">
             <li>Click the green button below to schedule a meeting with your peers.</li>
             <li>Or Use /we-discuss in Slach channels and select Later to schedule a meeting.</li>
         </ul> --}}
   </div>
+
   <form class="ui form profile-form">
+    
     <h4 class="ui horizontal divider header">
       Basic Info
     </h4>
@@ -369,7 +371,12 @@
 
       <div class="eight wide field">
         <label>Marital Status</label>
-        <input type="text" name="married" placeholder="E.g. married" value="{{user.married}}">
+        {{!-- <input type="text" name="married" placeholder="E.g. married" value="{{user.married}}"> --}}
+        <select name="married" class="ui dropdown marital" type="text" value="{{user.married}}">
+          <option value="Single">Single</option>
+          <option value="Married">Married</option>
+          <option value="Other">Other</option>
+        </select>
       </div>
       <div class="eight wide field">
         <label>Number of Kids</label>
@@ -390,6 +397,16 @@
     </div>
     <div id="submit-button" class="ui submit button save-profile-changes">Save Changes</div>
     <div class="ui error message"></div>
+    <div class="ui success message">
+      <i class="close icon"></i>
+      <div class="header">
+        You have successfully updated your profile info.
+      </div>
+      <ul class="list">
+        <li>Go to your <b>WeAre! space</b> to say hello to your peers now.</li>
+        <li>You could also look at your <b>similarity</b> with others in the Connect -> Similarity view.</li>
+      </ul>
+    </div>
   </form>
-  <div class="data" id="data" style="display:None" data-attribute='{{{json user}}}'></div>   
+  <div class="data" id="data" style="display:None" data-attribute='{{{json user}}}'></div>
 </section>

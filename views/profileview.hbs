@@ -29,13 +29,17 @@
         </div>
       </div>
     </div>
-    <h5 style="margin-bottom: 0px; margin-top: 0px; font-weight: 100;">Similarities</h5>
-    <div class="ui yellow small label">Current Career</div>
-    <div class="ui yellow small label">Major</div>
-    <div class="ui yellow small label">Penn State Campus</div>
+    {{!-- <h5 style="margin-bottom: 0px; margin-top: 0px; font-weight: 100;">Similarities</h5> --}}
+    <div class="ui yellow small label">Similarity is marked in yellow</div>
 
   </div>
-  <button class="ui green labeled icon button user-dm">
+  {{#if (eq uid ../userInfo.uid)}}
+  <button class="ui right floated white labeled icon button edit-profile">
+    <i class="pencil icon"></i>
+    <a href="/editProfile">Edit</a>
+  </button>
+  {{/if}}
+  <button class="ui right floated green labeled icon button user-dm">
     <i class="slack hash icon"></i>
     <a class="slackme" href="slack://user?team={{team_id}}&amp;id={{{get_UserID uid}}}">Message me on Slack!</a>
   </button>
@@ -73,14 +77,14 @@
     <div class="basic-info-text">
       <div class="ui list">
         <div class="large item">
-          <div class="ui blue small horizontal label">Major</div>
+          <div class="ui {{#if (eq major ../userInfo.major)}}yellow {{else}} blue {{/if}} small horizontal label">Major</div>
           <br>
           <p>{{major}}</p>
         </div>
       </div>
       <div class="ui list">
         <div class="item">
-          <div class="ui blue small horizontal label">Penn State Campus</div>
+          <div class="ui {{#if (eq campus ../userInfo.campus)}}yellow {{else}} blue {{/if}}small horizontal label">Penn State Campus</div>
           <br>
           <p>{{campus}}</p>
         </div>
@@ -88,28 +92,28 @@
 
       <div class="ui list">
         <div class="item">
-          <div class="ui blue small horizontal label">What I want to gain from World Campus</div>
+          <div class="ui {{#if (eq goals ../userInfo.goals)}}yellow {{else}} blue {{/if}}small horizontal label">What I want to gain from World Campus</div>
           <br>
           <p>{{goals}}</p>
         </div>
       </div>
       <div class="ui list">
         <div class="item">
-          <div class="ui blue small horizontal label">Current Courses</div>
+          <div class="ui {{#if (eq courses ../userInfo.courses)}}yellow {{else}} blue {{/if}} small horizontal label">Current Courses</div>
           <br>
           <p>{{courses}}</p>
         </div>
       </div>
       <div class="ui list">
         <div class="item">
-          <div class="ui blue small horizontal label">Courses I Recommend</div>
+          <div class="ui {{#if (eq reccourses ../userInfo.reccourses)}}yellow {{else}} blue {{/if}}small horizontal label">Courses I Recommend</div>
           <br>
           <p>{{reccourses}}</p>
         </div>
       </div>
       <div class="ui list">
         <div class="item">
-          <div class="ui blue small horizontal label">Instructors I Recommend</div>
+          <div class="ui {{#if (eq instructors ../userInfo.instructors)}}yellow {{else}} blue {{/if}}small horizontal label">Instructors I Recommend</div>
           <br>
           <p>{{instructors}}</p>
         </div>
@@ -122,9 +126,9 @@
     <div class="basic-info-text">
       <div class="ui list">
         <div class="large item">
-          <div class="ui blue small horizontal label">Current Profession</div>
+          <div class="ui {{#if (eq profession ../userInfo.profession)}}yellow {{else}} blue {{/if}} small horizontal label">Current Profession</div>
           <select disabled class="ui fluid dropdown profession" name="profession" id="profession">
-            {{#select user.profession}}
+            {{#select profession}}
             <option value="17">Architecture and Engineering</option>
             <option value="27">Arts, Design, Entertainment, Sports, and Media</option>
             <option value="37">Building and Grounds Cleaning and Maintenance</option>
@@ -155,7 +159,7 @@
       </div>
       <div class="ui list">
         <div class="item">
-          <div class="ui blue small horizontal label">Military Status</div>
+          <div class="ui {{#if (eq military ../userInfo.military)}}yellow {{else}} blue {{/if}}small horizontal label">Military Status</div>
           <select disabled class="ui dropdown military" name="military" id="military" class="military">
           {{#select user.military}}
           <option value="ad">Active Duty</option>
@@ -190,7 +194,7 @@
     <div class="basic-info-text">
       <div class="ui list">
         <div class="large item">
-          <div class="ui blue small horizontal label">Places I've Lived</div>
+          <div class="ui {{#if (eq pastCities ../userInfo.pastCities)}}yellow {{else}} blue {{/if}}small horizontal label">Places I've Lived</div>
           <br>
           <p>{{pastCities}}</p>
 
@@ -198,7 +202,7 @@
       </div>
       <div class="ui list">
         <div class="item">
-          <div class="ui blue small horizontal label">Places I'd Like to Visit</div>
+          <div class="ui {{#if (eq likeplaces ../userInfo.likeplaces)}}yellow {{else}} blue {{/if}}small horizontal label">Places I'd Like to Visit</div>
           <br><p>{{likeplaces}}</p>
           {{!-- <p>New Zealand</p>
           <br>
@@ -209,7 +213,7 @@
       </div>
       <div class="ui list">
         <div class="item">
-          <div class="ui blue small horizontal label">Marital Status</div>
+          <div class="ui {{#if (eq married ../userInfo.married)}}yellow {{else}} blue {{/if}}small horizontal label">Marital Status</div>
           <br>
           <p>{{married}}</p>
           </a>
@@ -217,7 +221,7 @@
       </div>
       <div class="ui list">
         <div class="item">
-          <div class="ui blue small horizontal label">Number of Kids</div>
+          <div class="ui {{#if (eq kids ../userInfo.kids)}}yellow {{else}} blue {{/if}}small horizontal label">Number of Kids</div>
           <br>
           <p>{{kids}}</p>
           </a>
@@ -225,7 +229,7 @@
       </div>
       <div class="ui list">
         <div class="item">
-          <div class="ui blue small horizontal label">Fun Fact</div>
+          <div class="ui {{#if (eq fun ../userInfo.fun)}}yellow {{else}} blue {{/if}}small horizontal label">Fun Fact</div>
           <br>
           <p>{{fun}}</p>
           </a>
@@ -233,7 +237,7 @@
       </div>
       <div class="ui list">
         <div class="item">
-          <div class="ui blue small horizontal label">Things my peers should know about me</div>
+          <div class="ui {{#if (eq unique ../userInfo.unique)}}yellow {{else}} blue {{/if}}small horizontal label">Things my peers should know about me</div>
           <br>
           <p>{{unique}}</p>
           </a>

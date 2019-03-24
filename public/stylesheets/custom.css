@@ -116,6 +116,16 @@
     z-index: 0;
   }
 
+  /* .connect.ui.dropdown.item.active.Table::before {
+    content: 'Connected by Table'
+  }
+  .connect.ui.dropdown.item.active.Timezones::before {
+    content: 'Connected by Timezones'
+  }
+  .connect.ui.dropdown.item.active.Similarity::before {
+    content: 'Connected by Similarity'
+  } */
+
   .we-are-message{
     position: absolute;
     top: 80px;
@@ -555,12 +565,19 @@ p{
 }
 
 
-.profile-header .ui.green.button{
+.profile-header .edit-profile.ui.button{
+  position: absolute;
+  bottom: 15px;
+  margin-right: 50px;
+  right: 200px;
+}
+
+.profile-header .user-dm.ui.green.button{
   position: absolute;
   bottom: 15px;
   right: 15px;
 }
-
+    
 .profile-name h2{
   font-size: 35px;
   font-weight: 200;

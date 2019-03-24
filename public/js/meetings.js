@@ -1,3 +1,11 @@
+$('.message .close')
+    .on('click', function () {
+        $(this)
+            .closest('.message')
+            .transition('fade')
+            ;
+    });
+
 window.addEventListener("DOMContentLoaded", function () {
     $('table').tablesort();
     document.getElementById("new").addEventListener("click", function (e) {
@@ -6,9 +14,11 @@ window.addEventListener("DOMContentLoaded", function () {
         location.href = "/meeting/new";
     });
 
+
+
     var remind_list = Array.prototype.slice.call(document.getElementsByClassName("button remind"));
     console.log(remind_list);
-    
+
     var updateRemind = function (e) {
         console.log('remind clicked');
         e.preventDefault();
@@ -34,7 +44,7 @@ window.addEventListener("DOMContentLoaded", function () {
 
     var invite_list = Array.prototype.slice.call(document.getElementsByClassName("button invite"));
     console.log(remind_list);
-    
+
     var updateInvite = function (e) {
         console.log('invite clicked');
         e.preventDefault();

@@ -31,6 +31,9 @@ $('.message .close')
 $('.gender.ui.dropdown')
     .dropdown('set selected', user.gender);
 
+$('.marital.ui.dropdown')
+    .dropdown('set selected', user.married);
+
 $('.profession.ui.dropdown')
     .dropdown('set selected', user.profession);
 
@@ -139,7 +142,13 @@ function submitForm(form, event) {
     json.availability = JSON.stringify(json.availability);
     console.log(json);
     $.post(profileUrl, json)
-        .done(data => console.log(data))
+        .done(data => {
+            console.log(data);
+            if (data.success) {
+                // location.href = "/editprofile";
+
+            }
+        })
         .fail(data => {
             console.warn(data);
         });
