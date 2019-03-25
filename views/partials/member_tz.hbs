@@ -1,5 +1,7 @@
 <div id="tz-wrapper">
     {{#each members.tz_members as |tz_members|}}
+    {{#if (eq tz_members.[1].0.locale null)}}
+    {{else}}
     <div class="ui item timezone-container">
         <div class="ui fluid card tz-header">
             <div class="content">
@@ -63,5 +65,6 @@
             {{/each}}
         </div>
     </div>
+    {{/if}}
     {{/each}}
 </div>

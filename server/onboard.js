@@ -6,28 +6,6 @@ const db = new JsonDB('users', true, false);
 
 const apiUrl = 'https://slack.com/api';
 
-// default message - edit to include actual ToS
-// var msg = {
-//   title: 'Consent Form of Participating in WeAre! Research Project',
-//   callback_id: 'self_intro',
-//   submit_label: 'Hello!',
-//   elements: [
-//     {
-//       label: 'Overview',
-//       type: 'textarea',
-//       name: 'procedure',
-//       text: 'We invite you to participate in a research study that takes place this spring semester. Our research goal is to explore and assess ways to build a sense of community among World Campus students. Participants must be over the age of 18 to participate. As a participant in the research project, you will be asked to use Slack and answer two questionnaires before and after usingt Slack (Each survey should 10 minutes to complete). As a compensation for your participation in the survey, we will draw 15 names in the first survey participants for a $30 Amazon Gift Card, and for those who answered both we will draw additional 15 names for a $50 Amazon Gift Card.',
-//     },
-//   ],
-// };
-// console.log('before dialog web method');
-// console.log(util.inspect(msg, { depth: 3 }));
-// web.dialog.open({
-//   trigger_id: trigger_id,
-//   dialog: msg
-// }).then(res => console.log(`successfully opened Consent form`)).catch(err => { console.error(err); console.log(util.inspect(err, { depth: 3 })) });
-
-
 const message = {
   token: process.env.BOT_USER_OAUTH_ACCESS_TOKEN,
   link_names: true,
@@ -73,9 +51,10 @@ const initialMessage = (userId, channelId) => {
   if (!data) {
     // add or update the team/user record
     // db.push(`/${teamId}/${userId}`, false);
-
+    console.log(`channel id is ${channelId}`);
+    console.log(`user id is ${userId}`);
     // send the default message as a DM to the user
-    message.channel = channelId?channelId:'#C0A28BAHG'; //if the channel id is empty, when team_join instead channel_join
+    message.channel = channelId; //if the channel id is empty, when team_join instead channel_join
     message.user = userId;
     axios.post(`${apiUrl}/chat.postEphemeral`, qs.stringify(message), { headers: { 'content-type': 'application/x-www-form-urlencoded' } })
       .then((result => {
