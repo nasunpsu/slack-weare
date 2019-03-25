@@ -76,7 +76,10 @@ def create_similar_users_dict(matrix):
 def get_db():
     """ Gets and returns pymongo database client """
     client = MongoClient(port=27017)
-    db = client.weare    
+    username= 'communityuser'
+    password = '4gVdtnBmTZ5zbKgE'
+    db = client.weare
+    db.authenticate(username, password)    
     return db
 
 def get_data():
