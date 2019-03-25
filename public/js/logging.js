@@ -64,27 +64,27 @@ document.addEventListener('click', (event) => {
     logEvent('Click', content);
 });
 
-document.addEventListener('keyup', (event) => {
-    actionPerformed();
-    const {key, target} = event;
-    const {id, nodeName, classList, value, innerText} = target;
-    const targetObj = {
-        nodeType: nodeName.toLowerCase(),
-        classList: classList.toString(),
-        tag: target.cloneNode(false).outerHTML
-    };
-    if(!!id){
-        targetObj['id'] = id;
-    }
-    if(!!value){
-        targetObj['value'] = value;
-    }
-    if(!!innerText){
-        targetObj['innerText'] = innerText;
-    }
-    const content = {key, target: targetObj };
-    logEvent('Keyup', content);
-});
+// document.addEventListener('keyup', (event) => {
+//     actionPerformed();
+//     const {key, target} = event;
+//     const {id, nodeName, classList, value, innerText} = target;
+//     const targetObj = {
+//         nodeType: nodeName.toLowerCase(),
+//         classList: classList.toString(),
+//         tag: target.cloneNode(false).outerHTML
+//     };
+//     if(!!id){
+//         targetObj['id'] = id;
+//     }
+//     if(!!value){
+//         targetObj['value'] = value;
+//     }
+//     if(!!innerText){
+//         targetObj['innerText'] = innerText;
+//     }
+//     const content = {key, target: targetObj };
+//     logEvent('Keyup', content);
+// });
 
 
 
