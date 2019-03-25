@@ -2211,7 +2211,6 @@ app.use((err, req, res, next) => {
 });
 
 // Set up express server here
-<<<<<<< HEAD
 const options = {
     cert: fs.readFileSync('/etc/pki/tls/certs/weconnect.pem'),
     key: fs.readFileSync('/etc/pki/tls/private/weconnect.key')
@@ -2220,21 +2219,11 @@ const options = {
 //	console.log(`WeAre! server is running on PORT ${process.env.PORT}`);
 //});
 https.createServer(options, app).listen(8443);
-=======
-// const options = {
-//     cert: fs.readFileSync('/etc/pki/tls/certs/weconnect.crt'),
-//     key: fs.readFileSync('/etc/pki/tls/private/weconnect.key')
-// };
-app.listen(process.env.PORT, () => {
-	console.log(`WeAre! server is running on PORT ${process.env.PORT}`);
-});
 
 process.on('exit', () => {
 	ldap.closeLdapConnection();
 });
 
-// https.createServer(options, app).listen(8443);
->>>>>>> origin/master
 
 function initDB() {
 	DB.createCollection('commands', function (err, collection) { });
