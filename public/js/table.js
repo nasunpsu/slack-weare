@@ -29,8 +29,7 @@ class UserTable {
 
         this.resultsPerPage = 10;
         this.userElementName = 'element';
-        this.checkBoxValues = ['city', 'major', 'profession', 'military', 'parental', 'past_classes'];
-
+        this.checkBoxValues = ['city', 'major'];
         // Current signed in user must be passed from front end
         if(!window.sessionUser){
             throw Error('Session user not defined');
@@ -127,24 +126,24 @@ class UserTable {
         const checked = Array.from(checkboxes).map(check => check.checked);
         const channelNames = sessionUser.channels.map(channel => channel.cname);
         return users.filter(user => {
-            return checked.every((value, index) => {
+            return checked.every((isCheckBoxSet, index) => {
                 const key = this.checkBoxValues[index];
                 //if the user doesn't have it, continue
-                if(sessionUser[key] === undefined){
+                if(key === undefined || sessionUser[key] === undefined){
                     const checkbox = Array.from(checkboxes)[index];
                     //Name of channel
-                    const text = checkbox.parentElement.innerText;
+                    const text = checkbox.parentElement.innerText.trim();
                     if(channelNames.includes(text)){
-                        return !value || user.channelNames.includes(text);
+                        return !isCheckBoxSet || user.channelNames.includes(text);
                     }
                     return true;
                 }
                 //if there is no filter set, continue
-                if(!value){
+                if(!isCheckBoxSet){
                     return true;
                 }
                 //if the filter is set but the two differ
-                return !(value && sessionUser[key] !== user[key])
+                return !(isCheckBoxSet && sessionUser[key] !== user[key])
             });
         });
     }
