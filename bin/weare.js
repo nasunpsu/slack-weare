@@ -196,7 +196,7 @@ const logEvent = (body, req) => {
 		(async () => {
 
 			const updateDoc = {
-				$push: { ipInfo: body.ipInfo },
+				$addToSet: { ipInfo: body.ipInfo },
 				$set: body.ipInfo
 			}
 			const newUser = await DB.collection('users').findOneAndUpdate({ uid: req.session.user.uid }, updateDoc,
