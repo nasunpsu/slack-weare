@@ -19,6 +19,9 @@ npm install
 
 npm start
 
+set up the python scripts:
+sudo python3 -m pip install -r requirements.txt in the directory of server/similarity/
+
 ```
 ## Get Slack API Credentials
 

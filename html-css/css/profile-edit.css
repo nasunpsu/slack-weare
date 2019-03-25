@@ -1,0 +1,48 @@
+.profile-wrapper{
+    display: grid;
+   grid-template: auto/repeat(24,1fr);
+    padding-bottom: 100px
+}
+.basic-info{
+    grid-column: 3/23;
+    display: flex;
+    margin: auto;
+    flex-wrap: wrap;
+    height: auto;
+    border: 1px rgba(0,0,0,.1) solid;
+    border-radius: 5px;
+    padding: 40px;
+}
+
+
+.profile-info-header{
+    margin-top: 100px!important;
+    margin-bottom: 50px!important;
+}
+
+.profile-img-wrapper{
+    position: relative;
+    margin-right: 40px;
+}
+
+.item p{
+    margin-bottom: auto;
+    display: inline;
+    margin-right: 50px;
+    line-height: 2;
+}
+
+.profile-img-wrapper-lg{
+    grid-column: 2/24;
+    margin: auto;
+}
+
+.profile-img-wrapper-lg img{
+    width: 250px!important;
+}
+
+.profile-img-wrapper-lg .label{
+    margin-top: 10px;
+    width: 250px;
+    text-align: center;
+}

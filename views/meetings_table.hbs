@@ -1,0 +1,72 @@
+<div class="meetings-wrapper">
+    {{#if (eq meetings.length 0)}}
+    <div class="ui message info">
+        <div class="header">
+            You have not created or been invited to any meetings.
+        </div>
+        <ul class="list">
+            <li>Click the green button below to schedule a meeting with your peers.</li>
+            <li>Or Use /we-discuss in Slach channels and select Later to schedule a meeting.</li>
+        </ul>
+    </div>
+
+    {{else}}
+    <div class="ui message info">
+        <div class="header">
+            You have created or been invited to the following meetings.
+        </div>
+        <ul class="list">
+            <li>Click the green button below to schedule a meeting with your peers.</li>
+            <li>Or Use /we-discuss in Slach channels and select Later to schedule a meeting.</li>
+        </ul>
+    </div>
+    {{!-- <p>{{{json userInfo}}}</p> --}}
+
+    <table class="ui sortable table ascending celled list-table">
+        <thead>
+            <tr id="table-head">
+                <th scope="col">Meeting Purpose</th>
+                <th scope="col">Date & Time</th>
+                <th scope="col">Topic</th>
+                <th scope="col">Attendees</th>
+                <th scope="col">Action</th>
+            </tr>
+        </thead>
+        <tbody id="table-body">
+            {{#each meetings as |meeting|}}
+            <tr>
+                <td>
+                    <a href="/meeting/{{this.mid}}" data-toggle="modal"
+                        data-target=".meeting-modal">{{this.purpose}}</a>
+                </td>
+                <td> {{meeting.start_time}}</td>
+                <td> {{meeting.topic}}</td>
+                <td> {{#each meeting.attendees as |attendee|}} {{attendee.real_name}} {{#if (eq attendee.attend "accept")}}<i class="check attendance-status icon"></i>{{else if (eq attendee.attend "reject")}}<i class="close attendance-status icon"></i>{{else}}<i class="question circle outline attendance-status icon"></i>{{/if}};{{/each}}</td>
+                <td>
+                    {{!-- |creator is {{meeting.creator_uid}}|uid is {{../userInfo.uid}} --}}
+                    {{#if (eq meeting.creator_uid ../userInfo.uid)}}
+                    <div class="ui basic meeting blue edit button"> <i class="pencil icon"></i><a class="edit"
+                            href="/meeting/{{meeting.mid}}">Edit</a> </div>
+                    <div class="ui basic meeting yellow remind button" data-mid="{{meeting.mid}}" data-attendees='{{{json meeting.attendees}}}'> <i class="bell icon"></i>Remind attendees</div>
+                    {{else}}
+                    <div class="ui buttons">
+                        <div class="ui basic meeting red button reject" data-attendees='{{{json meeting.attendees}}}' data-mid="{{meeting.mid}}" data-react="reject">
+                            <i class="times icon"></i>Reject
+                        </div>
+                        <div class="or"></div>
+                        <div class="ui basic meeting teal button accept" data-attendees='{{{json meeting.attendees}}}' data-mid="{{meeting.mid}}" data-react="accept">
+                            <i class="check icon"></i>Accept
+                        </div>
+                    </div>
+
+                    {{/if}}
+                </td>
+            </tr>
+            {{/each}}
+        </tbody>
+    </table>
+    
+    <h5>*Note that <i class="attendance-status icon question outline circle"></i>  means the attendee has not responded to the invitations; <i class="attendance-status icon close"></i> means the attendee cannot attend to the scheduled meeting; <i class="attendance-status icon check"></i> means the attendee accepted this invitation.</h5>
+    {{/if}}
+    <div id="new" class="ui create meeting right floated teal button">New Meeting</div>
+</div>
