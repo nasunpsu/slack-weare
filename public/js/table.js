@@ -29,7 +29,7 @@ class UserTable {
 
         this.resultsPerPage = 10;
         this.userElementName = 'element';
-        this.checkBoxValues = ['local_area', 'major', 'profession', 'military', 'parental', 'past_classes'];
+        this.checkBoxValues = ['city', 'major', 'profession', 'military', 'parental', 'past_classes'];
 
         // Current signed in user must be passed from front end
         if(!window.sessionUser){
