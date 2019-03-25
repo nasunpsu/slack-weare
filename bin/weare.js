@@ -5,6 +5,7 @@ const similarIdx = require('../server/calculators.js');
 const path = require('path');
 const https = require('https');
 const expressIp = require('express-ip');
+const { check, validationResult } = require('express-validator/check');
 const createError = require('http-errors')
 const util = require('util');
 const ticket = require('../ticket.js');
@@ -125,6 +126,9 @@ app.engine('hbs', hbs({
 	],
 	helpers: {
 		json: function (context) { return JSON.stringify(context); },
+		unescape: function(x) {
+			return unescape(x);
+		},
 		eq: function () {
 			const args = Array.prototype.slice.call(arguments, 0, -1);
 			return args.every(function (expression) {
@@ -1731,7 +1735,15 @@ app.get('/meeting/:mid', async function (req, res) {
 	res.render('meeting_form', to_be_rendered);
 });
 
-app.post('/meeting/:mid', async function (req, res) {
+app.post('/meeting/:mid', [
+	check('purpose').isLength({max: 150}).trim().escape(),
+	check('description').trim().escape(),
+	check('who').trim().escape(),
+	check('start_time').escape(),
+	check('date').escape(),
+	check('duration').isNumeric()
+
+], async function (req, res) {
 	console.log(`post update the meeting form is ${util.inspect(req.body, { depth: 2 })}`);
 	console.error('updating now');
 	// Sanitize fields.
