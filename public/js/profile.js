@@ -78,10 +78,6 @@ function reloadForm() {
         obj[fieldObj.name] = {
             rules: [
                 {
-                    type: 'empty',
-                    prompt: `Please enter your ${fieldObj.identifier}.`
-                },
-                {
                     type: 'maxLength[150]',
                     prompt: `Your ${fieldObj.identifier} must be at most {ruleValue} characters.`
                 },
@@ -173,7 +169,14 @@ let fields = [
         }]
     },
     { name: 'campus', identifier: 'campus' },
-    { name: 'courses', identifier: 'courses' },
+    {
+        name: 'courses',
+        identifier: 'courses',
+        rules: [{
+            type: 'empty',
+            prompt: `Please enter your current courses.`
+        }]
+    },
     { name: 'goals', identifier: 'goals' },
     { name: 'reccourses', identifier: 'recommended courses' },
     { name: 'instructors', identifier: 'recommended instructor' },
