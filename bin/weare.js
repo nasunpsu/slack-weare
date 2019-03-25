@@ -1537,7 +1537,7 @@ app.get('/meeting/:mid', async function (req, res) {
 		}
 		else if (req.params.mid == "new") {
 			console.log(`create new meeting`);
-			const members = await ChannelMembers("T0A286J8K_C0A28BAHG", "general");
+			const members = await ChannelMembers("TG6RV469K_CG82VU7HC", "general");
 			var obj = {
 				exist: true,
 				mid: makeid(),
@@ -1546,7 +1546,7 @@ app.get('/meeting/:mid', async function (req, res) {
 				creator_name: req.session.user.name,
 				cmembers: members,
 				attendees: [],
-				cid: 'T0A286J8K_C0A28BAHG',
+				cid: 'TG6RV469K_CG82VU7HC',
 				cname: 'general',
 				who: 'custom',
 				tz: req.session.user.tz_offset
