@@ -116,6 +116,16 @@
     z-index: 0;
   }
 
+  /* .connect.ui.dropdown.item.active.Table::before {
+    content: 'Connected by Table'
+  }
+  .connect.ui.dropdown.item.active.Timezones::before {
+    content: 'Connected by Timezones'
+  }
+  .connect.ui.dropdown.item.active.Similarity::before {
+    content: 'Connected by Similarity'
+  } */
+
   .we-are-message{
     position: absolute;
     top: 80px;
@@ -141,6 +151,17 @@
     font-weight: 100;
     padding: 10px;
     display: flex;
+    flex-wrap: wrap;
+  }
+
+  .emoji-label{
+    margin-bottom: 7px!important;
+    margin-right: 15px!important;
+    margin-left: 4px!important;
+  }
+
+  .message-card{
+    height: fit-content;
   }
 
   #timezone-main {
@@ -544,12 +565,19 @@ p{
 }
 
 
-.profile-header .ui.green.button{
+.profile-header .edit-profile.ui.button{
+  position: absolute;
+  bottom: 15px;
+  margin-right: 50px;
+  right: 200px;
+}
+
+.profile-header .user-dm.ui.green.button{
   position: absolute;
   bottom: 15px;
   right: 15px;
 }
-
+    
 .profile-name h2{
   font-size: 35px;
   font-weight: 200;
@@ -704,6 +732,10 @@ p{
   clear: right;
 }
 
+.meetings-wrapper .ui.button {
+  margin: 0.2em 0.02em 0.2em 0.05em;
+  padding: 0.78571429em .5em 0.78571429em;
+}
 .ui.button > a.accept {
   color: #00B5AD;
 }
@@ -716,6 +748,13 @@ p{
   color: #FBBD08;
 }
 
+.ui.button > a.invite{
+  color: #FBBD08;
+}
+
+.ui.button > a.slackme{
+  color: white;
+}
 
 .edit.ui.button {
   color: #4183C4!important;

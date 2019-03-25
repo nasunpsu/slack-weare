@@ -1,8 +1,20 @@
 <section class="profile-edit-wrapper">
-  <h4 style="margin: 0px;">To edit your profile, change any of the below information, and be sure to click save changes at the bottom of this page.</h4>
+  <div class="ui message info">
+    <i class="close icon"></i>
+    <div class="header">
+      To edit your profile, change any of the below information, and be sure to click save changes at the bottom of this
+      page.&nbsp;&nbsp;&nbsp;&nbsp;
+    </div>
+    {{!-- <ul class="list">
+            <li>Click the green button below to schedule a meeting with your peers.</li>
+            <li>Or Use /we-discuss in Slach channels and select Later to schedule a meeting.</li>
+        </ul> --}}
+  </div>
+
   <form class="ui form profile-form">
+    
     <h4 class="ui horizontal divider header">
-    Basic Info
+      Basic Info
     </h4>
     <div class="profile-img-wrapper">
       <img class="ui small right floated image profile-img" src={{user.image_512}}>
@@ -14,16 +26,16 @@
           value="{{user.real_name}}">
       </div>
       <div class="six wide field">
-        <label>City, Province I live in</label>
+        <label>City, Region, Country I live in</label>
         <input type="text" name="city" placeholder="E.g. Pittsburgh, PA"
-          value="{{#if user.city}}{{user.city}}, {{user.province}}{{/if}}">
+          value="{{#if user.city}}{{user.city}}, {{user.region}}, {{user.country}}{{/if}}">
       </div>
       <div class="two wide field">
         <label for=""> Gender</label>
         <select name="gender" class="ui dropdown gender" type="text" placeholder="Gender" value="{{user.gender}}">
-          <option value="female" class="value">Male</option>
-          <option value="male" class="value">Female</option>
-          <option value="other" class="value">Other</option>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+          <option value="other">Other</option>
         </select>
       </div>
 
@@ -31,7 +43,8 @@
     <div class="tz basic-info-edit fields">
       <div class="eight wide field">
         <label>Time Zone</label>
-        <select name="timezone" class="ui fluid dropdown">
+        <input type="text" disabled name="fullname" value="{{user.tz_label}}">
+        {{!-- <select name="timezone" class="ui fluid dropdown">
           <option timeZoneId="1" gmtAdjustment="GMT-12:00" useDaylightTime="0" value="-12">(GMT-12:00) International
             Date Line West</option>
           <option timeZoneId="2" gmtAdjustment="GMT-11:00" useDaylightTime="0" value="-11">(GMT-11:00) Midway Island,
@@ -177,39 +190,40 @@
             Kamchatka, Marshall Is.</option>
           <option timeZoneId="82" gmtAdjustment="GMT+13:00" useDaylightTime="0" value="13">(GMT+13:00) Nuku'alofa
           </option>
-        </select>
+        </select> --}}
       </div>
       <div class="six wide field">
         <label>Email</label>
-        <input type="email" name="email" placeholder="An email peers can contact you with."
+        <input type="email" disabled name="email" placeholder="An email peers can contact you with."
           value="{{user.email}}">
       </div>
     </div>
     {{#each user.availability}}
-    <div id="available" {{#if_eq @index 0}}style="display:none"{{/if_eq}} class="availability basic-info-edit inline fields">
-          <div class="field centered middle aligned">
-            <label> I am </label>
-            <select class="ui dropdown" name="available{{@index}}">
-              {{#select this.available}}
-              <option value="available">available online</option>
-              <option value="unavailable">unavailable online</option>
-              {{/select}}
-            </select>
-          </div>
-            
-          {{!-- <div class="ui label blue basic available">I am available online on</div> --}}
-        
+    <div id="available" {{#if_eq @index 0}}style="display:none" {{/if_eq}}
+      class="availability basic-info-edit inline fields">
+      <div class="field centered middle aligned">
+        <label> I am </label>
+        <select class="ui dropdown" name="available{{@index}}">
+          {{#select this.available}}
+          <option value="available">available online</option>
+          <option value="unavailable">unavailable online</option>
+          {{/select}}
+        </select>
+      </div>
+
+      {{!-- <div class="ui label blue basic available">I am available online on</div> --}}
+
       <div class="field centered middle aligned">
         <label> on </label>
         <select class="ui dropdown weekday" name="weekday{{@index}}">
           {{#select this.weekday}}
-          <option value="sun">Sunday</option>
-          <option value="mon">Monday</option>
-          <option value="tue">Tuesday</option>
-          <option value="wed">Wednesday</option>
-          <option value="thur">Thursday</option>
-          <option value="fri">Friday</option>
-          <option value="sat">Saturday</option>
+          <option value="Sun">Sunday</option>
+          <option value="Mon">Monday</option>
+          <option value="Tue">Tuesday</option>
+          <option value="Wed">Wednesday</option>
+          <option value="Thur">Thursday</option>
+          <option value="Fri">Friday</option>
+          <option value="Sat">Saturday</option>
           {{/select}}
         </select>
       </div>
@@ -234,7 +248,7 @@
       </div>
       <div class="field">
         <div class="ui buttons">
-          <div onClick= "removeTime(this)" class="ui basic button delete-button"><i class="icon trash"></i></div>
+          <div onClick="removeTime(this)" class="ui basic button delete-button"><i class="icon trash"></i></div>
           <div onClick="addTime()" class="ui basic button add-button"><i class="icon green plus"></i></div>
         </div>
       </div>
@@ -247,13 +261,13 @@
       <div class="field">
         <label>Major</label>
         <div class="field">
-          <input type="text" name="major" value="{{user.major}} {{user.title}}">
+          <input disabled type="text" name="major" value="{{user.major}}">
         </div>
       </div>
       <div class="field">
         <label>Penn State Campus</label>
         <div class="field">
-          <input type="text" name="campus" value="{{user.campus}}">
+          <input disabled type="text" name="campus" value="{{user.campus}}">
         </div>
       </div>
       <div class="nine wide field">
@@ -263,7 +277,8 @@
     </div>
     <div class="basic-info-edit field">
       <label>What I want to gain from World Campus</label>
-      <textarea name="goals" id="" cols="30" rows="5" placeholder="Anything you would like to gain from this experience (academic or not).">{{user.goals}}</textarea>
+      <textarea name="goals" id="" cols="30" rows="5"
+        placeholder="Anything you would like to gain from this experience (academic or not).">{{user.goals}}</textarea>
     </div>
     <div class="two inline recommendation fields">
       <div class="nine wide field">
@@ -275,14 +290,14 @@
         <input type="text" name="instructors" placeholder="e.g. InstructorName;" value="{{user.instructors}}">
       </div>
     </div>
-    
+
     <h4 class="ui horizontal divider header">
       Professional Info
     </h4>
     <div class="fields basic-info-edit profession">
       <div class="six wide field">
         <label for="">Current profession</label>
-        <select class="ui fluid dropdown" name="profession" id="profession">
+        <select class="ui fluid dropdown profession" name="profession" id="profession">
           {{#select user.profession}}
           <option value="17">Architecture and Engineering</option>
           <option value="27">Arts, Design, Entertainment, Sports, and Media</option>
@@ -307,7 +322,7 @@
           <option value="33">Protective Service</option>
           <option value="41">Sales and Related</option>
           <option value="53">Transportation and Material Moving</option>
-          <option value="0">All Occupations</option>
+          <option value="0">Other</option>
           {{/select}}
         </select>
       </div>
@@ -325,17 +340,17 @@
         </select>
       </div>
     </div>
-    <div class="fields personal-info-edit facts">
+    {{!-- <div class="fields personal-info-edit facts">
       <div class="eight wide field">
         <label for="">Career Goals</label>
-        <textarea name="career" id="fun" cols="30" rows="5" placeholder="Any future career you'd like to have or goals you have within your current career." >{{user.fun}}</textarea>
+        <textarea name="career" id="career" cols="30" rows="5" placeholder="Any future career you'd like to have or goals you have within your current career." >{{user.career}}</textarea>
       </div>
       <div class="eight wide field">
         <label for="">Past Careers</label>
-        <textarea id="unique" name="unique" cols="30" rows="5" placeholder="Companies and jobs you've worked in previously." >{{user.unique}}</textarea>
+        <textarea id="pastcareers" name="pastcareers" cols="30" rows="5" placeholder="Companies and jobs you've worked in previously." >{{user.pastcareers}}</textarea>
       </div>
-    </div>
-    
+    </div> --}}
+
     <h4 class="ui horizontal divider header">
       Personal Info
     </h4>
@@ -343,7 +358,8 @@
       <div class="eight wide field">
         <label>Places I've Lived</label>
 
-        <input type="text" name="pastCities" placeholder="Your city. E.g. State College, PA" value="{{user.pastCities}}">
+        <input type="text" name="pastCities" placeholder="Your city. E.g. State College, PA"
+          value="{{user.pastCities}}">
 
       </div>
       <div class="eight wide field">
@@ -355,7 +371,12 @@
 
       <div class="eight wide field">
         <label>Marital Status</label>
-        <input type="text" name="married" placeholder="E.g. married" value="{{user.married}}">
+        {{!-- <input type="text" name="married" placeholder="E.g. married" value="{{user.married}}"> --}}
+        <select name="married" class="ui dropdown marital" type="text" value="{{user.married}}">
+          <option value="Single">Single</option>
+          <option value="Married">Married</option>
+          <option value="Other">Other</option>
+        </select>
       </div>
       <div class="eight wide field">
         <label>Number of Kids</label>
@@ -365,14 +386,27 @@
     <div class="fields personal-info-edit facts">
       <div class="eight wide field">
         <label for="">Fun fact</label>
-        <textarea name="fun" id="fun" cols="30" rows="5" placeholder="E.g. My father graduated from PSU 20 years ago." >{{user.fun}}</textarea>
+        <textarea name="fun" id="fun" cols="30" rows="5"
+          placeholder="E.g. My father graduated from PSU 20 years ago.">{{user.fun}}</textarea>
       </div>
       <div class="eight wide field">
         <label for="">Things my peers should know about me</label>
-        <textarea id="unique" name="unique" cols="30" rows="5" placeholder="E.g. I served in the military for 10 years, and I care a lot about punctuality." >{{user.unique}}</textarea>
+        <textarea id="unique" name="unique" cols="30" rows="5"
+          placeholder="E.g. I served in the military for 10 years, and I care a lot about punctuality.">{{user.unique}}</textarea>
       </div>
     </div>
     <div id="submit-button" class="ui submit button save-profile-changes">Save Changes</div>
     <div class="ui error message"></div>
+    <div class="ui success message">
+      <i class="close icon"></i>
+      <div class="header">
+        You have successfully updated your profile info.
+      </div>
+      <ul class="list">
+        <li>Go to your <b>WeAre! space</b> to say hello to your peers now.</li>
+        <li>You could also look at your <b>similarity</b> with others in the Connect -> Similarity view.</li>
+      </ul>
+    </div>
   </form>
+  <div class="data" id="data" style="display:None" data-attribute='{{{json user}}}'></div>
 </section>
