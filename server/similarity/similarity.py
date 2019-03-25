@@ -26,7 +26,7 @@ def compute_similarity(uid):
         # Get first index of row with correct email
         user = users.loc[users.uid == uid].iloc[[0]]
     except Exception as e:
-        print(f'Error: user not found in database {e}', flush=True)
+        print('Error: user not found in database ' + str(e), flush=True)
         traceback.print_exc()
         return
     distances = compute_distances(users, user)
@@ -51,7 +51,7 @@ def update_db(uid, matrix):
     query = {'uid': uid}
     result = db.users.update_many(query, new_value)
     if result.modified_count != 1:
-        print(f'Warning, {result.modified_count} users modified, {result.matched_count} users matched', flush=True)
+        print('Warning, ' + str(result.modified_count) + ' users modified, ' + str(result.matched_count) + ' users matched', flush=True)
 
 def create_similar_users(matrix):
     """ Given matrix formatted like [[distance, uid]], produce dict with keys 'distance' and 'user' """
