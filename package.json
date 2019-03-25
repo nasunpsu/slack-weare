@@ -25,6 +25,7 @@
     "express-ip": "^1.0.3",
     "express-session": "^1.15.6",
     "express-validator": "^5.3.1",
+    "express-ws": "^4.0.0",
     "get-timezone-offset": "^1.0.3",
     "handlebars": "^4.0.12",
     "http-errors": "^1.7.1",
@@ -36,7 +37,8 @@
     "nodemon": "^1.18.9",
     "request": "^2.88.0",
     "serve-favicon": "^2.5.0",
-    "superagent": "^4.0.0"
+    "superagent": "^4.0.0",
+    "ws": "^6.2.0"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",

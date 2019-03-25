@@ -1,33 +1,67 @@
 <div id="tz-wrapper">
-    {{#each members.tz_members as |members tz|}}
+    {{#each members.tz_members as |tz_members|}}
     <div class="ui item timezone-container">
         <div class="ui fluid card tz-header">
             <div class="content">
                 <div class="header"></div>
                 <div class="meta">
-                    <span>{{tz}} hours</span>
+                    <span>{{tz_members.[0]}} hours</span>
+                    {{#if (eq tz_members.[0] ../userInfo.tz_offset)}}<div class="ui teal label clock" locale='{{tz_members.[1].0.locale}}' tz='{{tz_members.[1].0.tz}}'></div>
+                    {{else}}
+                    <div class="ui label clock" locale='{{tz_members.[1].0.locale}}' tz='{{tz_members.[1].0.tz}}'></div>
+                    {{/if}}
                 </div>
                 <div class="meta">
-                    <span>{{members.0.tz_label}}</span>
+                    <span>{{tz_members.[1].0.tz_label}}</span>
                 </div>
-                <div class="description">{{members.0.local_area}}</div>
+                <div class="description">{{tz_members.[1].0.local_area}}</div>
             </div>
-            
+
         </div>
 
         <div class="ui horizontal list">
-            {{#each members as |member|}}
-            <div class="item user">
-                <img class="ui mini circular image user-img" src="{{member.image_48}}">
+            {{#each tz_members.[1] as |member|}}
+            <div class="item user" id="{{member.uid}}">
+                <div class="user-detail" style="z-index: 1; opacity: 0;">
+
+                    <div style="margin-top: 60px; font-weight: bold">
+                        <a target="_blank" href="/profile/{{member.uid}}">{{member.real_name}}<i class="eye icon"></i></a>
+                    </div>
+                    <div style="margin-top: 0px; font-weight: bold">
+
+                    </div>
+
+                    <div style="margin-top: 5px; margin-bottom: 5px">
+
+                    </div>
+
+                    <!---->
+
+                    {{!-- <div class="user-email">
+                        <a href="mailto:{{member.email}}">{{member.email}}</a>
+                    </div>
+                    <div class="user-phone">
+                        <a href="tel:"></a>
+                    </div> --}}
+                    {{!-- <div class="user-profile-page">
+                        
+                    </div>  --}}
+                    <div class="user-dm">
+                        <a href="slack://user?team={{member.team_id}}&amp;id={{{get_UserID member.uid}}}">Slack DM</a>
+                    </div>
+                </div>
+                <div class="user-img" style="background-image: url('{{member.image_48}}')"></div>  
+                <div class="user-presence {{#if (eq member.presence "away")}}user-presence-away{{/if}}" >
+                    
+                </div>
                 <div class="content">
                     <div class="ui sub header user-name">{{member.first_name}}</div>
-                    {{member.status_text}}
+                    <div class="ui sub header">{{member.status_text}}</div>
+                    
                 </div>
             </div>
             {{/each}}
         </div>
     </div>
     {{/each}}
-    
-
 </div>

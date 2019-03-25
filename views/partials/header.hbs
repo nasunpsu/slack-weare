@@ -1,24 +1,26 @@
 <div class="ui padded grid">
   <div class="ui inverted borderless top fixed menu navbar">
     <a class="header item" href="/"><img src="/images/we-connect-logo-lt-06.png" class="nav-logo"></a>
-    <div class="right menu">
-      <div class="ui dropdown connect item">
+    <div class="nav right menu">
+      <a class="item"
+        href="/"> Home</a>
+      <div id="connectList" class="ui dropdown connect item">
         Connect
         <i class="dropdown icon"></i>
         <div class="menu">
-          <a class="item" href="/tablelist">Table</a>
-          <a href="/cardview" class="item">Cardview</a>
-          <a class="item" href="/network">Similarity</a>
-          <a class="item" href="/temporal">Timezones</a>
+          <a class="table item" href="/tablelist">Table</a>
+          {{!-- <a href="/cardview" class="item">Cardview</a> --}}
+          <a class="nw item" href="/network">Similarity</a>
+          <a class="tz item" href="/temporal">Timezones</a>
           {{!-- <a class="item">Map</a> --}}
         </div>
       </div>
+      <a href="/meetings" class="item"><i class="calendar alternate outline icon"></i> My meetings</a>
       <div id="profile_uid" class="ui dropdown profile item" data-uid="{{userInfo.uid}}">
-        Profile
+        {{userInfo.first_name}}
         <i class="dropdown icon"></i>
         <div class="menu">
           <a href="/editProfile" class="item"><i class="edit icon"></i> Edit Profile</a>
-          <a href="/meetings" class="item"><i class="calendar alternate outline icon"></i> My meetings</a>
           {{!-- <a href="/accountSetting" class="item"><i class="settings icon"></i> Account Settings</a> --}}
           <a href="/logout" class="item"><i class="sign out alternate icon"></i>Sign out</a>
         </div>

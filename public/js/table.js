@@ -1,8 +1,3 @@
-/**
- * Binds all functions to always have 'this' to be the object itself
- * @param {any} obj Object to bind all methods to
- */
-
 $('.search-by-dropdown .ui.dropdown')
 .dropdown({
   clearable: true,
@@ -14,6 +9,11 @@ $('.sort-dropdown .ui.dropdown')
   clearable: true,
   placeholder: 'Sort By'
 });
+
+/**
+ * Binds all functions to always have 'this' to be the object itself
+ * @param {any} obj Object to bind all methods to
+ */
 function bindAll(obj){
     for (const key in obj) {
         if (typeof obj[key] === 'function') {
@@ -51,23 +51,40 @@ class UserTable {
         this.nextPage = document.getElementById('nextPage');
         this.previousPage = document.getElementById('previousPage');
         this.pageContainer = document.getElementById('page-container');
-        this.sortDropdown = document.getElementById('sortDropdown');
 
         this.headings = this.getHeadings(this.tableHeading);
         this.users = this.getUserElements(this.tableBody, this.userElementName, this.users);
+        this.sortBy = null;
+        this.headingElements = $(this.tableHeading).find('th');
+        this.headingElements.click(event => {
+            if(!!this.search.value){
+                return;
+            }
+            const target = event.target;
+            const index = [...target.parentElement.children].indexOf(target);
+            if(this.sortBy === index){
+                updateResults();
+                return;
+            }
+            updateResults(index);
+        });
 
-        this.setDropDownOptions(this.headings, this.searchDropdown, this.sortDropdown);
+        this.setDropDownOptions(this.headings, this.searchDropdown); 
 
-        const updateResults = () => {
+        const updateResults = (sortIndex=-1) => {
+            this.sortBy = sortIndex;
             const query = this.search.value;
+            this.headingElements.removeClass('sort-heading');
             const sortReverse = false;
-            const sortIndex = this.sortDropdown.selectedIndex - 1;
             let sortField;
             if(sortIndex === -1){
                 sortField = '';
             }
             else{
                 sortField = this.headings[sortIndex];
+                if(!query){
+                    $(this.tableHeading.children[sortIndex]).addClass('sort-heading');
+                }
             }
             const {checkboxes, sessionUser, users, tableBody, searchDropdown, userElementName, resultsPerPage} = this;
             this.updateUsers(checkboxes, sessionUser, query, users, searchDropdown, tableBody, userElementName, sortField, sortReverse, resultsPerPage);
@@ -79,7 +96,6 @@ class UserTable {
         this.checkboxes.change(updateResults);
         this.search.addEventListener('keyup', updateResults);
         this.searchDropdown.addEventListener('change', updateResults);
-        this.sortDropdown.addEventListener('change', updateResults);
         this.nextPage.addEventListener('click', () => this.changePage(this.userResults, this.currentPage + 1, this.resultsPerPage, this.tableBody, this.userElementName, this.numPages));
         this.previousPage.addEventListener('click', () => this.changePage(this.userResults, this.currentPage - 1, this.resultsPerPage, this.tableBody, this.userElementName, this.numPages));
         updateResults();
@@ -148,16 +164,12 @@ class UserTable {
         });
     }
 
-    setDropDownOptions(headings, searchDropdown, sortDropdown){            
+    setDropDownOptions(headings, searchDropdown){            
         headings.forEach((heading, index) => {
             const option = document.createElement("option");
             option.innerText = heading;
             option.value = index + 1;
             searchDropdown.appendChild(option);
-            const option2 = document.createElement("option");
-            option2.innerText = heading;
-            option2.value = index + 1;
-            sortDropdown.appendChild(option2);
         });
     }
 
@@ -168,10 +180,8 @@ class UserTable {
 
     searchUsers(query, users, dropdown){
         if(query === ''){
-            $(this.sortDropdown).parent().removeClass('disabled');
             return users
         }
-        $(this.sortDropdown).parent().addClass('disabled');
         const searchIndex = dropdown.selectedIndex - 1;
         let results = null;
         if(searchIndex >= 0){

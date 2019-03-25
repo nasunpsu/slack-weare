@@ -40,72 +40,42 @@
 </style>
 
 <body>
-
-	{{!-- <div id="connect" class="ui container canvas draw fullwidth first-page-element">
-		<div class="ui grid page">
-			<div class="ui selection dropdown connectedby">
-				We are connected by
-				<input type="hidden" name="language">
-				<span class="text">Filter</span>
-				<div class="menu">
-					<div class="item" data-value="classes">Classes</div>
-					<div class="item" data-value="majors">Majors</div>
-					<div class="item" data-value="degree">Degree progress</div>
-					<div class="item" data-value="prev_degree">Previous degree</div>
-					<div class="item" data-value="goal">Goal</div>
-					<div class="item" data-value="kids">Kids</div>
-					<div class="item" data-value="ERL">Cohort</div>
-					<div class="item" data-value="timezone">Timezone</div>
-					<div class="item" data-value="nationality">Country</div>
-					<div class="item" data-value="EMP_status">Employment Status</div>
-					<div class="item" data-value="workday">Available work day</div>
-					<div class="item" data-value="age">Age range</div>
-				</div>
-			</div>
-			<div class="input field">
-				<div class="ui multiple search selection dropdown filtered">
-					<input type="hidden" name="language">
-					<span class="text">Filter by selecting a state from map view </span>
-					<div class="menu">
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<div class="ui modal initiatemsg">
-			<div class="ui text container aligned center middle padded">
-				<h3 class="ui header">Compose the message for <strong class="receiver"></strong></h3>
-				<div class="ui form">
-					<div class="field">
-						<div class="field">
-							<div class="ui inverted black label">She/he might be waiting for you to reach out to! Remember we are connected!</div>
-						</div>
-
-						<div class="field"><textarea type="text" class="feedback item" placeholder="Enter the message"></textarea>
-						</div>
-					</div>
-
-					<button class="ui button teal sendmsg">Send</button>
-					<button class="ui button teal cancelmsg">Cancel</button>
-				</div>
-			</div>
-		</div>
-		<div class="ui info message hidden">
-			<i class="close icon"></i>
-			<div class="header">
-				Filtered too much!
-			</div>
-			<ul class="list">
-				<li>Oops! You may select a state in which there are no Penn State students registered to this network.</li>
-				<li>Cick <a href="/map" class="">here</a> to select other states.</li>
-				<li>You can remove the filter condition above by deleting the tag.</li>
-			</ul>
-		</div> --}}
 		<div id="nw-wrapper">
-		<label><input style="width:240px;" id = "strength" type="range" min="0" max="1" step="any" value="0.5"> Link Strength</label>
-
-		<div id="chart" visdata='{{{json data}}}' class="network canvas draw fullwidth">
-		</div>
+		<!-- <label><input style="width:240px;" id = "strength" type="range" min="0" max="1" step="any" value="0.5"> Link Strength</label> -->
+			<div class="nw-filter-wrapper">
+            <h3>Filter Peers By</h3>
+				<div class="filters">
+					<form id="checkboxes">
+						<div class="ui checkbox">
+							<input type="checkbox" id="locationCheck">
+							<label class="form-check-label" for="locationCheck"><a class="ui red empty circular label mini"></a> Location</label>
+						</div>
+						<div class="ui checkbox">
+							<input type="checkbox" id="majorCheck">
+							<label for="majorCheck"><a class="ui orange empty circular label mini"></a> Major</label>
+						</div>
+						{{#each this.channelNames}}
+							<div class="ui checkbox">
+								<input type="checkbox">
+								<label>{{this}}</label>
+							</div>
+						{{/each}}
+					</form>
+				</div>
+				<div class="ui category search nw-search">
+					<div class="ui icon right labeled input nw-search-box">
+						<input class="prompt" type="text" id="search" placeholder="search">
+						<select id="searchby-dropdown" class="ui dropdown nw-search-by-dropdown label">
+							<option value="0">Search By</option>
+						</select>
+					</div>
+					<div class="results"></div>
+				</div> 
+			</div>
+			<p>{{{json data.links}}}</p>
+			<div id="chart" visdata='{{{json data}}}' class="network canvas draw fullwidth">
+			</div>
+			
 		</div>
 	</div>
 	{{!--

@@ -75,7 +75,7 @@ const initialMessage = (userId, channelId) => {
     // db.push(`/${teamId}/${userId}`, false);
 
     // send the default message as a DM to the user
-    message.channel = channelId;
+    message.channel = channelId?channelId:'#C0A28BAHG'; //if the channel id is empty, when team_join instead channel_join
     message.user = userId;
     axios.post(`${apiUrl}/chat.postEphemeral`, qs.stringify(message), { headers: { 'content-type': 'application/x-www-form-urlencoded' } })
       .then((result => {

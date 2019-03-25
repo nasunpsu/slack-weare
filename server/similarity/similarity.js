@@ -1,5 +1,6 @@
 const { exec } = require('child_process');
 const { resolve } = require('path');
+const util = require('util');
 
 /**
  * Stores similar users to current user in database
@@ -113,6 +114,7 @@ const getSimilarUsers = async (uid, DB, numUsers, objectKeys) => {
     const res = await DB.collection('users').aggregate(query);
     const doc = await res.toArray();
     console.log(doc.length);
+    console.log(`query is ${util.inspect(query, {depth: null})}`);
     return doc[0].similar_users;
 }
 

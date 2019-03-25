@@ -15,6 +15,9 @@ $('.select-topic.ui.fluid.dropdown')
 $('.select-scope.ui.fluid.dropdown')
     .dropdown('set selected', meeting.who);
 
+// $('.tz.ui.dropdown')
+//     .dropdown('set selected', meeting.tz);
+
 // $('#start, #end').calendar(); //instead of start and end; make it normal to choose a start date and time, and specify duration
 
 $('#pop-date').calendar({
@@ -110,7 +113,8 @@ window.addEventListener("DOMContentLoaded", function () {
         const UpdateObj = $.extend({
             mid: meeting.mid,
             cid: meeting.cid,
-            cname: meeting.cname
+            cname: meeting.cname,
+            tz: meeting.tz
         }, Origobj);
         // obj.mid = meeting.mid;
         // obj.cid = meeting.cid ? meeting.cid : 'T0A286J8K_C0A28BAHG';
@@ -129,35 +133,65 @@ window.addEventListener("DOMContentLoaded", function () {
             };
         });
     });
-    document.getElementById("invite").addEventListener("click", function (e) {
-        console.log('save and invite clicked');
-        e.preventDefault();
-        document.getElementById("invite_label").value = "true";
-        $('.meeting-form.ui.form').form('validate form');
-        console.dir($('.ui.form input').serializeArray());
-        $('.meeting-form.ui.form').form('set value', 'invite', 'true');
-        // $('.ui.invite').addClass('submit'); //<===== without submit class, click will not trigger the post behavior
-        // // $('.meeting-form.ui.form').form('submit');
-        // form.submit();
+    // document.getElementById("invite").addEventListener("click", function (e) {
+    //     console.log('save and invite clicked');
+    //     e.preventDefault();
+    //     document.getElementById("invite_label").value = "true";
+    //     $('.meeting-form.ui.form').form('validate form');
+    //     console.dir($('.ui.form input').serializeArray());
+    //     $('.meeting-form.ui.form').form('set value', 'invite', 'true');
+    //     // $('.ui.invite').addClass('submit'); //<===== without submit class, click will not trigger the post behavior
+    //     // // $('.meeting-form.ui.form').form('submit');
+    //     // form.submit();
 
+    // });
+
+    document.getElementById("delete").addEventListener("click", function (e) {
+        console.log('delete clicked');
+        e.preventDefault();
+        const Origobj = {};
+
+        $.ajax({
+            type: 'POST', url: '/deletemeeting',
+            data: {
+                mid: meeting.mid
+            }
+        }).done(function (res) {
+            if (res.success) {
+                console.log('id from ajax call is', res);
+                location.href = "/meetings";
+                // window.location.reload();
+            } else {
+                console.log('error...ajax');
+            };
+        });
     });
 
     document.getElementById("reject").addEventListener("click", function (e) {
         console.log('reject clicked');
         e.preventDefault();
         $.ajax({
-            type: 'POST', url: '/reactmeeting', data: {
+            type: 'POST',
+            url: '/reactmeeting',
+            data: {
                 mid: meeting.mid,
                 react: "reject",
                 who_react: document.getElementById("profile_uid").getAttribute("data-uid"),
                 attendees: $(".ui.form").form('get value', 'attendees')
-            }, success: function (data) {
-                console.log(data);
-                console.log('successfully reject');
             }
-        });
-
+        })
+            .done(function (res) {
+                if (res.success) {
+                    console.log('id from ajax call is', res);
+                    location.href = "/meetings";
+                    // window.location.reload();
+                } else {
+                    console.log('error...ajax');
+                };
+            })
     });
+
+
 
     document.getElementById("accept").addEventListener("click", function (e) {
         console.log('save clicked');

@@ -90,13 +90,11 @@ def get_data():
     # Users is a collection of users data collected from slack and ldap
     student_queries, user_queries = db.students.find({}), db.users.find({})
     students, users = pd.DataFrame(list(student_queries)), pd.DataFrame(list(user_queries))
-    # students = clean_email(students)
-    # # Merge both collections into one dataframe, without losing any columns
-    # if students == []:
-    #     return users;
-    # everybody = pd.merge(students, users, how='right', on=['email'])
-    # return everybody
-    return users;
+    if(list(students) == [] or 'Email' not in students): return users
+    students = clean_email(students)
+    # Merge both collections into one dataframe, without losing any columns
+    everybody = pd.merge(students, users, how='right', on=['email'])
+    return everybody
 
 def compute_distances(df, Y, weights=None):
     """Computes distances from a y value to all entries in a datafrma

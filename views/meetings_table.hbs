@@ -1,6 +1,7 @@
 <div class="meetings-wrapper">
     {{#if (eq meetings.length 0)}}
     <div class="ui message info">
+        <i class="close icon"></i>
         <div class="header">
             You have not created or been invited to any meetings.
         </div>
@@ -12,6 +13,7 @@
 
     {{else}}
     <div class="ui message info">
+        <i class="close icon"></i>
         <div class="header">
             You have created or been invited to the following meetings.
         </div>
@@ -24,30 +26,40 @@
 
     <table class="ui sortable table ascending celled list-table">
         <thead>
-            <tr id="table-head">
-                <th scope="col">Meeting Purpose</th>
-                <th scope="col">Date & Time</th>
-                <th scope="col">Topic</th>
-                <th scope="col">Attendees</th>
-                <th scope="col">Action</th>
+            <tr id="table-head" class="center aligned">
+                <th scope="col" class="two wide">Meeting Purpose</th>
+                <th scope="col" class="three wide">Date & Time</th>
+                <th scope="col" class="one wide">Topic</th>
+                <th scope="col" class="one wide">Organizer</th>
+                <th scope="col" class="six wide">Guests</th>
+                <th scope="col" class="three wide">Action</th>
             </tr>
         </thead>
         <tbody id="table-body">
             {{#each meetings as |meeting|}}
-            <tr>
+            <tr class="center aligned">
                 <td>
                     <a href="/meeting/{{this.mid}}" data-toggle="modal"
                         data-target=".meeting-modal">{{this.purpose}}</a>
                 </td>
-                <td> {{meeting.start_time}}</td>
+                <td> {{meeting.date}} {{meeting.start_time}}</td>
                 <td> {{meeting.topic}}</td>
-                <td> {{#each meeting.attendees as |attendee|}} {{attendee.real_name}} {{#if (eq attendee.attend "accept")}}<i class="check attendance-status icon"></i>{{else if (eq attendee.attend "reject")}}<i class="close attendance-status icon"></i>{{else}}<i class="question circle outline attendance-status icon"></i>{{/if}};{{/each}}</td>
+                <td>{{meeting.creator_name}}</td>
+                <td> {{#each meeting.attendees as |attendee|}} 
+                    {{#unless (eq attendee.uid meeting.creator_uid)}}
+                    {{attendee.real_name}} 
+                    {{#if (eq attendee.attend "accept")}}<i class="check attendance-status icon"></i>
+                    {{else if (eq attendee.attend "reject")}}<i class="close attendance-status icon"></i>
+                    {{else}}<i class="question circle outline attendance-status icon"></i>{{/if}};
+                    {{/unless}}
+                    {{/each}}</td>
                 <td>
                     {{!-- |creator is {{meeting.creator_uid}}|uid is {{../userInfo.uid}} --}}
                     {{#if (eq meeting.creator_uid ../userInfo.uid)}}
                     <div class="ui basic meeting blue edit button"> <i class="pencil icon"></i><a class="edit"
                             href="/meeting/{{meeting.mid}}">Edit</a> </div>
-                    <div class="ui basic meeting yellow remind button" data-mid="{{meeting.mid}}" data-attendees='{{{json meeting.attendees}}}'> <i class="bell icon"></i>Remind attendees</div>
+                    <div class="ui basic meeting yellow remind button" data-content="Remind your confirmed guests via Slack DM"  data-position="bottom center" data-mid="{{meeting.mid}}" data-purpose="{{meeting.purpose}}" data-date="{{meeting.date}}" data-time="{{meeting.start_time}}" data-creator="{{meeting.creator_name}}" data-attendees='{{{json meeting.attendees}}}'> <i class="bell outline icon"></i>Remind</div>
+                    <div class="ui basic meeting green invite button" data-content="Invite guests who have not responded"  data-position="bottom center" data-mid="{{meeting.mid}}" data-purpose="{{meeting.purpose}}" data-date="{{meeting.date}}" data-time="{{meeting.start_time}}" data-creator="{{meeting.creator_name}}" data-attendees='{{{json meeting.attendees}}}'> <i class="paper plane outline icon"></i>Invite</div>
                     {{else}}
                     <div class="ui buttons">
                         <div class="ui basic meeting red button reject" data-attendees='{{{json meeting.attendees}}}' data-mid="{{meeting.mid}}" data-react="reject">
