@@ -2085,7 +2085,7 @@ app.post('/invitemeeting', async (req, res) => {
 			if (attendee.attend == undefined) web.chat.postMessage({
 				as_user: false,
 				channel: dm.channel.id,
-				text: `Would you like to join the meeting invited by ${req.session.user.real_name}?`,
+				text: `Would you like to accept the meeting invitation from ${req.session.user.real_name}?`,
 				attachments: JSON.stringify([
 					{
 						title: `Purpose: ${req.body.purpose} \n When: ${req.body.date} ${req.body.start_time}`,
