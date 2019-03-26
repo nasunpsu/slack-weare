@@ -423,7 +423,7 @@ app.post('/slack/events', (req, res, next) => {
 						// DB.collection('channels').findOne({cid: team + '_' + channel }).then(old_channel =>{
 						// 	if(old_channel.cname == 'general' || old_channel.cname=='')
 						// })
-						if(channel=="C0A28BAHG" || channel == "CH3V2AMNZ") { //C0A34HJVA
+						if(channel=="CG82VU7HC" || channel == "T0A286J8K") { //C0A34HJVA
 							// onboard.initialMessage(user, channel);
 							const message = {
 								channel: channel,
