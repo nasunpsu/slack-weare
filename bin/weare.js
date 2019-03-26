@@ -1541,7 +1541,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 
 });
 
-app.ws('/temporal/presenceUpdate', function (ws, req) {
+expressWs.app.ws('/temporal/presenceUpdate', function (ws, req) {
 	ws.on('message', function (msg) {
 		console.log(msg);
 	});
