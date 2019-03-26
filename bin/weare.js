@@ -127,6 +127,7 @@ app.engine('hbs', hbs({
 	helpers: {
 		json: function (context) { return JSON.stringify(context); },
 		unescape: function(x) {
+			if(x==undefined) return null;
 			return unescape(x);
 		},
 		eq: function () {
