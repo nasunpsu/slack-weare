@@ -14,7 +14,6 @@ const serverUrl = window.location.origin + '/log';
 
 const scrollElements = [{
     id: 'home-table',
-    route: '/home',
     label: 'home view table'
 }];
 
@@ -23,15 +22,15 @@ const triggerScrollEvent = () => {
     const yStart = (window.pageYOffset || doc.scrollTop)  - (doc.clientTop || 0);
     const yEnd = (window.innerHeight || doc.clientHeight) + yStart;
     const visibleElements = calcVisibleElements(yStart, yEnd);
+    if(visibleElements.length === 0){
+       return;
+    }
     const visibleElement = visibleElements[0];
     logEvent('Scroll', 'User scrolled to ' + visibleElement);
 };
 
 const calcVisibleElements = (yStart, yEnd) => {
     return scrollElements.filter(scrollElement => {
-        if(window.location.pathname !== scrollElement.route){
-            return false;
-        }
         const element = $(`#${scrollElement.id}`);
         const top = $(element).offset().top;
         const bottom = top + $(element).height();
@@ -44,6 +43,7 @@ const clickElements = [
    {id: 'connectList', label: 'Connect dropdown'},
    {id: 'profile_uid', label: 'Profile dropdown'},
    {id: 'open-slack', label: 'Open slack button'},
+   {id: 'help-button', label: 'Help button'},
    {className: 'slack-link', label: 'Slack link'},
 ];
 
@@ -134,7 +134,7 @@ setInterval(() => {
 });
 
 /** Time in milliseconds without scroll to trigger a scroll event*/
-const scrollThreshold = 2000;
+const scrollThreshold = 500;
 /** Last time the document scroll event was triggered */
 let lastScroll = null;
 let isScrolling = false;
