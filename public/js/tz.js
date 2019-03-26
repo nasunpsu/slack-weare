@@ -21,7 +21,7 @@ window.addEventListener("DOMContentLoaded", function () {
         $(this).find('.user-img').css({ "z-index": "2" });
     });
     // var ws = new WebSocket('ws://localhost:8080/temporal/presenceUpdate');
-    var ws = new WebSocket('wss://420520b7.ngrok.io/temporal/presenceUpdate');
+    var ws = new WebSocket('wss://weconnect.ist.psu.edu:8443/temporal/presenceUpdate');
     ws.onmessage = function (message) {
         console.log('message is ' + JSON.stringify(message.data))
         var obj_data = JSON.parse(message.data);

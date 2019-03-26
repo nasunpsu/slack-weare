@@ -126,8 +126,8 @@ app.engine('hbs', hbs({
 	],
 	helpers: {
 		json: function (context) { return JSON.stringify(context); },
-		unescape: function(x) {
-			if(x==undefined) return null;
+		unescape: function (x) {
+			if (x == undefined) return null;
 			return unescape(x);
 		},
 		eq: function () {
@@ -252,6 +252,8 @@ app.post('/log', async (req, res) => {
 	res.status(500);
 	res.send({ response: 'Server error' });
 });
+
+
 
 app.get('/install', (req, res) => {
 	let to_be_rendered = {
@@ -422,14 +424,8 @@ app.post('/slack/events', (req, res, next) => {
 					if (!event.is_bot) {
 						console.log(`the event body is ${util.inspect(event.user, { depth: null })}`);
 						const { user, channel, team, event_ts } = event;
-						// onboard.initialMessage(user, channel);
-						// onboard.initialMessage(user, channel);
-
-						// DB.collection('channels').findOne({cid: team + '_' + channel }).then(old_channel =>{
-						// 	if(old_channel.cname == 'general' || old_channel.cname=='')
-						// })
 						if(channel=="CG82VU7HC" || channel == "T0A286J8K") { //C0A34HJVA
-							// onboard.initialMessage(user, channel);
+						
 							const message = {
 								channel: channel,
 								user: user,
@@ -437,41 +433,49 @@ app.post('/slack/events', (req, res, next) => {
 								text: 'Consent form of Participating WeAre! Research Project',
 								as_user: false,
 								attachments: JSON.stringify([
-								  {
-									title: 'Procedure',
-									text: 'We invite you to participate in a research study that takes place this spring semester. Our research goal is to explore and assess ways to build a sense of community among World Campus students. Participants must be over the age of 18 to participate. As a participant in the research project, you will be asked to use Slack and answer two questionnaires before and after usingt Slack (Each survey should 10 minutes to complete). As a compensation for your participation in the survey, we will draw 15 names in the first survey participants for a $30 Amazon Gift Card, and for those who answered both we will draw additional 15 names for a $50 Amazon Gift Card. During your use of Slack tool and visualization dashboard, we will collect your usage data (e.g. interactive moves in the dashboard, log-in time), but these data will always remain confidential and stored anonymously for data analysis. Only researchers of this project in the Human-Centered Lab of Penn State will have access to the data. No third party or university authorities will have access to the data.',
-									color: '#3060f0',
-								  },
-								  {
-									title: 'Questions or concerns?',
-									text: 'If you have questions or concerns, you may contact Na Sun at nzs162@psu.edu. If you have questions regarding your rights as a research subject or concerns regarding your privacy, you may contact the Penn State Office for Research Protections at 814-865-1775. Your participation is voluntary and you may decide to withdraw at any time without penalty. You do not have to answer any questions that you do not want to answer. Note that you can no longer modify the content once you complete the survey content. Your participation implies your voluntary consent to participate in the research.',
-									color: '#74c8ed',
-									callback_id: 'terms-of-service',
-									actions: [{
-									  name: 'accept',
-									  text: 'Accept',
-									  type: 'button',
-									  value: 'accept',
-									  style: 'primary',
+									{
+										title: 'Procedure',
+										text: 'We invite you to participate in a research study that takes place this spring semester. Our research goal is to explore and assess ways to build a sense of community among World Campus students. Participants must be over the age of 18 to participate. As a participant in the research project, you will be asked to use Slack and answer two questionnaires before and after usingt Slack (Each survey should 10 minutes to complete). As a compensation for your participation in the survey, we will draw 15 names in the first survey participants for a $30 Amazon Gift Card, and for those who answered both we will draw additional 15 names for a $50 Amazon Gift Card. During your use of Slack tool and visualization dashboard, we will collect your usage data (e.g. interactive moves in the dashboard, log-in time), but these data will always remain confidential and stored anonymously for data analysis. Only researchers of this project in the Human-Centered Lab of Penn State will have access to the data. No third party or university authorities will have access to the data.',
+										color: '#3060f0',
 									},
 									{
-									  name: 'Decline',
-									  text: 'Decline',
-									  type: 'button',
-									  value: 'decline',
-									  style: 'default'
-									}],
-								  }]
+										title: 'Questions or concerns?',
+										text: 'If you have questions or concerns, you may contact Na Sun at nzs162@psu.edu. If you have questions regarding your rights as a research subject or concerns regarding your privacy, you may contact the Penn State Office for Research Protections at 814-865-1775. Your participation is voluntary and you may decide to withdraw at any time without penalty. You do not have to answer any questions that you do not want to answer. Note that you can no longer modify the content once you complete the survey content. Your participation implies your voluntary consent to participate in the research.',
+										color: '#74c8ed',
+										callback_id: 'terms-of-service',
+										actions: [{
+											name: 'accept',
+											text: 'Accept',
+											type: 'button',
+											value: 'accept',
+											style: 'primary',
+										},
+										{
+											name: 'Decline',
+											text: 'Decline',
+											type: 'button',
+											value: 'decline',
+											style: 'default'
+										}],
+									}]
 								),
-							  };
-							  web.chat.postEphemeral(message).catch(err => console.error(err));
+							};
+							setTimeout(function () {
+								// onboard.initialMessage(user, channel);
+								web.chat.postEphemeral(message)
+									.catch(err => {
+										console.log(`error with posting ephmeral`);
+										console.error(err);
+									});
+							}, 7000);
+
 
 						}
 						DB.collection('users').findOne({ uid: team + '_' + user }, function (err, user_doc) {
 							console.log(`finding the user is ${util.inspect(user_doc, { depth: null })}`);
 							console.log(`error is ${util.inspect(err, { depth: null })}`);
 							if (err) console.error(err);
-							else if(user_doc){
+							else if (user_doc) {
 								// console.log(`the retrieved docs is ${util.inspect(docs, { depth: null })}`)
 								DB.collection('channels').findOneAndUpdate(
 									{ cid: team + '_' + channel },
@@ -498,8 +502,8 @@ app.post('/slack/events', (req, res, next) => {
 												{
 													$push: {
 														channels: {
-															cid: updatedChannel.cid,
-															cname: updatedChannel.cname
+															cid: updatedChannel.value.cid,
+															cname: updatedChannel.value.cname
 														}
 													}
 												},
@@ -510,25 +514,25 @@ app.post('/slack/events', (req, res, next) => {
 												});
 										}
 									});
-									DB.collection('userlogs').updateOne({ log_id: makeid()}, {
-										$set: {
-											uid: team + '_' + user,
-											email: user_doc.email,
-											real_name: user_doc.real_name,
-											first_name: user_doc.first_name,
-											last_name: user_doc.last_name,
-											action: `join the channel`,
-											channel: team + '_' + channel
-										},
-									}, { upsert: true }, function (err, res) {
-										if (err) console.error(err);
-										else console.log(`the user ${util.inspect(user_doc.first_name)} join the channel ${channel} `);
-									});
+								DB.collection('userlogs').updateOne({ log_id: makeid() }, {
+									$set: {
+										uid: team + '_' + user,
+										email: user_doc.email,
+										real_name: user_doc.real_name,
+										first_name: user_doc.first_name,
+										last_name: user_doc.last_name,
+										action: `join the channel`,
+										channel: team + '_' + channel
+									},
+								}, { upsert: true }, function (err, res) {
+									if (err) console.error(err);
+									else console.log(`the user ${util.inspect(user_doc.first_name)} join the channel ${channel} `);
+								});
 
 							}
 						});
 
-						
+
 					}
 					res.sendStatus(200);
 					break;
@@ -552,7 +556,7 @@ app.post('/slack/events', (req, res, next) => {
 										else console.log(`the deleted user is ${util.inspect(tobeDEL)}`);
 									})
 								}
-								DB.collection('userlogs').updateOne({ log_id: makeid()}, {
+								DB.collection('userlogs').updateOne({ log_id: makeid() }, {
 									$set: {
 										uid: team + '_' + user,
 										email: tobeDEL.email,
@@ -608,7 +612,7 @@ app.post('/slack/events', (req, res, next) => {
 						// 	await similarity.storeSimilarUsers(uid);
 
 						// };
-						
+
 						DB.collection('users').updateOne(
 							{ uid: user.team_id + '_' + user.id },
 							{
@@ -653,7 +657,7 @@ app.post('/slack/events', (req, res, next) => {
 								console.error(err);
 							});
 						// onComplete);
-						
+
 					}
 					res.sendStatus(200);
 					break;
@@ -1392,6 +1396,14 @@ app.use(checkSignIn);
 
 // app.use(rtmConnectFn);
 
+app.get('/help', (req, res) => {
+	let to_be_rendered = {
+		layout: 'default',
+		template: 'help-template'
+	};
+	res.render('help', to_be_rendered);
+});
+
 app.get('/', async function (req, res) {
 	//you could do a combo of res.session.locals = res.locals() and res.locals(res.session.locals), but kinda hacky
 	console.log(`session info is ${util.inspect(req.session, { depth: 3 })}, and the locals are ${util.inspect(res.locals, { depth: 2 })}`)
@@ -1515,22 +1527,22 @@ app.get('/tablelist', async function (req, res) {
 	to_be_rendered.template = 'table-template';
 	to_be_rendered.userInfo = req.session.user;
 	const numUsers = 80;
-    const fields = ['uid', 'real_name', 'city', 'channels', 'major', 'local_area', 'affiliation', 'campus'];
+	const fields = ['uid', 'real_name', 'city', 'channels', 'major', 'local_area', 'affiliation', 'campus'];
 	let users = await similarity.getSimilarUsers(req.session.user.uid, DB, numUsers, fields);
-    // to_be_rendered.users = similarity.createSimilarityField(req.session.user, users, fields);
-    to_be_rendered.users = users.map(user => {
-        if (!!user.city) {
-            return;
-        }
-        if (!!user.region) {
-            user.city = user.region;
-            return;
-        }
-        if (!!user.local_area) {
-            user.city = user.local_area;
-            return;
-        }
-    });
+	// to_be_rendered.users = similarity.createSimilarityField(req.session.user, users, fields);
+	to_be_rendered.users = users.map(user => {
+		if (!!user.city) {
+			return;
+		}
+		if (!!user.region) {
+			user.city = user.region;
+			return;
+		}
+		if (!!user.local_area) {
+			user.city = user.local_area;
+			return;
+		}
+	});
 
 	to_be_rendered.users = similarity.createIsSharedField(req.session.user, users, fields);
 	const channelNames = req.session.user.channels.map(channel => channel.cname)
@@ -1758,7 +1770,7 @@ app.get('/meeting/:mid', async function (req, res) {
 });
 
 app.post('/meeting/:mid', [
-	check('purpose').isLength({max: 150}).trim().escape(),
+	check('purpose').isLength({ max: 150 }).trim().escape(),
 	check('description').trim().escape(),
 	check('who').trim().escape(),
 	check('start_time').escape(),
