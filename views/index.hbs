@@ -28,7 +28,7 @@
             </div>
         </div>
     </div>
-    <button class="ui button slack-btn"><a href="slack://open" target="_blank">Open Slack of {{team.team_name}}</a></button>
+    <button id="open-slack" class="ui button slack-btn"><a href="slack://open" target="_blank">Open Slack of {{team.team_name}}</a></button>
 
     {{!-- <div id="data" class="ui segment">{{{json msgs}}}</div> --}}
     <p class="post-title">Most Reacted Posts on the World Campus Slack</p>
@@ -78,7 +78,7 @@
                 {{#each channels_info.TopActiveChannels as |channel|}}
                 <tr class="center aligned">
                     <td><a href="https://slack.com/app_redirect?channel={{channel.cname}}"
-                            target="_blank">#{{channel.cname}}</a></td>
+                            target="_blank" class="slack-link">#{{channel.cname}}</a></td>
                     <td>{{channel.num_members}}</td>
                     <td>{{channel.num_msgs}}</td>
                     <td>{{{timeConverter channel.latest_msg_ts ../userInfo}}}</td>

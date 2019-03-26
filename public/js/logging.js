@@ -16,20 +16,16 @@ const scrollElements = [{
     id: 'home-table',
     route: '/home',
     label: 'home view table'
-}]
+}];
 
 const triggerScrollEvent = () => {
     const doc = document.documentElement;
     const yStart = (window.pageYOffset || doc.scrollTop)  - (doc.clientTop || 0);
     const yEnd = (window.innerHeight || doc.clientHeight) + yStart;
     const visibleElements = calcVisibleElements(yStart, yEnd);
-    const content = {
-        yStart,
-        yEnd,
-        elements: visibleElements
-    }
-    logEvent('Scroll', content);
-}
+    const visibleElement = visibleElements[0];
+    logEvent('Scroll', 'User scrolled to ' + visibleElement);
+};
 
 const calcVisibleElements = (yStart, yEnd) => {
     return scrollElements.filter(scrollElement => {
@@ -42,25 +38,26 @@ const calcVisibleElements = (yStart, yEnd) => {
         return yStart < top &&  bottom < yEnd;
     })
     .map(scrollElement => scrollElement.label);
-}
+};
+
+const clickElements = [
+   {id: 'connectList', label: 'Connect dropdown'},
+   {id: 'profile_uid', label: 'Profile dropdown'},
+   {id: 'open-slack', label: 'Open slack button'},
+   {className: 'slack-link', label: 'Slack link'},
+];
 
 
 document.addEventListener('click', (event) => {
     actionPerformed();
-    const { x, y, target } = event;
-    const {id, nodeName, classList, innerText} = target;
-    const targetObj = {
-        nodeType: nodeName.toLowerCase(),
-        classList: classList.toString(),
-        tag: target.cloneNode(false).outerHTML
-    }
-    if(!!id){
-        targetObj['id'] = id;
-    }
-    if(!!innerText){
-        targetObj['innerText'] = innerText;
-    }
-    const content = {x, y, target: targetObj}
+    const { target } = event;
+    const label = clickElements.filter(element => {
+       if(!!element.className){
+          return $(target).closest('.' + element.className).length === 1;
+       }
+       return $(target).closest('#' + element.id).length === 1;
+    }).map(element => element.label)[0];  
+    const content = label + ' clicked';
     logEvent('Click', content);
 });
 
@@ -95,10 +92,12 @@ document.addEventListener('click', (event) => {
  * @param {Object} content Extra parameters to send to the server
  */
 const logEvent = async (eventName, content) => {
+   const timestamp = new Date();
     const sendObj = {
         type: eventName,
         path: window.location.pathname,
-        time: new Date().toString(),
+        timestamp,
+        time: timestamp.toString(),
         content,
     };
     return new Promise(resolve => {
@@ -121,15 +120,15 @@ let isIdle = false;
 const actionPerformed = () => {
     lastActionTime = new Date();
     if(isIdle){
-        logEvent('Activity', {type: 'Active'});
+        logEvent('Activity', 'User became active');
         isIdle = false;
     }
-}
+};
 
 setInterval(() => {
     const currentTime = new Date();
     if(!isIdle && currentTime - lastActionTime > inactiveThreshold){
-        logEvent('Activity', {type: 'Inactive'});
+        logEvent('Activity', 'User became inactive');
         isIdle = true;
     }
 });
