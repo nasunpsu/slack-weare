@@ -424,7 +424,7 @@ app.post('/slack/events', (req, res, next) => {
 					if (!event.is_bot) {
 						console.log(`the event body is ${util.inspect(event.user, { depth: null })}`);
 						const { user, channel, team, event_ts } = event;
-						
+
 						if (channel == "C0A28BAHG" || channel == "CH3V2AMNZ") { //C0A34HJVA
 							// onboard.initialMessage(user, channel);
 							const message = {
@@ -523,7 +523,8 @@ app.post('/slack/events', (req, res, next) => {
 										first_name: user_doc.first_name,
 										last_name: user_doc.last_name,
 										action: `join the channel`,
-										channel: team + '_' + channel
+										channel: team + '_' + channel,
+										ts: new Date()
 									},
 								}, { upsert: true }, function (err, res) {
 									if (err) console.error(err);
@@ -735,54 +736,127 @@ app.post('/slack/commands/WhoIsOnline', urlencodedParser, (req, res) => {
 });
 
 app.post('/slack/commands/intro', urlencodedParser, (req, res) => {
-	console.log(`within intro`);
+	
 	res.status(200).end(); // best practice to respond with empty 200 status code
 	var reqBody = req.body;
-	var msg = {
-		title: 'I am, We Are!',
-		callback_id: 'self_intro',
-		submit_label: 'Done',
-		elements: [
-			{
-				label: 'Fun fact',
-				type: 'text',
-				name: 'fun',
-				text: 'existing content blah blah',
-				hint: 'Tell them something fun!'
-			},
-			{
-				label: 'I live in',
-				type: 'text',
-				name: 'city',
-				optional: true,
-				hint: 'Separate places with ";"! (e.g. Pittsburgh, PA; Victoria, BC'
-			},
-			{
-				label: 'Current profession',
-				type: 'select',
-				name: 'topic',
-				options: [
-					{ label: 'Veteran/military', value: 'military' },
-					{ label: 'Industry sector', value: 'industry' },
-					{ label: 'Education sector', value: 'education' },
-					{ label: 'No job yet', value: 'unemployed' }
-				],
-			},
-			{
-				label: 'Things I want my peers here to know about me',
-				type: 'text',
-				name: 'unique',
-				optional: true,
-				hint: 'e.g. interests, language, value systems, hobbies, minority roles'
-			}
-		],
-	};
-	console.log('before dialog web method');
-	console.log(util.inspect(msg, { depth: 3 }));
-	web.dialog.open({
-		trigger_id: reqBody.trigger_id,
-		dialog: msg
-	}).then(res => console.log(`successfully opened intro dialog`)).catch(err => { console.error(err); console.log(util.inspect(err, { depth: 3 })) });
+	console.log(`within intro: reqbody is ${util.inspect(reqBody, {depth: null})}`);
+	// var msg = {
+	// 	title: 'I am, We Are!',
+	// 	callback_id: 'self_intro',
+	// 	submit_label: 'Done',
+	// 	elements: [
+	// 		{
+	// 			label: 'Fun fact',
+	// 			type: 'text',
+	// 			name: 'fun',
+	// 			text: 'existing content blah blah',
+	// 			hint: 'Tell them something fun!'
+	// 		},
+	// 		{
+	// 			label: 'I live in',
+	// 			type: 'text',
+	// 			name: 'city',
+	// 			optional: true,
+	// 			hint: 'Separate places with ";"! (e.g. Pittsburgh, PA; Victoria, BC'
+	// 		},
+	// 		{
+	// 			label: 'Current profession',
+	// 			type: 'select',
+	// 			name: 'topic',
+	// 			options: [
+	// 				{ label: 'Veteran/military', value: 'military' },
+	// 				{ label: 'Industry sector', value: 'industry' },
+	// 				{ label: 'Education sector', value: 'education' },
+	// 				{ label: 'No job yet', value: 'unemployed' }
+	// 			],
+	// 		},
+	// 		{
+	// 			label: 'Things I want my peers here to know about me',
+	// 			type: 'text',
+	// 			name: 'unique',
+	// 			optional: true,
+	// 			hint: 'e.g. interests, language, value systems, hobbies, minority roles'
+	// 		}
+	// 	],
+	// };
+	// console.log('before dialog web method');
+	// console.log(util.inspect(msg, { depth: 3 }));
+	// web.dialog.open({
+	// 	trigger_id: reqBody.trigger_id,
+	// 	dialog: msg
+	// }).then(res => console.log(`successfully opened intro dialog`)).catch(err => { console.error(err); console.log(util.inspect(err, { depth: 3 })) });
+
+
+	DB.collection('users').findOne({ uid: reqBody.team_id + '_' + reqBody.user_id }, async (err, user) => {
+		const msg2 = {
+			title: 'I am, We Are!',
+			callback_id: 'self_intro',
+			submit_label: 'Done',
+			elements: [
+				{
+					label: 'Fun fact',
+					type: 'text',
+					name: 'fun',
+					value: user.fun,
+					hint: 'Tell them something fun!'
+				},
+				{
+					label: 'I have lived in',
+					type: 'text',
+					name: 'pastCities',
+					optional: true,
+					value: user.pastCities,
+					hint: 'Separate places with ";"! (e.g. Pittsburgh, PA; Victoria, BC)'
+				},
+				{
+					label: 'Current profession',
+					type: 'select',
+					name: 'profession',
+					options: [
+						{ label: 'Architecture and Engineering', value: '17' },
+						{ label: 'Arts, Design, Entertainment, Sports, and Media', value: '27' },
+						{ label: 'Building and Grounds Cleaning and Maintenance', value: '37' },
+						{ label: 'Business and Financial Operations', value: '13' },
+						{ label: 'Community and Social Service', value: '21' },
+						{ label: 'Computer and Mathematical', value: '15' },
+						{ label: 'Construction and Extraction', value: '47' },
+						{ label: 'Education, Training, and Library', value: '25' },
+						{ label: 'Farming, Fishing, and Forestry', value: '45' },
+						{ label: 'Food Preparation and Serving Related', value: '35' },
+						{ label: 'Healthcare Practitioners and Technical', value: '29' },
+						{ label: 'Healthcare Support', value: '31' },
+						{ label: 'Installation, Maintenance, and Repair', value: '49' },
+						{ label: 'Legal', value: '23' },
+						{ label: 'Life, Physical, and Social Science', value: '19' },
+						{ label: 'Management', value: '11' },
+						{ label: 'Miltary Specific', value: '55' },
+						{ label: 'Office and Administrative Support', value: '43' },
+						{ label: 'Personal Care and Service', value: '39' },
+						{ label: 'Production', value: '51' },
+						{ label: 'Protective Service', value: '33' },
+						{ label: 'Sales and Related', value: '41' },
+						{ label: 'Transportation and Material Moving', value: '53' },
+						{ label: 'Other', value: '0' },
+					],
+					value: 0
+				},
+				{
+					label: 'Things I want my peers here to know about me',
+					type: 'text',
+					name: 'unique',
+					optional: true,
+					value: user.unique,
+					hint: 'e.g. language, value systems, hobbies, minority roles, ethnicity'
+				},
+			],
+		};
+		console.log('before dialog web method');
+		console.log(util.inspect(msg2, { depth: 3 }));
+		web.dialog.open({
+			trigger_id: reqBody.trigger_id,
+			dialog: msg2
+		}).then(result => console.log(`successfully opened intro dialog`)).catch(err => { console.error(err); console.log(util.inspect(err, { depth: 3 })) });
+	});
 
 });
 
@@ -820,18 +894,23 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 								type: 'button',
 								value: 'not-intro',
 								style: 'default'
-							},
-								// {
-								// 	name: 'neverIntro',
-								// 	text: 'Don\'t show this again',
-								// 	type: 'button',
-								// 	value: 'never-intro',
-								// 	style: 'default'
-								// }
+							}
 							],
 						},]
 					)
 				}).catch(err => console.error(err));
+				DB.collection('users').updateOne(
+					{ uid: body.team.id + '_' + body.user.id },
+					{
+						$set: {
+							consent: 'accept'
+						}
+					},
+					{ upsert: true },
+					function (err, doc) {
+						if (err) console.error(err);
+						else console.log('User accepted to consent their participation');
+					});
 				break;
 			case 'decline':
 				web.chat.postEphemeral({
@@ -863,6 +942,72 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 						},]
 					)
 				}).catch(err => console.error(err));
+				DB.collection('users').updateOne(
+					{ uid: body.team.id + '_' + body.user.id },
+					{
+						$set: {
+							consent: 'decline'
+						}
+					},
+					{ upsert: true },
+					function (err, doc) {
+						if (err) console.error(err);
+						else console.log('User declined to participate in research');
+					});
+				break;
+			case 'leave-weare':
+				web.chat.postEphemeral({
+					as_user: false,
+					channel: body.channel.id,
+					user: body.user.id,
+					text: `Sorry that you decided to leave here. We hope you have a wonderful journey as a World Campus student. Bye!`,
+				}).catch(err => console.error(err));
+				setTimeout(function () {
+					DB.collection('users').updateOne(
+						{ uid: body.team.id + '_' + body.user.id },
+						{
+							$set: {
+								consent: 'leave'
+							}
+						},
+						{ upsert: true },
+						function (err, doc) {
+							if (err) console.error(err);
+							else console.log('User decided to leave weare');
+						});
+				}, 7000);
+				break;
+			case 'weare-welcome':
+				DB.collection('interactions').updateOne(
+					{ iid: makeid() },
+					{
+						$set: {
+							from: body.team.id + '_' + body.user.id,
+							content: 'weare-welcome',
+							// to: 
+						}
+					},
+					{ upsert: true },
+					function (err, doc) {
+						if (err) console.error(err);
+						else console.log('Welcome weAre!');
+					});
+				break;
+			case 'heart':
+			DB.collection('interactions').updateOne(
+				{ iid: makeid() },
+				{
+					$set: {
+						from: body.team.id + '_' + body.user.id,
+						content: 'heart',
+						// to: 
+					}
+				},
+				{ upsert: true },
+				function (err, doc) {
+					if (err) console.error(err);
+					else console.log('Welcome heart!');
+				});
 				break;
 			case 'now': console.log('now selected');
 				OnlineNow(body.channel.id, body.user.id, body.response_url);//body.response_url
