@@ -118,9 +118,7 @@ const options = {
 //app.listen(process.env.PORT, () => {
 //	console.log(`WeAre! server is running on PORT ${process.env.PORT}`);
 //});
-const httpsServer = https.createServer(options, app).listen(8443);
 
-const expressWs = require('express-ws')(app, httpsServer);
 const web = new SlackWebClient(process.env.BOT_USER_OAUTH_ACCESS_TOKEN);
 const web_slack = new SlackWebClient(process.env.SLACK_OAUTH_ACCESS_TOKEN);
 
@@ -2292,6 +2290,10 @@ app.get('/temporal', async function (req, res) {
 app.post('/rtmconnect', (req, res) => {
 	rtmConnectFn(req);
 });
+
+const httpsServer = https.createServer(options, app).listen(8443);
+
+const expressWs = require('express-ws')(app, httpsServer);
 
 async function rtmConnectFn(req) {
 
