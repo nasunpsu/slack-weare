@@ -424,12 +424,7 @@ app.post('/slack/events', (req, res, next) => {
 					if (!event.is_bot) {
 						console.log(`the event body is ${util.inspect(event.user, { depth: null })}`);
 						const { user, channel, team, event_ts } = event;
-						// onboard.initialMessage(user, channel);
-						// onboard.initialMessage(user, channel);
-
-						// DB.collection('channels').findOne({cid: team + '_' + channel }).then(old_channel =>{
-						// 	if(old_channel.cname == 'general' || old_channel.cname=='')
-						// })
+						
 						if (channel == "C0A28BAHG" || channel == "CH3V2AMNZ") { //C0A34HJVA
 							// onboard.initialMessage(user, channel);
 							const message = {
