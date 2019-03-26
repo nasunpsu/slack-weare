@@ -2173,8 +2173,14 @@ async function rtmConnectFn(req) {
 						// console.log(`data message type is ${obj_data.type}`)
 						switch (obj_data.type) {
 							case 'presence_change':
+								expressWs.app.ws('/temporal/presenceUpdate', function (ws, req) {
+									ws.on('message', function (msg) {
+										console.log(msg);
+									});
+									console.log('socket', req.session);
+								});
 								let aWss = expressWs.getWss('/temporal/presenceUpdate');
-								
+
 								presence_snapshot[obj_data.team + '_' + obj_data.user] = obj_data.presence;
 								var foundIndex = snapshot_db['users'].findIndex(x => x.uid == obj_data.team + '_' + obj_data.user);
 								snapshot_db['users'][foundIndex].presence = obj_data.presence;
@@ -2970,8 +2976,8 @@ const options = {
 //app.listen(process.env.PORT, () => {
 //	console.log(`WeAre! server is running on PORT ${process.env.PORT}`);
 //});
-httpsServer = https.createServer(options, app).listen(8443);
-const expressWs = require('express-ws')(app , httpsServer);
+let httpsServer = https.createServer(options, app).listen(8443);
+const expressWs = require('express-ws')(app, httpsServer);
 // let wss = new WebSocketServer({ server: server, path: "/temporal/presenceUpdate" });
 
 // wss.on('message', function (msg) {
