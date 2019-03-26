@@ -35,17 +35,7 @@ const express = require('express');
 const ldap = require('../server/ldap');
 const assert = require('assert');
 
-// Set up express server here
-const options = {
-    cert: fs.readFileSync('/etc/pki/tls/certs/weconnect.pem'),
-    key: fs.readFileSync('/etc/pki/tls/private/weconnect.key')
-};
-//app.listen(process.env.PORT, () => {
-//	console.log(`WeAre! server is running on PORT ${process.env.PORT}`);
-//});
-const httpsServer = https.createServer(options, app).listen(8443);
 
-expressWs(app, httpsServer);
 
 app.use(expressIp().getIpInfoMiddleware);
 app.use(bodyParser.json());
@@ -120,6 +110,18 @@ app.use((req, res, next) => {
 	logEvent(log, req);
 	next();
 });
+
+// Set up express server here
+const options = {
+    cert: fs.readFileSync('/etc/pki/tls/certs/weconnect.pem'),
+    key: fs.readFileSync('/etc/pki/tls/private/weconnect.key')
+};
+//app.listen(process.env.PORT, () => {
+//	console.log(`WeAre! server is running on PORT ${process.env.PORT}`);
+//});
+const httpsServer = https.createServer(options, app).listen(8443);
+
+expressWs(app, httpsServer);
 
 const web = new SlackWebClient(process.env.BOT_USER_OAUTH_ACCESS_TOKEN);
 const web_slack = new SlackWebClient(process.env.SLACK_OAUTH_ACCESS_TOKEN);
