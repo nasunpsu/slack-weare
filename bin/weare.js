@@ -12,7 +12,7 @@ const ticket = require('../ticket.js');
 const onboard = require('../server/onboard.js')
 const similarity = require('../server/similarity/similarity');
 const WebSocket = require('ws');
-const expressWs = require('express-ws')(app);
+const expressWs = require('express-ws')(app , httpsServer);
 // const app = http.createServer(server);
 // console.log(`this is the PORT: ${process.env.PORT}`)
 const { sanitizeBody } = require('express-validator/filter');
@@ -424,8 +424,8 @@ app.post('/slack/events', (req, res, next) => {
 					if (!event.is_bot) {
 						console.log(`the event body is ${util.inspect(event.user, { depth: null })}`);
 						const { user, channel, team, event_ts } = event;
-						if(channel=="CG82VU7HC" || channel == "T0A286J8K") { //C0A34HJVA
-						
+						if (channel == "CG82VU7HC" || channel == "T0A286J8K") { //C0A34HJVA
+
 							const message = {
 								channel: channel,
 								user: user,
@@ -2174,6 +2174,7 @@ async function rtmConnectFn(req) {
 						switch (obj_data.type) {
 							case 'presence_change':
 								let aWss = expressWs.getWss('/temporal/presenceUpdate');
+								
 								presence_snapshot[obj_data.team + '_' + obj_data.user] = obj_data.presence;
 								var foundIndex = snapshot_db['users'].findIndex(x => x.uid == obj_data.team + '_' + obj_data.user);
 								snapshot_db['users'][foundIndex].presence = obj_data.presence;
@@ -2963,13 +2964,19 @@ app.use((err, req, res, next) => {
 
 // Set up express server here
 const options = {
-    cert: fs.readFileSync('/etc/pki/tls/certs/weconnect.pem'),
-    key: fs.readFileSync('/etc/pki/tls/private/weconnect.key')
+	cert: fs.readFileSync('/etc/pki/tls/certs/weconnect.pem'),
+	key: fs.readFileSync('/etc/pki/tls/private/weconnect.key')
 };
 //app.listen(process.env.PORT, () => {
 //	console.log(`WeAre! server is running on PORT ${process.env.PORT}`);
 //});
-https.createServer(options, app).listen(8443);
+httpsServer = https.createServer(options, app).listen(8443);
+
+// let wss = new WebSocketServer({ server: server, path: "/temporal/presenceUpdate" });
+
+// wss.on('message', function (msg) {
+// 	console.log(msg);
+// });
 
 process.on('exit', () => {
 	ldap.closeLdapConnection();
