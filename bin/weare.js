@@ -12,7 +12,7 @@ const ticket = require('../ticket.js');
 const onboard = require('../server/onboard.js')
 const similarity = require('../server/similarity/similarity');
 const WebSocket = require('ws');
-// const expressWs = require('express-ws')(app , httpsServer);
+const expressWs = require('express-ws');
 // const app = http.createServer(server);
 // console.log(`this is the PORT: ${process.env.PORT}`)
 const { sanitizeBody } = require('express-validator/filter');
@@ -34,6 +34,18 @@ const getOffset = require('get-timezone-offset');
 const express = require('express');
 const ldap = require('../server/ldap');
 const assert = require('assert');
+
+// Set up express server here
+const options = {
+    cert: fs.readFileSync('/etc/pki/tls/certs/weconnect.pem'),
+    key: fs.readFileSync('/etc/pki/tls/private/weconnect.key')
+};
+//app.listen(process.env.PORT, () => {
+//	console.log(`WeAre! server is running on PORT ${process.env.PORT}`);
+//});
+const httpsServer = https.createServer(options, app).listen(8443);
+
+expressWs(app, httpsServer);
 
 app.use(expressIp().getIpInfoMiddleware);
 app.use(bodyParser.json());
@@ -424,8 +436,8 @@ app.post('/slack/events', (req, res, next) => {
 					if (!event.is_bot) {
 						console.log(`the event body is ${util.inspect(event.user, { depth: null })}`);
 						const { user, channel, team, event_ts } = event;
-						if (channel == "CG82VU7HC" || channel == "T0A286J8K") { //C0A34HJVA
-
+						if(channel=="CG82VU7HC" || channel == "T0A286J8K") { //C0A34HJVA
+						
 							const message = {
 								channel: channel,
 								user: user,
@@ -1385,12 +1397,12 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 
 });
 
-// expressWs.app.ws('/temporal/presenceUpdate', function (ws, req) {
-// 	ws.on('message', function (msg) {
-// 		console.log(msg);
-// 	});
-// 	console.log('socket', req.session);
-// });
+app.ws('/temporal/presenceUpdate', function (ws, req) {
+	ws.on('message', function (msg) {
+		console.log(msg);
+	});
+	console.log('socket', req.session);
+});
 
 app.use(checkSignIn);
 
@@ -2173,14 +2185,7 @@ async function rtmConnectFn(req) {
 						// console.log(`data message type is ${obj_data.type}`)
 						switch (obj_data.type) {
 							case 'presence_change':
-								expressWs.app.ws('/temporal/presenceUpdate', function (ws, req) {
-									ws.on('message', function (msg) {
-										console.log(msg);
-									});
-									console.log('socket', req.session);
-								});
 								let aWss = expressWs.getWss('/temporal/presenceUpdate');
-
 								presence_snapshot[obj_data.team + '_' + obj_data.user] = obj_data.presence;
 								var foundIndex = snapshot_db['users'].findIndex(x => x.uid == obj_data.team + '_' + obj_data.user);
 								snapshot_db['users'][foundIndex].presence = obj_data.presence;
@@ -2968,27 +2973,15 @@ app.use((err, req, res, next) => {
 	return res.render('error')
 });
 
-// Set up express server here
-const options = {
-	cert: fs.readFileSync('/etc/pki/tls/certs/weconnect.pem'),
-	key: fs.readFileSync('/etc/pki/tls/private/weconnect.key')
-};
-//app.listen(process.env.PORT, () => {
-//	console.log(`WeAre! server is running on PORT ${process.env.PORT}`);
-//});
-let httpsServer = https.createServer(options, app).listen(8443);
-const expressWs = require('express-ws')(app, httpsServer);
-// let wss = new WebSocketServer({ server: server, path: "/temporal/presenceUpdate" });
-
-// wss.on('message', function (msg) {
-// 	console.log(msg);
-// });
-expressWs.app.ws('/temporal/presenceUpdate', function (ws, req) {
-	ws.on('message', function (msg) {
-		console.log(msg);
-	});
-	console.log('socket', req.session);
-});
+// // Set up express server here
+// const options = {
+//     cert: fs.readFileSync('/etc/pki/tls/certs/weconnect.pem'),
+//     key: fs.readFileSync('/etc/pki/tls/private/weconnect.key')
+// };
+// //app.listen(process.env.PORT, () => {
+// //	console.log(`WeAre! server is running on PORT ${process.env.PORT}`);
+// //});
+// https.createServer(options, app).listen(8443);
 
 process.on('exit', () => {
 	ldap.closeLdapConnection();
