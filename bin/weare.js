@@ -1541,12 +1541,17 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 
 });
 
+const httpsServer = https.createServer(options, app).listen(8443);
+
+const expressWs = require('express-ws')(app, httpsServer);
+
 expressWs.app.ws('/temporal/presenceUpdate', function (ws, req) {
 	ws.on('message', function (msg) {
 		console.log(msg);
 	});
 	console.log('socket', req.session);
 });
+
 
 app.use(checkSignIn);
 
@@ -2291,9 +2296,7 @@ app.post('/rtmconnect', (req, res) => {
 	rtmConnectFn(req);
 });
 
-const httpsServer = https.createServer(options, app).listen(8443);
 
-const expressWs = require('express-ws')(app, httpsServer);
 
 async function rtmConnectFn(req) {
 
