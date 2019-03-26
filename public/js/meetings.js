@@ -74,6 +74,14 @@ window.addEventListener("DOMContentLoaded", function () {
     var reactUpdate = function (e) {
         console.log('react reject/accept clicked');
         const attendees = JSON.parse(e.target.getAttribute("data-attendees")).map(x => x.uid);
+        if($(e.target).hasClass('basic')) {// element reject/accept clicked
+            $(e.target).removeClass('basic');
+            $($(e.target).siblings('.button')[0]).addClass('basic')
+        }
+        else {
+            $(e.target).addClass('basic');
+            $($(e.target).siblings('.button')[0]).removeClass('basic');
+        }
         e.preventDefault();
         $.ajax({
             type: 'POST', url: '/reactmeeting', data: {

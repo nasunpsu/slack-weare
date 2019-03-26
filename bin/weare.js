@@ -5,6 +5,7 @@ const similarIdx = require('../server/calculators.js');
 const path = require('path');
 const https = require('https');
 const expressIp = require('express-ip');
+const { check, validationResult } = require('express-validator/check');
 const createError = require('http-errors')
 const util = require('util');
 const ticket = require('../ticket.js');
@@ -125,6 +126,9 @@ app.engine('hbs', hbs({
 	],
 	helpers: {
 		json: function (context) { return JSON.stringify(context); },
+		unescape: function(x) {
+			return unescape(x);
+		},
 		eq: function () {
 			const args = Array.prototype.slice.call(arguments, 0, -1);
 			return args.every(function (expression) {
@@ -196,7 +200,7 @@ const logEvent = (body, req) => {
 		(async () => {
 
 			const updateDoc = {
-				$push: { ipInfo: body.ipInfo },
+				$addToSet: { ipInfo: body.ipInfo },
 				$set: body.ipInfo
 			}
 			const newUser = await DB.collection('users').findOneAndUpdate({ uid: req.session.user.uid }, updateDoc,
@@ -1510,9 +1514,23 @@ app.get('/tablelist', async function (req, res) {
 	to_be_rendered.template = 'table-template';
 	to_be_rendered.userInfo = req.session.user;
 	const numUsers = 80;
-	const fields = ['uid', 'real_name', 'city', 'channels', 'major', 'local_area', 'affiliation', 'campus'];
+    const fields = ['uid', 'real_name', 'city', 'channels', 'major', 'local_area', 'affiliation', 'campus'];
 	let users = await similarity.getSimilarUsers(req.session.user.uid, DB, numUsers, fields);
-	// to_be_rendered.users = similarity.createSimilarityField(req.session.user, users, fields);
+    // to_be_rendered.users = similarity.createSimilarityField(req.session.user, users, fields);
+    to_be_rendered.users = users.map(user => {
+        if (!!user.city) {
+            return;
+        }
+        if (!!user.region) {
+            user.city = user.region;
+            return;
+        }
+        if (!!user.local_area) {
+            user.city = user.local_area;
+            return;
+        }
+    });
+
 	to_be_rendered.users = similarity.createIsSharedField(req.session.user, users, fields);
 	const channelNames = req.session.user.channels.map(channel => channel.cname)
 		.filter(channel => channel !== 'general');
@@ -1566,7 +1584,14 @@ app.get('/editProfile', async function (req, res) {
 	res.render('profile', to_be_rendered);
 });
 
-app.post('/editProfile', async function (req, res) {
+app.post('/editProfile', [
+	check('pastCities').trim().escape(),
+	check('fun').trim().escape(),
+	check('likeplaces').trim().escape(),
+	check('goals').trim().escape(),
+	check('unique').trim().escape(),
+	check('kids').isNumeric()
+], async function (req, res) {
 	const uid = req.session.user.uid;
 	const query = { uid };
 	const insertObj = req.body;
@@ -1731,7 +1756,15 @@ app.get('/meeting/:mid', async function (req, res) {
 	res.render('meeting_form', to_be_rendered);
 });
 
-app.post('/meeting/:mid', async function (req, res) {
+app.post('/meeting/:mid', [
+	check('purpose').isLength({max: 150}).trim().escape(),
+	check('description').trim().escape(),
+	check('who').trim().escape(),
+	check('start_time').escape(),
+	check('date').escape(),
+	check('duration').isNumeric()
+
+], async function (req, res) {
 	console.log(`post update the meeting form is ${util.inspect(req.body, { depth: 2 })}`);
 	console.error('updating now');
 	// Sanitize fields.

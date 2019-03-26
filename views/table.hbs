@@ -58,7 +58,7 @@
                     {{#each this.channelNames}}
                     <div class="ui checkbox">
                         <input type="checkbox">
-                        <label>{{this}}</label>
+                        <label><a class="ui purple empty circular label mini"></a> {{this}}</label>
                     </div>
                     {{/each}}
                 </form>
@@ -91,7 +91,7 @@
                         {{!-- <a href="slack://user?team={{userInfo.team_id}}&amp;id={{{get_UserID this.uid}}}"><i class="envelope icon"></i></a> --}}
                     </td>
                     <td {{#if this.ismajorShared}} style="color: #f2711c" {{/if}}>{{this.major}}</td>
-                    <td {{#if this.islocal_areaShared}} style="color: #db2828" {{/if}}>{{this.city}}</td>
+                    <td {{#if this.iscityShared}} style="color: #db2828" {{/if}}>{{this.city}}</td>
                     <td>
                         {{#each this.displayChannels}}
                         <span {{#if this.isShared}}class="{{this.className}}" {{/if}}>{{this.name}}; </span>
