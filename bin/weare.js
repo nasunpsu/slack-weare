@@ -12,7 +12,6 @@ const ticket = require('../ticket.js');
 const onboard = require('../server/onboard.js')
 const similarity = require('../server/similarity/similarity');
 const WebSocket = require('ws');
-const expressWs = require('express-ws');
 // const app = http.createServer(server);
 // console.log(`this is the PORT: ${process.env.PORT}`)
 const { sanitizeBody } = require('express-validator/filter');
@@ -121,8 +120,7 @@ const options = {
 //});
 const httpsServer = https.createServer(options, app).listen(8443);
 
-expressWs(app, httpsServer);
-
+const expressWs = require('express-ws')(app, httpsServer);
 const web = new SlackWebClient(process.env.BOT_USER_OAUTH_ACCESS_TOKEN);
 const web_slack = new SlackWebClient(process.env.SLACK_OAUTH_ACCESS_TOKEN);
 
