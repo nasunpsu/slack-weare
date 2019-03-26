@@ -1584,7 +1584,14 @@ app.get('/editProfile', async function (req, res) {
 	res.render('profile', to_be_rendered);
 });
 
-app.post('/editProfile', async function (req, res) {
+app.post('/editProfile', [
+	check('pastCities').trim().escape(),
+	check('fun').trim().escape(),
+	check('likeplaces').trim().escape(),
+	check('goals').trim().escape(),
+	check('unique').trim().escape(),
+	check('kids').isNumeric()
+], async function (req, res) {
 	const uid = req.session.user.uid;
 	const query = { uid };
 	const insertObj = req.body;

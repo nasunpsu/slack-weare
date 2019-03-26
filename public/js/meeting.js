@@ -9,6 +9,13 @@ if (meeting.who == "all" | meeting.who == undefined) {
     $('.select-attendee.ui.dropdown').addClass("disabled");
 };
 //   var topic = document.getElementById("hidden-topic").value;
+
+let me_id = document.getElementById('profile_uid').getAttribute('data-uid');
+if (meeting.creator_uid != me_id) { //the meeting is not created by me
+    let attendee_me = meeting.attendees.filter(x => x.uid == me_id)[0];
+    if (attendee_me.attend == 'accept') $('#accept').removeClass('basic');
+    else if (attendee_me.attend == 'reject') $('#reject').removeClass('basic');
+}
 $('.select-topic.ui.fluid.dropdown')
     .dropdown('set selected', meeting.topic);
 
@@ -169,6 +176,14 @@ window.addEventListener("DOMContentLoaded", function () {
 
     document.getElementById("reject").addEventListener("click", function (e) {
         console.log('reject clicked');
+        // if($(e.target).hasClass('basic')) {// element reject/accept clicked
+        //     $(e.target).removeClass('basic');
+        //     $($(e.target).siblings('.button')[0]).addClass('basic')
+        // }
+        // else {
+        //     $(e.target).addClass('basic');
+        //     $($(e.target).siblings('.button')[0]).removeClass('basic');
+        // }
         e.preventDefault();
         $.ajax({
             type: 'POST',
@@ -202,9 +217,14 @@ window.addEventListener("DOMContentLoaded", function () {
                 react: "accept",
                 who_react: document.getElementById("profile_uid").getAttribute("data-uid"),
                 attendees: $(".ui.form").form('get value', 'attendees')
-            }, success: function (data) {
-                console.log(data);
-                console.log('successfully accept');
+            }, success: function (res) {
+                if (res.success) {
+                    console.log('id from ajax call is', res);
+                    location.href = "/meetings";
+                    // window.location.reload();
+                } else {
+                    console.log('error...ajax');
+                };
             }
         });
 
