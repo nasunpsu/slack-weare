@@ -651,6 +651,7 @@ app.post('/slack/events', (req, res, next) => {
 								const fullName = user.profile.real_name;
 								await ldap.updateUserWithLdapData(email, fullName, user.team_id + '_' + user.id, DB);
 								await similarity.storeSimilarUsers(user.team_id + '_' + user.id);
+								await InitTeamMembers(user.team_id.split('_')[0], process.env.SLACK_OAUTH_ACCESS_TOKEN, 200);
 								console.log('user updated with LDAP succesfully');
 
 							})
