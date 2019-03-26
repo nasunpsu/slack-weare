@@ -2970,7 +2970,7 @@ const options = {
 //app.listen(process.env.PORT, () => {
 //	console.log(`WeAre! server is running on PORT ${process.env.PORT}`);
 //});
-httpsServer = https.createServer(options, app).listen(8443);
+let httpsServer = https.createServer(options, app).listen(8443);
 const expressWs = require('express-ws')(app , httpsServer);
 // let wss = new WebSocketServer({ server: server, path: "/temporal/presenceUpdate" });
 
