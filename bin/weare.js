@@ -12,7 +12,7 @@ const ticket = require('../ticket.js');
 const onboard = require('../server/onboard.js')
 const similarity = require('../server/similarity/similarity');
 const WebSocket = require('ws');
-const expressWs = require('express-ws')(app , httpsServer);
+// const expressWs = require('express-ws')(app , httpsServer);
 // const app = http.createServer(server);
 // console.log(`this is the PORT: ${process.env.PORT}`)
 const { sanitizeBody } = require('express-validator/filter');
@@ -1385,12 +1385,12 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 
 });
 
-expressWs.app.ws('/temporal/presenceUpdate', function (ws, req) {
-	ws.on('message', function (msg) {
-		console.log(msg);
-	});
-	console.log('socket', req.session);
-});
+// expressWs.app.ws('/temporal/presenceUpdate', function (ws, req) {
+// 	ws.on('message', function (msg) {
+// 		console.log(msg);
+// 	});
+// 	console.log('socket', req.session);
+// });
 
 app.use(checkSignIn);
 
@@ -2971,12 +2971,18 @@ const options = {
 //	console.log(`WeAre! server is running on PORT ${process.env.PORT}`);
 //});
 httpsServer = https.createServer(options, app).listen(8443);
-
+const expressWs = require('express-ws')(app , httpsServer);
 // let wss = new WebSocketServer({ server: server, path: "/temporal/presenceUpdate" });
 
 // wss.on('message', function (msg) {
 // 	console.log(msg);
 // });
+expressWs.app.ws('/temporal/presenceUpdate', function (ws, req) {
+	ws.on('message', function (msg) {
+		console.log(msg);
+	});
+	console.log('socket', req.session);
+});
 
 process.on('exit', () => {
 	ldap.closeLdapConnection();
