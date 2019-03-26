@@ -804,3 +804,18 @@ div.ui.dropdown.weekday.selection {
   margin-top: 60px!important;
   margin-bottom: 40px!important;
 }
+
+.help-wrapper {
+  /* overflow-x: auto;
+  display: flex;
+  display: -webkit-flex; */
+  justify-content: end;
+  padding-left: 35px;
+  padding-right: 25px;
+  margin-top: 150px;
+  margin-bottom: 20px;
+ }
+
+ .help-wrapper .subheader {
+   color: #e01e5a;
+ }
