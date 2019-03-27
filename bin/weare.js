@@ -365,24 +365,11 @@ app.get('/api/oauth', function (req, res, next) {
 						}
 					}, { upsert: true }, async function (err, db_result) {
 						if (err) console.error(err);
-<<<<<<< HEAD
 						console.log(`team id is ${result.team_id}, and Initiating ALL`);
-						await InitTeamMembers(result.team_id, result.access_token, null);
-						await InitTeamChannels(result.team_id, result.access_token, null);
-						await InitRecentMsgs(null, 'general', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200);
-=======
-						console.log(`team id is ${result.team_id}, and token is ${result.access_token}`);
 						await InitTeamMembers(result.team_id, result.access_token, null);
 						await InitTeamChannels(result.team_id, result.access_token, null);
 						await UpdateChannelRecentMsgs(null, 'general', result.access_token, 200); //cid example:"T0A286J8K_C0A28BAHG"
 
-						// (async () => {									//TODO: MOVE this Block to the Init Module
-						// 	await InitTeamMembers(result.team_id, result.access_token, null);
-						// })();
-						// (async () => {
-						// 	await InitTeamChannels(result.team_id, result.access_token, null);;
-						// })();
->>>>>>> parent of da6b4bd... changed the filter location in table views; changed the words for dropdown
 						await DB.collection('users').find({ uid: result.team_id + '_' + result.user_id }).toArray()
 							.then(async (user_docs, err) => {
 								if (err) console.error(err);
@@ -417,19 +404,13 @@ app.get('/test', (req, res) => {
 	res.send('haha');
 	res.status(200).end();
 	(async () => {									//TODO: MOVE this Block to the Init Module
-		await InitTeamMembers('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200);
-		await InitTeamChannels('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, null);
-		await InitRecentMsgs(null, 'general', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200);
+		await InitTeamMembers('TG6RV469K', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200);
 	})();
-<<<<<<< HEAD
+	(async () => {									//TODO: MOVE this Block to the Init Module
+		await InitTeamChannels('TG6RV469K', process.env.SLACK_OAUTH_ACCESS_TOKEN, null);
+	})();
 
-	//cid example:"T0A286J8K_C0A28BAHG"
-=======
 	UpdateChannelRecentMsgs(null, 'general', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200); //cid example:"T0A286J8K_C0A28BAHG"
->>>>>>> parent of da6b4bd... changed the filter location in table views; changed the words for dropdown
-
-
-
 	console.log('---------------test----------------');
 });
 
