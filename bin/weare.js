@@ -94,7 +94,9 @@ app.use((req, res, next) => {
 		next();
 		return;
 	}
-	const content = {body, query, params};
+	const type = `${method} Request`;
+        const label = type + ' to ' + path; 
+        const content = {body, query, params, label};
 	for(const key in content){
 		if(!content[key] || Object.keys(content[key]).length === 0){
 			delete content[key];
@@ -103,7 +105,7 @@ app.use((req, res, next) => {
 	const timeStamp = new Date();
 	const time = timeStamp.toString();
 	const log = {
-		type: `${method} Request`,
+		type,
 		time,
 		timeStamp,
 		content,
