@@ -605,62 +605,58 @@ app.post('/slack/events', (req, res, next) => {
 						// console.log(`the event body is ${util.inspect(event, { depth: null })}`);
 						const { user } = event;
 						console.log(`the user just joined the team is ${util.inspect(user, { depth: null })}`);
-						// const onComplete = async () => {
-						// 	console.log('user updated succesfully');
-
-						// 	const email = user.profile.email;
-						// 	const fullName = user.profile.real_name;
-						// 	await ldap.updateUserWithLdapData(email, fullName, uid, DB);
-						// 	await similarity.storeSimilarUsers(uid);
-
-						// };
-
-						DB.collection('users').updateOne(
-							{ uid: user.team_id + '_' + user.id },
-							{
-								$set: {
-									team_id: user.team_id,
-									name: user.name,
-									email: user.profile.email,
-									real_name: user.real_name,
-									tz: user.tz,
-									tz_label: user.tz_label,
-									local_area: user.tz ? user.tz.match(/([a-zA-Z]+)\//)[1] : 'unknown',
-									tz_offset: user.tz_offset / (60 * 60),
-									title: user.profile.title,
-									phone: user.profile.phone,
-									status_text: user.profile.status_text,
-									status_emoji: user.profile.status_emoji,
-									status_expiration: user.profile.status_expiration,
-									first_name: user.profile.first_name ? user.profile.first_name : user.profile.real_name.split(' ')[0],
-									last_name: user.profile.last_name,
-									image_48: user.profile.image_48,
-									image_512: user.profile.image_512,
-									is_custom_image: user.profile.is_custom_image,
-									is_bot: user.is_bot,
-									last_updated: user.updated,
-									locale: user.locale,
-									// channels: user_channels,
-									join_ts: new Date()
-								}
-							},
-							{ upsert: true })
-							.then(async () => {
-								console.log('user updated succesfully');
-								const email = user.profile.email;
-								const fullName = user.profile.real_name;
-								await ldap.updateUserWithLdapData(email, fullName, user.team_id + '_' + user.id, DB);
-								await similarity.storeSimilarUsers(user.team_id + '_' + user.id);
-								await InitTeamMembers(user.team_id.split('_')[0], process.env.SLACK_OAUTH_ACCESS_TOKEN, 200);
-								console.log('user updated with LDAP succesfully');
-
-							})
-							.catch(err => {
-								console.log(`error duing the inserting new user from Team_JOIN`);
-								console.error(err);
-							});
-						// onComplete);
-
+						
+						web.users.info({ user: user.id, include_locale: true })
+									.then(result => {
+										let userInfo = result.user;
+										if (!userInfo.is_bot) {
+											console.log(`Updating Locale etc for ${userInfo.profile.real_name}`);
+											DB.collection('users').updateOne(
+												{ uid: user.team_id + '_' + user.id },
+												{
+													$set: {
+														team_id: user.team_id,
+														name: userInfo.name,
+														email: userInfo.profile.email,
+														real_name: userInfo.real_name,
+														tz: userInfo.tz,
+														tz_label: userInfo.tz_label,
+														local_area: userInfo.tz ? user.tz.match(/([a-zA-Z]+)\//)[1] : 'unknown',
+														tz_offset: userInfo.tz_offset / (60 * 60),
+														title: userInfo.profile.title,
+														phone: userInfo.profile.phone,
+														status_text: userInfo.profile.status_text,
+														status_emoji: userInfo.profile.status_emoji,
+														status_expiration: userInfo.profile.status_expiration,
+														first_name: userInfo.profile.first_name ? userInfo.profile.first_name : userInfo.profile.real_name.split(' ')[0],
+														last_name: userInfo.profile.last_name,
+														image_48: userInfo.profile.image_48,
+														image_512: userInfo.profile.image_512,
+														is_custom_image: userInfo.profile.is_custom_image,
+														is_bot: userInfo.is_bot,
+														last_updated: userInfo.updated,
+														locale: userInfo.locale,
+														// channels: user_channels,
+														join_ts: new Date()
+													}
+												},
+												{ upsert: true })
+												.then(async () => {
+													console.log('user updated succesfully');
+													const uid = user.team_id + '_' + user.id;
+													const email = user.profile.email;
+													const fullName = user.profile.real_name;
+													await ldap.updateUserWithLdapData(email, fullName, user.team_id + '_' + user.id, DB);
+													await similarity.storeSimilarUsers(user.team_id + '_' + user.id);
+													console.log('user updated with LDAP succesfully');
+					
+												})
+												.catch(err => {
+													console.log(`error duing the inserting new user from Team_JOIN`);
+													console.error(err);
+												});
+										}
+									});
 					}
 					res.sendStatus(200);
 					break;
