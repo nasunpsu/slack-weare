@@ -32,8 +32,16 @@ const triggerScrollEvent = () => {
 const calcVisibleElements = (yStart, yEnd) => {
     return scrollElements.filter(scrollElement => {
         const element = $(`#${scrollElement.id}`);
-        const top = $(element).offset().top;
-        const bottom = top + $(element).height();
+        if(element.length === 0){
+           return false;
+        }
+        const offset = $(element).offset();
+        const height = $(element).height();
+        if(!offset || !height){
+           return false;
+        }
+        const top = offset.top;
+        const bottom = top + height;
         return yStart < top &&  bottom < yEnd;
     })
     .map(scrollElement => scrollElement.label);
@@ -56,7 +64,16 @@ document.addEventListener('click', (event) => {
           return $(target).closest('.' + element.className).length === 1;
        }
        return $(target).closest('#' + element.id).length === 1;
-    }).map(element => element.label)[0];  
+    }).map(element => {
+        if(!!element.className){
+           const text = $(target).closest('.' + element.className).text().trim();
+           return `${element.label} ${text}`;
+        }
+        return element.label;
+    })[0];  
+    if(!label){
+       return;
+    }
     const content = label + ' clicked';
     logEvent('Click', content);
 });
