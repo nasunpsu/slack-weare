@@ -144,6 +144,19 @@ app.use((req, res, next) => {
 		path
 	};
 	logEvent(log, req);
+        if(method === 'GET' && '/logout' === path){
+	   const action = 'logout';
+	   const type = `User ${action}`;
+	   const content = type;
+	   const log = {
+		   type,
+		   time,
+		   timeStamp,
+		   content,
+		   path
+	   };
+	   logEvent(log, req);
+	}	    
 	next();
 });
 
@@ -369,7 +382,20 @@ app.get('/api/oauth', function (req, res, next) {
 									if (err) console.error(err);
 									req.session.user = await users_docs[0];
 									req.session.team = await docs[0];
-
+									const timeStamp = new Date();
+									const time = timeStamp.toString();
+									const action = 'login';
+									const type = `User ${action}`;
+									const content = type;
+									const path = '/api/oauth';
+									const log = {
+									   type,
+									   time,
+									   timeStamp,
+									   content,
+									   path
+									};
+									logEvent(log, req);
 									res.redirect('/');
 								});
 							snapshot_db['users'] = await DB.collection('users').find({}).toArray();
