@@ -404,11 +404,11 @@ app.get('/test', (req, res) => {
 	res.status(200).end();
 	(async () => {									//TODO: MOVE this Block to the Init Module
 		await InitTeamMembers('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200);
-	})();
-	(async () => {
 		await InitTeamChannels('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, null);
+		await InitRecentMsgs(null, 'general', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200);
 	})();
-	InitRecentMsgs(null, 'general', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200); //cid example:"T0A286J8K_C0A28BAHG"
+
+	//cid example:"T0A286J8K_C0A28BAHG"
 
 
 
