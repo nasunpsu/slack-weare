@@ -91,7 +91,7 @@ if (app.get('env') === 'production') {
 }
 app.use(morgan('dev'));//combined				        
 app.use((req, res, next) => {
-   const maxAge = 24 * 60 * 60 * 1000 } //<=24h, 60000 1min
+   const maxAge = 24 * 60 * 60 * 1000  //<=24h, 60000 1min
    const sess = {
 	secret: 'keyboard cat',
 	resave: false,
