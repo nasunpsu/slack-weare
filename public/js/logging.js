@@ -56,7 +56,13 @@ document.addEventListener('click', (event) => {
           return $(target).closest('.' + element.className).length === 1;
        }
        return $(target).closest('#' + element.id).length === 1;
-    }).map(element => element.label)[0];  
+    }).map(element => {
+        if(!!element.className){
+           const text = $(target).closest('.' + element.className).text().trim();
+           return `${element.label} ${text}`;
+        }
+        return element.label;
+    })[0];  
     if(!label){
        return;
     }
