@@ -96,16 +96,23 @@ app.use((req, res, next) => {
 		next();
 		return;
 	}
-	const log = {
-		type: `${method} Request`,
-		time: new Date().toString(),
-		content: {
-			body,
-			query,
-			params,
-		},
-		path
+	const type = `${method} Request`;
+        const label = type + ' to ' + path; 
+        const content = {body, query, params, label};
+	for(const key in content){
+		if(!content[key] || Object.keys(content[key]).length === 0){
+			delete content[key];
+		}
 	}
+	const timeStamp = new Date();
+	const time = timeStamp.toString();
+	const log = {
+		type,
+		time,
+		timeStamp,
+		content,
+		path
+	};
 	logEvent(log, req);
 	next();
 });
@@ -188,8 +195,9 @@ const logEvent = (body, req) => {
 	if (!!req.sessionID) {
 		body.sessionID = req.sessionID;
 	}
+   let ipInfo = null;
 	if (!('error' in req.ipInfo)) {
-		body.ipInfo = modIpInfo(req.ipInfo);
+		ipInfo = modIpInfo(req.ipInfo);
 	}
 	if (!!req.session && !!req.session.user) {
 		body.email = req.session.user.email;
@@ -207,12 +215,12 @@ const logEvent = (body, req) => {
 		})();
 
 	}
-	if ('user' in req.session && 'uid' in req.session.user && 'ipInfo' in body) {
+	if ('user' in req.session && 'uid' in req.session.user && !!ipInfo) {
 		(async () => {
 
 			const updateDoc = {
-				$addToSet: { ipInfo: body.ipInfo },
-				$set: body.ipInfo
+				$addToSet: { ipInfo },
+				$set: ipInfo
 			}
 			const newUser = await DB.collection('users').findOneAndUpdate({ uid: req.session.user.uid }, updateDoc,
 				{ returnOriginal: false }).then((user) => {
@@ -245,6 +253,7 @@ app.post('/log', async (req, res) => {
 	try {
 		assert('type' in body, `'type' must be present in body`);
 		assert('time' in body, `'time' must be present in body`);
+		assert('timestamp' in body, `'timestamp' must be present in body`);
 		assert('content' in body, `'content' must be present in body`);
 		assert('path' in body, `'path' must be present in body`);
 	}
@@ -326,8 +335,8 @@ app.get('/api/oauth', function (req, res, next) {
 								return res.redirect('/install');
 							}
 							console.log('before retrieving usr DB');
-							// await DB.collection('users').find({major : {$exists: true}}).toArray()
-							await DB.collection('users').find({ uid: result.team.id + '_' + result.user.id }).toArray()
+							await DB.collection('users').find({major : {$exists: true}}).toArray()
+							// await DB.collection('users').find({ uid: result.team.id + '_' + result.user.id }).toArray()
 								.then(async (users_docs, err) => {
 									console.log(`the user is read from MongoDB: ${util.inspect(users_docs[0], { depth: 2 })}`);
 									if (err) console.error(err);
@@ -614,62 +623,58 @@ app.post('/slack/events', (req, res, next) => {
 						// console.log(`the event body is ${util.inspect(event, { depth: null })}`);
 						const { user } = event;
 						console.log(`the user just joined the team is ${util.inspect(user, { depth: null })}`);
-						// const onComplete = async () => {
-						// 	console.log('user updated succesfully');
-
-						// 	const email = user.profile.email;
-						// 	const fullName = user.profile.real_name;
-						// 	await ldap.updateUserWithLdapData(email, fullName, uid, DB);
-						// 	await similarity.storeSimilarUsers(uid);
-
-						// };
-
-						DB.collection('users').updateOne(
-							{ uid: user.team_id + '_' + user.id },
-							{
-								$set: {
-									team_id: user.team_id,
-									name: user.name,
-									email: user.profile.email,
-									real_name: user.real_name,
-									tz: user.tz,
-									tz_label: user.tz_label,
-									local_area: user.tz ? user.tz.match(/([a-zA-Z]+)\//)[1] : 'unknown',
-									tz_offset: user.tz_offset / (60 * 60),
-									title: user.profile.title,
-									phone: user.profile.phone,
-									status_text: user.profile.status_text,
-									status_emoji: user.profile.status_emoji,
-									status_expiration: user.profile.status_expiration,
-									first_name: user.profile.first_name ? user.profile.first_name : user.profile.real_name.split(' ')[0],
-									last_name: user.profile.last_name,
-									image_48: user.profile.image_48,
-									image_512: user.profile.image_512,
-									is_custom_image: user.profile.is_custom_image,
-									is_bot: user.is_bot,
-									last_updated: user.updated,
-									locale: user.locale,
-									// channels: user_channels,
-									join_ts: new Date()
-								}
-							},
-							{ upsert: true })
-							.then(async () => {
-								console.log('user updated succesfully');
-								const email = user.profile.email;
-								const fullName = user.profile.real_name;
-								await ldap.updateUserWithLdapData(email, fullName, user.team_id + '_' + user.id, DB);
-								await similarity.storeSimilarUsers(user.team_id + '_' + user.id);
-								await InitTeamMembers(user.team_id.split('_')[0], process.env.SLACK_OAUTH_ACCESS_TOKEN, 200);
-								console.log('user updated with LDAP succesfully');
-
-							})
-							.catch(err => {
-								console.log(`error duing the inserting new user from Team_JOIN`);
-								console.error(err);
-							});
-						// onComplete);
-
+						
+						web.users.info({ user: user.id, include_locale: true })
+									.then(result => {
+										let userInfo = result.user;
+										if (!userInfo.is_bot) {
+											console.log(`Updating Locale etc for ${userInfo.profile.real_name}`);
+											DB.collection('users').updateOne(
+												{ uid: user.team_id + '_' + user.id },
+												{
+													$set: {
+														team_id: user.team_id,
+														name: userInfo.name,
+														email: userInfo.profile.email,
+														real_name: userInfo.real_name,
+														tz: userInfo.tz,
+														tz_label: userInfo.tz_label,
+														local_area: userInfo.tz ? user.tz.match(/([a-zA-Z]+)\//)[1] : 'unknown',
+														tz_offset: userInfo.tz_offset / (60 * 60),
+														title: userInfo.profile.title,
+														phone: userInfo.profile.phone,
+														status_text: userInfo.profile.status_text,
+														status_emoji: userInfo.profile.status_emoji,
+														status_expiration: userInfo.profile.status_expiration,
+														first_name: userInfo.profile.first_name ? userInfo.profile.first_name : userInfo.profile.real_name.split(' ')[0],
+														last_name: userInfo.profile.last_name,
+														image_48: userInfo.profile.image_48,
+														image_512: userInfo.profile.image_512,
+														is_custom_image: userInfo.profile.is_custom_image,
+														is_bot: userInfo.is_bot,
+														last_updated: userInfo.updated,
+														locale: userInfo.locale,
+														// channels: user_channels,
+														join_ts: new Date()
+													}
+												},
+												{ upsert: true })
+												.then(async () => {
+													console.log('user updated succesfully');
+													const uid = user.team_id + '_' + user.id;
+													const email = user.profile.email;
+													const fullName = user.profile.real_name;
+													await ldap.updateUserWithLdapData(email, fullName, user.team_id + '_' + user.id, DB);
+													await similarity.storeSimilarUsers(user.team_id + '_' + user.id);
+													console.log('user updated with LDAP succesfully');
+					
+												})
+												.catch(err => {
+													console.log(`error duing the inserting new user from Team_JOIN`);
+													console.error(err);
+												});
+										}
+									});
 					}
 					res.sendStatus(200);
 					break;
@@ -1560,7 +1565,8 @@ app.use(checkSignIn);
 app.get('/help', (req, res) => {
 	let to_be_rendered = {
 		layout: 'default',
-		template: 'help-template'
+		template: 'help-template',
+		userInfo: req.session.user
 	};
 	res.render('help', to_be_rendered);
 });
@@ -2099,7 +2105,7 @@ app.post('/invitemeeting', async (req, res) => {
 			if (attendee.attend == undefined) web.chat.postMessage({
 				as_user: false,
 				channel: dm.channel.id,
-				text: `Would you like to join the meeting invited by ${req.session.user.real_name}?`,
+				text: `Would you like to accept the meeting invitation from ${req.session.user.real_name}?`,
 				attachments: JSON.stringify([
 					{
 						title: `Purpose: ${req.body.purpose} \n When: ${req.body.date} ${req.body.start_time}`,
@@ -2301,7 +2307,7 @@ app.post('/rtmconnect', (req, res) => {
 async function rtmConnectFn(req) {
 
 	if (typeof ws == 'undefined' || ws.readyState != WebSocket.OPEN) {
-		if (typeof snapshot_db['users'] == 'undefined') snapshot_db['users'] = await DB.collection('users').find({}).toArray();
+		snapshot_db['users'] = await DB.collection('users').find({}).toArray();
 		console.log('Connecting rtm.connect now:');
 		console.log(`snapshot users length is ${snapshot_db['users'].length}`);
 		// Promise.resolve(snapshot_db['users'])
@@ -2721,7 +2727,7 @@ async function UpdateChannelRecentMsgs(c_id, cname, token, limit = 200) {
 							if (msg.ts > latest) latest = msg.ts;
 							num_msgs += 1;
 							const msg_obj = {
-								uid: msg.user,
+								uid: msg.user,//team??
 								username: user.real_name,
 								user_avatar: user.image_48,
 								cid: c_id,

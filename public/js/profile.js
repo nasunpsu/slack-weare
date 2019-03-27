@@ -20,6 +20,26 @@ function reloadCalendar() {
 
 }
 
+$('.gender.ui.dropdown')
+    .dropdown({
+        placeholder: 'Select gender'
+    });
+
+$('.military.ui.dropdown')
+    .dropdown({
+        placeholder: 'Select military status'
+    });
+
+$('.profession.ui.dropdown')
+    .dropdown({
+        placeholder: 'Select profession'
+    });
+
+$('.military.ui.dropdown')
+    .dropdown({
+        placeholder: 'Select military status'
+    });
+
 $('.message .close')
     .on('click', function () {
         $(this)
@@ -83,6 +103,7 @@ function reloadForm() {
                 },
             ]
         };
+        obj[fieldObj.name].optional = true;
         if (!!fieldObj.rules) {
             obj[fieldObj.name].rules.unshift(...fieldObj.rules);
         }
@@ -169,14 +190,7 @@ let fields = [
         }]
     },
     { name: 'campus', identifier: 'campus' },
-    {
-        name: 'courses',
-        identifier: 'courses',
-        rules: [{
-            type: 'empty',
-            prompt: `Please enter your current courses.`
-        }]
-    },
+    { name: 'courses', identifier: 'courses' },
     { name: 'goals', identifier: 'goals' },
     { name: 'reccourses', identifier: 'recommended courses' },
     { name: 'instructors', identifier: 'recommended instructor' },

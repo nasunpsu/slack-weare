@@ -14,53 +14,67 @@ const serverUrl = window.location.origin + '/log';
 
 const scrollElements = [{
     id: 'home-table',
-    route: '/home',
     label: 'home view table'
-}]
+}];
 
 const triggerScrollEvent = () => {
     const doc = document.documentElement;
     const yStart = (window.pageYOffset || doc.scrollTop)  - (doc.clientTop || 0);
     const yEnd = (window.innerHeight || doc.clientHeight) + yStart;
     const visibleElements = calcVisibleElements(yStart, yEnd);
-    const content = {
-        yStart,
-        yEnd,
-        elements: visibleElements
+    if(visibleElements.length === 0){
+       return;
     }
-    logEvent('Scroll', content);
-}
+    const visibleElement = visibleElements[0];
+    logEvent('Scroll', 'User scrolled to ' + visibleElement);
+};
 
 const calcVisibleElements = (yStart, yEnd) => {
     return scrollElements.filter(scrollElement => {
-        if(window.location.pathname !== scrollElement.route){
-            return false;
-        }
         const element = $(`#${scrollElement.id}`);
-        const top = $(element).offset().top;
-        const bottom = top + $(element).height();
+        if(element.length === 0){
+           return false;
+        }
+        const offset = $(element).offset();
+        const height = $(element).height();
+        if(!offset || !height){
+           return false;
+        }
+        const top = offset.top;
+        const bottom = top + height;
         return yStart < top &&  bottom < yEnd;
     })
     .map(scrollElement => scrollElement.label);
-}
+};
+
+const clickElements = [
+   {id: 'connectList', label: 'Connect dropdown'},
+   {id: 'profile_uid', label: 'Profile dropdown'},
+   {id: 'open-slack', label: 'Open slack button'},
+   {id: 'help-button', label: 'Help button'},
+   {className: 'slack-link', label: 'Slack link'},
+];
 
 
 document.addEventListener('click', (event) => {
     actionPerformed();
-    const { x, y, target } = event;
-    const {id, nodeName, classList, innerText} = target;
-    const targetObj = {
-        nodeType: nodeName.toLowerCase(),
-        classList: classList.toString(),
-        tag: target.cloneNode(false).outerHTML
+    const { target } = event;
+    const label = clickElements.filter(element => {
+       if(!!element.className){
+          return $(target).closest('.' + element.className).length === 1;
+       }
+       return $(target).closest('#' + element.id).length === 1;
+    }).map(element => {
+        if(!!element.className){
+           const text = $(target).closest('.' + element.className).text().trim();
+           return `${element.label} ${text}`;
+        }
+        return element.label;
+    })[0];  
+    if(!label){
+       return;
     }
-    if(!!id){
-        targetObj['id'] = id;
-    }
-    if(!!innerText){
-        targetObj['innerText'] = innerText;
-    }
-    const content = {x, y, target: targetObj}
+    const content = label + ' clicked';
     logEvent('Click', content);
 });
 
@@ -95,10 +109,12 @@ document.addEventListener('click', (event) => {
  * @param {Object} content Extra parameters to send to the server
  */
 const logEvent = async (eventName, content) => {
+   const timestamp = new Date();
     const sendObj = {
         type: eventName,
         path: window.location.pathname,
-        time: new Date().toString(),
+        timestamp,
+        time: timestamp.toString(),
         content,
     };
     return new Promise(resolve => {
@@ -121,21 +137,21 @@ let isIdle = false;
 const actionPerformed = () => {
     lastActionTime = new Date();
     if(isIdle){
-        logEvent('Activity', {type: 'Active'});
+        logEvent('Activity', 'User became active');
         isIdle = false;
     }
-}
+};
 
 setInterval(() => {
     const currentTime = new Date();
     if(!isIdle && currentTime - lastActionTime > inactiveThreshold){
-        logEvent('Activity', {type: 'Inactive'});
+        logEvent('Activity', 'User became inactive');
         isIdle = true;
     }
 });
 
 /** Time in milliseconds without scroll to trigger a scroll event*/
-const scrollThreshold = 2000;
+const scrollThreshold = 500;
 /** Last time the document scroll event was triggered */
 let lastScroll = null;
 let isScrolling = false;

@@ -819,3 +819,11 @@ div.ui.dropdown.weekday.selection {
  .help-wrapper .subheader {
    color: #e01e5a;
  }
+
+ .help-wrapper .ui.header{
+  margin-top: 20px;
+ }
+
+ .help-wrapper .ui.content{
+  margin-bottom: 20px;
+ }

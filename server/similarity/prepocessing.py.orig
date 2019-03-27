@@ -67,6 +67,10 @@ def add_binarized_channels(users):
     binarized_channels = users.channels.apply('|'.join).str.get_dummies()
     col_list = list(binarized_channels.columns)
     column_mappings = {name: 'channel_' + str(i) for i, name in enumerate(col_list)}
+<<<<<<< HEAD
+
+=======
+>>>>>>> origin/master
     binarized_channels = binarized_channels.rename(index=str, columns=column_mappings)
     binarized_channels = binarized_channels.reset_index() 
     users = pd.merge(users, binarized_channels, left_index=True, right_index=True)
