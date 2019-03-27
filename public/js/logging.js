@@ -57,6 +57,9 @@ document.addEventListener('click', (event) => {
        }
        return $(target).closest('#' + element.id).length === 1;
     }).map(element => element.label)[0];  
+    if(!label){
+       return;
+    }
     const content = label + ' clicked';
     logEvent('Click', content);
 });
