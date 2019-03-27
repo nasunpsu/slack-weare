@@ -736,12 +736,17 @@ p{
   margin: 0.2em 0.02em 0.2em 0.05em;
   padding: 0.78571429em .5em 0.78571429em;
 }
-.ui.button > a.accept {
+
+.basic.ui.button > a.accept {
   color: #00B5AD;
 }
 
-.ui.button > a.reject {
+.basic.ui.button > a.reject {
   color: #DB2828;
+}
+
+.ui.button > a.accept, a.reject {
+  color: white;
 }
 
 .ui.button > a.remind{
@@ -799,3 +804,26 @@ div.ui.dropdown.weekday.selection {
   margin-top: 60px!important;
   margin-bottom: 40px!important;
 }
+
+.help-wrapper {
+  /* overflow-x: auto;
+  display: flex;
+  display: -webkit-flex; */
+  justify-content: end;
+  padding-left: 35px;
+  padding-right: 25px;
+  margin-top: 150px;
+  margin-bottom: 20px;
+ }
+
+ .help-wrapper .subheader {
+   color: #e01e5a;
+ }
+
+ .help-wrapper .ui.header{
+  margin-top: 20px;
+ }
+
+ .help-wrapper .ui.content{
+  margin-bottom: 20px;
+ }

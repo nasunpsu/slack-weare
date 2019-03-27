@@ -20,6 +20,26 @@ function reloadCalendar() {
 
 }
 
+$('.gender.ui.dropdown')
+    .dropdown({
+        placeholder: 'Select gender'
+    });
+
+$('.military.ui.dropdown')
+    .dropdown({
+        placeholder: 'Select military status'
+    });
+
+$('.profession.ui.dropdown')
+    .dropdown({
+        placeholder: 'Select profession'
+    });
+
+$('.military.ui.dropdown')
+    .dropdown({
+        placeholder: 'Select military status'
+    });
+
 $('.message .close')
     .on('click', function () {
         $(this)

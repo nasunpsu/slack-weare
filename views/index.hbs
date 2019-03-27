@@ -31,7 +31,7 @@
     <button id="open-slack" class="ui button slack-btn"><a href="slack://open" target="_blank">Open Slack of {{team.team_name}}</a></button>
 
     {{!-- <div id="data" class="ui segment">{{{json msgs}}}</div> --}}
-    <p class="post-title">Most Reacted Posts on the World Campus Slack</p>
+    <h2 class="post-title">Most Reacted Posts on the World Campus Slack</h2>
     <div class="post-wrapper">
         {{#each msgs as |msg|}}
         <div class="ui card message-card">
@@ -63,7 +63,7 @@
         </div>
         {{/each}}
     </div>
-    <p class="channel-title">Most Active Channels You're Subscribed to</p>
+    <h2 class="channel-title">Most Active Channels You're Subscribed to</h2>
     <div class="channel-wrapper">
         <table id="home-table" class="ui sortable celled table table-striped table-dark channel-table">
             <thead>

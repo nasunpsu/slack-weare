@@ -32,7 +32,7 @@
                 <div class="ten wide field">
                     <label>Purpose</label>
                     <input type="text" name="purpose" id="purpose" placeholder="e.g. Talk about group project (due 2.1)"
-                        value="{{meeting.purpose}}">
+                        value="{{{unescape meeting.purpose}}}">
                 </div>
                 <div class="six wide field">
                     <label>Topic</label>
@@ -51,7 +51,7 @@
                 <div class="sixteen wide field">
                     <label>Description</label>
                     <textarea id="description" name="description" cols="40" rows="5"
-                        placeholder="e.g. We will set up a plan and timeline for individuals' share of work, available time to work together and also talk about one another's situation for possible unavailable meetings.">{{meeting.description}}</textarea>
+                        placeholder="e.g. We will set up a plan and timeline for individuals' share of work, available time to work together and also talk about one another's situation for possible unavailable meetings.">{{{unescape meeting.description}}}</textarea>
                 </div>
             </div>
             <h3>When</h3>
@@ -142,4 +142,4 @@
 
     {{/if}}
 </div>
-<div id="data_string" placeholder="Topic" data='{{{json meeting}}}' style="display: None"></div>
+<div id="data_string" placeholder="Topic" data='{{{unescape (json meeting)}}}' style="display: None"></div>

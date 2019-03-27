@@ -55,9 +55,10 @@ const initialMessage = (userId, channelId) => {
     console.log(`user id is ${userId}`);
     // send the default message as a DM to the user
     message.channel = channelId; //if the channel id is empty, when team_join instead channel_join
-    message.user = userId;
+    // message.user = userId;
     axios.post(`${apiUrl}/chat.postEphemeral`, qs.stringify(message), { headers: { 'content-type': 'application/x-www-form-urlencoded' } })
       .then((result => {
+        console.log(`onboarding user ${userId}`);
         console.log(result.data);
       }));
   } else {
