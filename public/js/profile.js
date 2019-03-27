@@ -22,25 +22,21 @@ function reloadCalendar() {
 
 $('.gender.ui.dropdown')
     .dropdown({
-        clearable: true,
         placeholder: 'Select gender'
     });
 
 $('.military.ui.dropdown')
     .dropdown({
-        clearable: true,
         placeholder: 'Select military status'
     });
 
 $('.profession.ui.dropdown')
     .dropdown({
-        clearable: true,
         placeholder: 'Select profession'
     });
 
 $('.military.ui.dropdown')
     .dropdown({
-        clearable: true,
         placeholder: 'Select military status'
     });
 

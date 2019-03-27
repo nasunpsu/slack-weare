@@ -22,6 +22,10 @@ window.addEventListener("DOMContentLoaded", function () {
     var updateRemind = function (e) {
         console.log('remind clicked');
         e.preventDefault();
+        $(e.target).removeClass('basic');
+        // setTimeout(function () {
+        //     $(e.target).addClass('basic');
+        // }, 3000);
         $('.update-attendees').removeClass('hidden');
         $('.update-attendees').removeClass('invisible');
         const attendees = JSON.parse(e.target.getAttribute("data-attendees"));

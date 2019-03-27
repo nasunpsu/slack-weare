@@ -129,6 +129,7 @@
           <div class="ui {{#if (eq profession ../userInfo.profession)}}yellow {{else}} blue {{/if}} small horizontal label">Current Profession</div>
           <select disabled class="ui fluid dropdown profession" name="profession" id="profession">
             {{#select profession}}
+            <option value="">Select your profession</option>
             <option value="17">Architecture and Engineering</option>
             <option value="27">Arts, Design, Entertainment, Sports, and Media</option>
             <option value="37">Building and Grounds Cleaning and Maintenance</option>
@@ -162,6 +163,7 @@
           <div class="ui {{#if (eq military ../userInfo.military)}}yellow {{else}} blue {{/if}}small horizontal label">Military Status</div>
           <select disabled class="ui dropdown military" name="military" id="military" class="military">
           {{#select user.military}}
+          <option value="">Select your military status</option>
           <option value="ad">Active Duty</option>
           <option value="re">Reserves</option>
           <option value="ng">National Guard</option>

@@ -2289,7 +2289,7 @@ app.post('/rtmconnect', (req, res) => {
 async function rtmConnectFn(req) {
 
 	if (typeof ws == 'undefined' || ws.readyState != WebSocket.OPEN) {
-		if (typeof snapshot_db['users'] == 'undefined') snapshot_db['users'] = await DB.collection('users').find({}).toArray();
+		snapshot_db['users'] = await DB.collection('users').find({}).toArray();
 		console.log('Connecting rtm.connect now:');
 		console.log(`snapshot users length is ${snapshot_db['users'].length}`);
 		// Promise.resolve(snapshot_db['users'])
