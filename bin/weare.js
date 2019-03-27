@@ -96,10 +96,10 @@ app.use((req, res, next) => {
 		return;
 	}
 	const type = `${method} Request`;
-        const label = type + ' to ' + path; 
-        const content = {body, query, params, label};
-	for(const key in content){
-		if(!content[key] || Object.keys(content[key]).length === 0){
+	const label = type + ' to ' + path;
+	const content = { body, query, params, label };
+	for (const key in content) {
+		if (!content[key] || Object.keys(content[key]).length === 0) {
 			delete content[key];
 		}
 	}
@@ -185,7 +185,7 @@ const logEvent = (body, req) => {
 	if (!!req.sessionID) {
 		body.sessionID = req.sessionID;
 	}
-   let ipInfo = null;
+	let ipInfo = null;
 	if (!('error' in req.ipInfo)) {
 		ipInfo = modIpInfo(req.ipInfo);
 	}
@@ -325,8 +325,8 @@ app.get('/api/oauth', function (req, res, next) {
 								return res.redirect('/install');
 							}
 							console.log('before retrieving usr DB');
-							await DB.collection('users').find({major : {$exists: true}}).toArray()
-							// await DB.collection('users').find({ uid: result.team.id + '_' + result.user.id }).toArray()
+							// await DB.collection('users').find({ major: { $exists: true } }).toArray()
+							await DB.collection('users').find({ uid: result.team.id + '_' + result.user.id }).toArray()
 								.then(async (users_docs, err) => {
 									console.log(`the user is read from MongoDB: ${util.inspect(users_docs[0], { depth: 2 })}`);
 									if (err) console.error(err);
@@ -355,11 +355,8 @@ app.get('/api/oauth', function (req, res, next) {
 						}
 					}, { upsert: true }, async function (err, db_result) {
 						if (err) console.error(err);
-						console.log(`team id is ${result.team_id}, and token is ${result.access_token}`);
-						await InitTeamMembers(result.team_id, result.access_token, null);
-						await InitTeamChannels(result.team_id, result.access_token, null);
-						await UpdateChannelRecentMsgs(null, 'general', result.access_token, 200); //cid example:"T0A286J8K_C0A28BAHG"
-
+						console.log(`team id is ${result.team_id}, and Initiating ALL`);
+						await initAll();
 						// (async () => {									//TODO: MOVE this Block to the Init Module
 						// 	await InitTeamMembers(result.team_id, result.access_token, null);
 						// })();
@@ -405,13 +402,21 @@ app.get('/test', (req, res) => {
 	(async () => {
 		await InitTeamChannels('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, null);
 	})();
-	UpdateChannelRecentMsgs(null, 'general', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200); //cid example:"T0A286J8K_C0A28BAHG"
+	InitRecentMsgs(null, 'general', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200); //cid example:"T0A286J8K_C0A28BAHG"
 
 
 
 	console.log('---------------test----------------');
 });
 
+async function initAll() {
+	//TODO: MOVE this Block to the Init Module
+	await InitTeamMembers('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200);
+
+	await InitTeamChannels('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, null);
+
+	await InitRecentMsgs(null, 'general', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200); //cid example:"T0A286J8K_C0A28BAHG"
+}
 
 app.post('/slack/events', (req, res, next) => {
 	console.log(`an example event is ${util.inspect(req.body)}`);
@@ -445,7 +450,7 @@ app.post('/slack/events', (req, res, next) => {
 								attachments: JSON.stringify([
 									{
 										title: 'Procedure',
-										text: 'We invite you to participate in a research study that takes place this spring semester. Our research goal is to explore and assess ways to build a sense of community among World Campus students. Participants must be over the age of 18 to participate. As a participant in the research project, you will be asked to use Slack and answer two questionnaires before and after usingt Slack (Each survey should 10 minutes to complete). As a compensation for your participation in the survey, we will draw 15 names in the first survey participants for a $30 Amazon Gift Card, and for those who answered both we will draw additional 15 names for a $50 Amazon Gift Card. During your use of Slack tool and visualization dashboard, we will collect your usage data (e.g. interactive moves in the dashboard, log-in time), but these data will always remain confidential and stored anonymously for data analysis. Only researchers of this project in the Human-Centered Lab of Penn State will have access to the data. No third party or university authorities will have access to the data.',
+										text: 'We invite you to participate in a research study that takes place this spring semester. Our research goal is to explore and assess ways to build a sense of community among World Campus students. Participants must be over the age of 18 to participate, and not stay or live in European Economic Area to participate. As a participant in the research project, you will be asked to use Slack and answer two questionnaires before and after usingt Slack (Each survey should 10 minutes to complete). As a compensation for your participation in the survey, we will draw 15 names in the first survey participants for a $30 Amazon Gift Card, and for those who answered both we will draw additional 15 names for a $50 Amazon Gift Card. During your use of Slack tool and visualization dashboard, we will collect your usage data (e.g. interactive moves in the dashboard, log-in time), but these data will always remain confidential and stored anonymously for data analysis. Only researchers of this project in the Human-Centered Lab of Penn State will have access to the data. No third party or university authorities will have access to the data.',
 										color: '#3060f0',
 									},
 									{
@@ -614,58 +619,58 @@ app.post('/slack/events', (req, res, next) => {
 						// console.log(`the event body is ${util.inspect(event, { depth: null })}`);
 						const { user } = event;
 						console.log(`the user just joined the team is ${util.inspect(user, { depth: null })}`);
-						
+
 						web.users.info({ user: user.id, include_locale: true })
-									.then(result => {
-										let userInfo = result.user;
-										if (!userInfo.is_bot) {
-											console.log(`Updating Locale etc for ${userInfo.profile.real_name}`);
-											DB.collection('users').updateOne(
-												{ uid: user.team_id + '_' + user.id },
-												{
-													$set: {
-														team_id: user.team_id,
-														name: userInfo.name,
-														email: userInfo.profile.email,
-														real_name: userInfo.real_name,
-														tz: userInfo.tz,
-														tz_label: userInfo.tz_label,
-														local_area: userInfo.tz ? user.tz.match(/([a-zA-Z]+)\//)[1] : 'unknown',
-														tz_offset: userInfo.tz_offset / (60 * 60),
-														title: userInfo.profile.title,
-														phone: userInfo.profile.phone,
-														status_text: userInfo.profile.status_text,
-														status_emoji: userInfo.profile.status_emoji,
-														status_expiration: userInfo.profile.status_expiration,
-														first_name: userInfo.profile.first_name ? userInfo.profile.first_name : userInfo.profile.real_name.split(' ')[0],
-														last_name: userInfo.profile.last_name,
-														image_48: userInfo.profile.image_48,
-														image_512: userInfo.profile.image_512,
-														is_custom_image: userInfo.profile.is_custom_image,
-														is_bot: userInfo.is_bot,
-														last_updated: userInfo.updated,
-														locale: userInfo.locale,
-														// channels: user_channels,
-														join_ts: new Date()
-													}
-												},
-												{ upsert: true })
-												.then(async () => {
-													console.log('user updated succesfully');
-													const uid = user.team_id + '_' + user.id;
-													const email = user.profile.email;
-													const fullName = user.profile.real_name;
-													await ldap.updateUserWithLdapData(email, fullName, user.team_id + '_' + user.id, DB);
-													await similarity.storeSimilarUsers(user.team_id + '_' + user.id);
-													console.log('user updated with LDAP succesfully');
-					
-												})
-												.catch(err => {
-													console.log(`error duing the inserting new user from Team_JOIN`);
-													console.error(err);
-												});
-										}
-									});
+							.then(result => {
+								let userInfo = result.user;
+								if (!userInfo.is_bot) {
+									console.log(`Updating Locale etc for ${userInfo.profile.real_name}`);
+									DB.collection('users').updateOne(
+										{ uid: user.team_id + '_' + user.id },
+										{
+											$set: {
+												team_id: user.team_id,
+												name: userInfo.name,
+												email: userInfo.profile.email,
+												real_name: userInfo.real_name,
+												tz: userInfo.tz,
+												tz_label: userInfo.tz_label,
+												local_area: userInfo.tz ? user.tz.match(/([a-zA-Z]+)\//)[1] : 'unknown',
+												tz_offset: userInfo.tz_offset / (60 * 60),
+												title: userInfo.profile.title,
+												phone: userInfo.profile.phone,
+												status_text: userInfo.profile.status_text,
+												status_emoji: userInfo.profile.status_emoji,
+												status_expiration: userInfo.profile.status_expiration,
+												first_name: userInfo.profile.first_name ? userInfo.profile.first_name : userInfo.profile.real_name.split(' ')[0],
+												last_name: userInfo.profile.last_name,
+												image_48: userInfo.profile.image_48,
+												image_512: userInfo.profile.image_512,
+												is_custom_image: userInfo.profile.is_custom_image,
+												is_bot: userInfo.is_bot,
+												last_updated: userInfo.updated,
+												locale: userInfo.locale,
+												// channels: user_channels,
+												join_ts: new Date()
+											}
+										},
+										{ upsert: true })
+										.then(async () => {
+											console.log('user updated succesfully');
+											const uid = user.team_id + '_' + user.id;
+											const email = user.profile.email;
+											const fullName = user.profile.real_name;
+											await ldap.updateUserWithLdapData(email, fullName, user.team_id + '_' + user.id, DB);
+											await similarity.storeSimilarUsers(user.team_id + '_' + user.id);
+											console.log('user updated with LDAP succesfully');
+
+										})
+										.catch(err => {
+											console.log(`error duing the inserting new user from Team_JOIN`);
+											console.error(err);
+										});
+								}
+							});
 					}
 					res.sendStatus(200);
 					break;
@@ -742,10 +747,10 @@ app.post('/slack/commands/WhoIsOnline', urlencodedParser, (req, res) => {
 });
 
 app.post('/slack/commands/intro', urlencodedParser, (req, res) => {
-	
+
 	res.status(200).end(); // best practice to respond with empty 200 status code
 	var reqBody = req.body;
-	console.log(`within intro: reqbody is ${util.inspect(reqBody, {depth: null})}`);
+	console.log(`within intro: reqbody is ${util.inspect(reqBody, { depth: null })}`);
 	// var msg = {
 	// 	title: 'I am, We Are!',
 	// 	callback_id: 'self_intro',
@@ -876,15 +881,23 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 		switch (body.actions[0].value) {
 			case 'accept':
 				console.log('accepted term from new channel member!');
+				const msg_postAccept = {
+					as_user: false,
+					replace_original: true,
+					channel: body.channel.id,
+					user: body.user.id,
+					text: `Thanks for participating our research project We Are! an online community for World Campus students. Remember to introduce yourself :point_down:`,
+				};
+				sendMessageToSlackResponseURL(body.response_url, msg_postAccept);
 				web.chat.postEphemeral({
 					as_user: false,
 					channel: body.channel.id,
 					user: body.user.id,
-					text: `Thanks for participating our research project We Are! an online community for World Campus students. Remember to introduce yourself :point_down:`,
+					// text: `Thanks for participating our research project We Are! an online community for World Campus students. Remember to introduce yourself :point_down:`,
 					attachments: JSON.stringify([
 						{
 							title: 'Welcome to the World Campus Students Community! We Are!',
-							text: 'Penn State is where learning gains and your career takes off. If this is your first time using Slack, take some time to read the help docs at get.slack.help and our internal <https://docs.google.com/document/d/1-nCasqUcPrLYbhDuAm9SmuvY0S5ZOevPLbp52-PpZLM/edit?usp=sharing|wiki>. If you have any questions, jump into #help-slack and we\'ll help you out',
+							text: 'Penn State is where learning gains and your career takes off. If this is your first time using Slack, take some time to read the help docs at get.slack.help and our internal <https://weconnect.ist.psu.edu:8443/help|wiki>. If you have any questions, jump into <#CGNQYDKKJ|help-slack> and we\'ll help you out',
 							callback_id: 'consent',
 							color: '#74c8ed',
 							actions: [{
@@ -894,13 +907,13 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 								value: 'intro',
 								style: 'primary'
 							},
-							{
-								name: 'later',
-								text: 'Perhaps later',
-								type: 'button',
-								value: 'not-intro',
-								style: 'default'
-							}
+								// {
+								// 	name: 'later',
+								// 	text: 'Perhaps later',
+								// 	type: 'button',
+								// 	value: 'not-intro',
+								// 	style: 'default'
+								// }
 							],
 						},]
 					)
@@ -981,7 +994,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 							if (err) console.error(err);
 							else console.log('User decided to leave weare');
 						});
-				}, 7000);
+				}, 5000);
 				break;
 			case 'weare-welcome':
 				DB.collection('interactions').updateOne(
@@ -990,7 +1003,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 						$set: {
 							from: body.team.id + '_' + body.user.id,
 							content: 'weare-welcome',
-							// to: 
+							to: body.callback_id
 						}
 					},
 					{ upsert: true },
@@ -1000,20 +1013,36 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 					});
 				break;
 			case 'heart':
-			DB.collection('interactions').updateOne(
-				{ iid: makeid() },
-				{
-					$set: {
-						from: body.team.id + '_' + body.user.id,
-						content: 'heart',
-						// to: 
-					}
-				},
-				{ upsert: true },
-				function (err, doc) {
-					if (err) console.error(err);
-					else console.log('Welcome heart!');
-				});
+				DB.collection('interactions').updateOne(
+					{ iid: makeid() },
+					{
+						$set: {
+							from: body.team.id + '_' + body.user.id,
+							content: 'heart',
+							to: body.callback_id
+						}
+					},
+					{ upsert: true },
+					function (err, doc) {
+						if (err) console.error(err);
+						else console.log('Welcome heart!');
+					});
+				break;
+			case 'dismiss-welcome':
+				DB.collection('interactions').updateOne(
+					{ iid: makeid() },
+					{
+						$set: {
+							from: body.team.id + '_' + body.user.id,
+							content: 'dismiss-welcome',
+							to: body.callback_id
+						}
+					},
+					{ upsert: true },
+					function (err, doc) {
+						if (err) console.error(err);
+						else console.log('Welcome heart!');
+					});
 				break;
 			case 'now': console.log('now selected');
 				OnlineNow(body.channel.id, body.user.id, body.response_url);//body.response_url
@@ -1276,7 +1305,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 						{
 							"text": `Send ${body.user.name} some We Are! or some positive vibes! :fireworks: :tada: :wave: :clap:`,
 							"fallback": "Shame... buttons aren't supported in this land",
-							"callback_id": "hello_all",
+							"callback_id": `${body.team.id} + '_' + ${body.user.id}`,
 							"color": "#3AA3E3",
 							"actions": [
 								{
@@ -1297,7 +1326,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 									"name": "dismiss",
 									"text": "Dismiss",
 									"type": "button",
-									"value": "cancel",
+									"value": "dismiss-welcome",
 									"style": "default"
 								}
 							]
@@ -1632,6 +1661,7 @@ app.get('/', async function (req, res) {
 			}
 		});
 	console.log(`the logged user subscribed channels are ${sub_c}`);
+	// to_be_rendered.prepare_msgs = await InitRecentMsgs(null, 'general', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200);
 	to_be_rendered.msgs = await DB.collection("msgs").find({
 		cid: {
 			"$in": sub_c
@@ -2584,25 +2614,24 @@ async function InitTeamChannels(team_id, token, limit = null) {
 
 }
 
-async function UpdateChannelRecentMsgs(c_id, cname, token, limit = 200) {
+async function InitRecentMsgs(c_id, cname, token, limit = 200) {
 	var local_slack = new SlackWebClient(token);
 	if (c_id) console.log(`channel id passed in is ${c_id}`);
 	else console.log(`channel id passed in is EMPTY; I going to update messages in the subscribed channels only`);
-	if (typeof snapshot_db['users'] == 'undefined') snapshot_db['users'] = await DB.collection('users').find({}).toArray();
+	snapshot_db['users'] = await DB.collection('users').find({}).toArray();
 	if (!c_id) { //c_id is not defined, pull all the channels msgs
-		if (typeof snapshot_db['channels'] == 'undefined') snapshot_db['channels'] = await DB.collection('channels').find({}).toArray();
+		snapshot_db['channels'] = await DB.collection('channels').find({}).toArray();
 		snapshot_db['channels'].forEach(async c => {
 			const obj = await Go_through_channel_msgs(c.cid, c.cname);
 			DB.collection('channels').updateOne(
 				{ cid: c.cid },
 				{
 					$set: {
-
 						num_msgs: obj.num_msgs,
 						latest_msg_ts: obj.latest_msg_ts
 					}
 				},
-				{ upsert: true },
+				{ upsert: false },
 				function (err, res) {
 					if (err) console.error(err);
 				});
@@ -2615,12 +2644,11 @@ async function UpdateChannelRecentMsgs(c_id, cname, token, limit = 200) {
 			{ cid: c_id },
 			{
 				$set: {
-
 					num_msgs: obj.num_msgs,
 					latest_msg_ts: obj.latest_msg_ts
 				}
 			},
-			{ upsert: true },
+			{ upsert: false },
 			function (err, res) {
 				if (err) console.error(err);
 			});
@@ -2750,84 +2778,6 @@ async function UpdateChannelRecentMsgs(c_id, cname, token, limit = 200) {
 		});
 	}
 }
-
-// async function UpdateChannelRecentMsgs(c_id, token, limit = 200) {
-// 	//init the channel info with the msgs from real users in the past month from now
-// 	let local_slack = new SlackWebClient(token);
-// 	console.log(`channel id passed in is ${c_id}`)
-
-// 	var x = new Date();
-// 	x.setDate(1);
-// 	x.setMonth(x.getMonth() - 1);
-// 	local_slack.channels.history({ // pay attention the user token (for reading history from channel/groups) but the bot is used to write
-// 		channel: c_id.split('_')[1], //#test-bot (left) #learning-tech C0A34HJVA
-// 		count: limit | 200,
-// 		latest: new Date().getTime(),
-// 		// oldest: x.getTime() //since previous month
-// 	}).then(async res => {
-// 		const msgs = res.messages;
-// 		var recent_msgs = [];
-// 		var promiseArray = [];
-
-// 		// console.log(`msg in the Update func is ${util.inspect(msgs, {depth: 2})}`);
-// 		// console.log(`there are ${msgs.length} results from a channel history \n the first one is ${util.inspect(msgs[0], { depth: 2 })}`)
-
-// 		msgs.forEach(msg => {
-// 			if (msg.type == 'message' && !msg.bot_id && !msg.subtype) { // only look at the plain text msgs from real users
-// 				// console.log(`Real msg from user in the Update func is ${util.inspect(msg, {depth: 2})}`);
-// 				var promise = DB.collection('users')
-// 					.find({ uid: c_id.split('_')[0] + '_' + msg.user }
-// 					).toArray()
-// 					.then((docs, err) => {
-// 						if (err) console.error(err);
-// 						if (docs.length != 0) {
-// 							console.log(`real_name for the message creator is ${docs[0].real_name}`);
-// 							return Promise.resolve(docs[0]);
-// 						}
-// 						else console.error(`Member ${msg.user} does not exist`);
-// 					}).then(user => {
-// 						const msg_obj = {
-// 							mid: msg.client_msg_id,
-// 							uid: msg.user,
-// 							username: user.real_name,
-// 							user_avatar: user.image_48,
-// 							text: msg.text,
-// 							ts: msg.ts,
-// 							is_starred: msg.is_starred,
-// 							reactions: msg.reactions
-// 						}
-// 						recent_msgs.push(msg_obj);
-// 					});
-// 				promiseArray.push(promise);
-// 			}
-// 		});
-
-// 		await Promise.all(promiseArray).then(res => {
-// 			console.log(promiseArray)
-// 			console.log(`recent msgs array inside Promise array is ${util.inspect(recent_msgs, { depth: null })}`)
-
-// 		})
-// 		console.log(`recent msgs array is ${util.inspect(recent_msgs, { depth: null })}`)
-// 		return recent_msgs;
-
-
-// 	})
-// 		.then(recent_msgs => {
-// 			console.log(`recent msgs array is ${util.inspect(recent_msgs, { depth: null })}`)
-// 			DB.collection('channels').updateOne(
-// 				{ cid: c_id },
-// 				{
-// 					$set: {
-// 						msgs: recent_msgs
-// 					}
-// 				},
-// 				function (err, res) {
-// 					if (err) console.error(err);
-// 					// else console.log(`msgs entered with DB transaction ${res}`)
-// 				});
-// 		})
-// 		.catch(err => console.error(err));
-// }
 
 async function ActiveWho(channel_id, user_id) {
 	var members = [], activeMembers = [], activeProfiles = [];
