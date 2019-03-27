@@ -32,8 +32,16 @@ const triggerScrollEvent = () => {
 const calcVisibleElements = (yStart, yEnd) => {
     return scrollElements.filter(scrollElement => {
         const element = $(`#${scrollElement.id}`);
-        const top = $(element).offset().top;
-        const bottom = top + $(element).height();
+        if(element.length === 0){
+           return false;
+        }
+        const offset = $(element).offset();
+        const height = $(element).height();
+        if(!offset || !height){
+           return false;
+        }
+        const top = offset.top;
+        const bottom = top + height;
         return yStart < top &&  bottom < yEnd;
     })
     .map(scrollElement => scrollElement.label);

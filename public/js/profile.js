@@ -83,6 +83,7 @@ function reloadForm() {
                 },
             ]
         };
+        obj[fieldObj.name].optional = true;
         if (!!fieldObj.rules) {
             obj[fieldObj.name].rules.unshift(...fieldObj.rules);
         }
@@ -169,14 +170,7 @@ let fields = [
         }]
     },
     { name: 'campus', identifier: 'campus' },
-    {
-        name: 'courses',
-        identifier: 'courses',
-        rules: [{
-            type: 'empty',
-            prompt: `Please enter your current courses.`
-        }]
-    },
+    { name: 'courses', identifier: 'courses' },
     { name: 'goals', identifier: 'goals' },
     { name: 'reccourses', identifier: 'recommended courses' },
     { name: 'instructors', identifier: 'recommended instructor' },
