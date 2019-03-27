@@ -128,7 +128,7 @@ const logEvent = async (eventName, content) => {
 }
 
 /** Time in milliseconds without the use doing anything to trigger an inactive event */
-const inactiveThreshold = 10000; 
+const inactiveThreshold = 1000 * 60; // (1 hour) 
 /** Time that the last action was performed */
 let lastActionTime = new Date();
 /** If the user is currently not doing anythign  */
