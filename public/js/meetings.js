@@ -22,6 +22,8 @@ window.addEventListener("DOMContentLoaded", function () {
     var updateRemind = function (e) {
         console.log('remind clicked');
         e.preventDefault();
+        $('.update-attendees').removeClass('hidden');
+        $('.update-attendees').removeClass('invisible');
         const attendees = JSON.parse(e.target.getAttribute("data-attendees"));
         $.ajax({
             type: 'POST', url: '/remindmeeting', data: {
@@ -43,10 +45,13 @@ window.addEventListener("DOMContentLoaded", function () {
     });
 
     var invite_list = Array.prototype.slice.call(document.getElementsByClassName("button invite"));
-    console.log(remind_list);
+    console.log(invite_list);
 
     var updateInvite = function (e) {
         console.log('invite clicked');
+        $('.update-attendees').removeClass('invisible');
+        // $('.update-attendees').removeClass('transition');
+        $('.update-attendees').removeClass('hidden');
         e.preventDefault();
         const attendees = JSON.parse(e.target.getAttribute("data-attendees"));
         $.ajax({

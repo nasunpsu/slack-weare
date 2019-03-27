@@ -23,7 +23,16 @@
         </ul>
     </div>
     {{!-- <p>{{{json userInfo}}}</p> --}}
-
+    <div class="ui success message update-attendees invisible">
+      <i class="close icon"></i>
+      <div class="header">
+        You have successfully reminded/invited your peers.
+      </div>
+      <ul class="list">
+        <li><b>Invite</b> goes to all guests who are invited but have not responded.</li>
+        <li><b>Remind</b> goes to all guests who confirmed to attend to update the meeting or remind the approaching time.</li>
+      </ul>
+    </div>
     <table class="ui sortable table ascending celled list-table">
         <thead>
             <tr id="table-head" class="center aligned">

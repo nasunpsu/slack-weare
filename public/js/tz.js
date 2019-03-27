@@ -49,12 +49,13 @@ window.addEventListener("DOMContentLoaded", function () {
     function updateClock(clocks) {
         clocks.forEach(clock => {
             // console.log(clock.getAttribute("tz"));
-            clock.innerHTML = new Date().toLocaleTimeString(clock.getAttribute("locale"),
+            if(clock.getAttribute("locale"))clock.innerHTML = new Date().toLocaleTimeString(clock.getAttribute("locale"),
                 {
                     timeZone: clock.getAttribute("tz"),
                     hour: '2-digit',
                     minute: '2-digit'
                 });
+            else clock.innerHTML = 'Unknown time'
         });
     }
     updateClock(clockElements);

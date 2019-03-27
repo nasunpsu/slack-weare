@@ -1542,7 +1542,8 @@ app.use(checkSignIn);
 app.get('/help', (req, res) => {
 	let to_be_rendered = {
 		layout: 'default',
-		template: 'help-template'
+		template: 'help-template',
+		userInfo: req.session.user
 	};
 	res.render('help', to_be_rendered);
 });
@@ -2701,7 +2702,7 @@ async function UpdateChannelRecentMsgs(c_id, cname, token, limit = 200) {
 							if (msg.ts > latest) latest = msg.ts;
 							num_msgs += 1;
 							const msg_obj = {
-								uid: msg.user,
+								uid: msg.user,//team??
 								username: user.real_name,
 								user_avatar: user.image_48,
 								cid: c_id,
