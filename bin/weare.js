@@ -366,13 +366,9 @@ app.get('/api/oauth', function (req, res, next) {
 					}, { upsert: true }, async function (err, db_result) {
 						if (err) console.error(err);
 						console.log(`team id is ${result.team_id}, and Initiating ALL`);
-						await initAll();
-						// (async () => {									//TODO: MOVE this Block to the Init Module
-						// 	await InitTeamMembers(result.team_id, result.access_token, null);
-						// })();
-						// (async () => {
-						// 	await InitTeamChannels(result.team_id, result.access_token, null);;
-						// })();
+						await InitTeamMembers(result.team_id, result.access_token, null);
+						await InitTeamChannels(result.team_id, result.access_token, null);
+						await InitRecentMsgs(null, 'general', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200);
 						await DB.collection('users').find({ uid: result.team_id + '_' + result.user_id }).toArray()
 							.then(async (user_docs, err) => {
 								if (err) console.error(err);
