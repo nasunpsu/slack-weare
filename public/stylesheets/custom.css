@@ -221,10 +221,6 @@ svg:not(:root){
   width: 300px;
 }
 
-.filter-wrapper h3{
-  font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji"!important;
-  margin-bottom: 1em;
-}
 .filters{
   margin-top: 20px;
   border: 1px solid #e2efff;

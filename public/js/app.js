@@ -29,13 +29,13 @@ var text_to_change = connect.childNodes[0];
 
 switch (window.location.pathname) {
   case '/tablelist':
-    text_to_change.nodeValue = 'Connected by Commonality';
+    text_to_change.nodeValue = 'Connected in Table View';
     break;
   case '/network':
     text_to_change.nodeValue = 'Connected in Network';
     break;
   case '/temporal':
-    text_to_change.nodeValue = 'Connected by Temporal proximity';
+    text_to_change.nodeValue = 'Connected in Timezone Offset';
     break;
   default:
     break;
