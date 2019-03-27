@@ -95,16 +95,21 @@ app.use((req, res, next) => {
 		next();
 		return;
 	}
+	const content = {body, query, params};
+	for(const key in content){
+		if(!content[key] || Object.keys(content[key]).length === 0){
+			delete content[key];
+		}
+	}
+	const timeStamp = new Date();
+	const time = timeStamp.toString();
 	const log = {
 		type: `${method} Request`,
-		time: new Date().toString(),
-		content: {
-			body,
-			query,
-			params,
-		},
+		time,
+		timeStamp,
+		content,
 		path
-	}
+	};
 	logEvent(log, req);
 	next();
 });
@@ -178,8 +183,9 @@ const logEvent = (body, req) => {
 	if (!!req.sessionID) {
 		body.sessionID = req.sessionID;
 	}
+   let ipInfo = null;
 	if (!('error' in req.ipInfo)) {
-		body.ipInfo = modIpInfo(req.ipInfo);
+		ipInfo = modIpInfo(req.ipInfo);
 	}
 	if (!!req.session && !!req.session.user) {
 		body.email = req.session.user.email;
@@ -197,12 +203,12 @@ const logEvent = (body, req) => {
 		})();
 
 	}
-	if ('user' in req.session && 'uid' in req.session.user && 'ipInfo' in body) {
+	if ('user' in req.session && 'uid' in req.session.user && !!ipInfo) {
 		(async () => {
 
 			const updateDoc = {
-				$addToSet: { ipInfo: body.ipInfo },
-				$set: body.ipInfo
+				$addToSet: { ipInfo },
+				$set: ipInfo
 			}
 			const newUser = await DB.collection('users').findOneAndUpdate({ uid: req.session.user.uid }, updateDoc,
 				{ returnOriginal: false }).then((user) => {
@@ -235,6 +241,7 @@ app.post('/log', async (req, res) => {
 	try {
 		assert('type' in body, `'type' must be present in body`);
 		assert('time' in body, `'time' must be present in body`);
+		assert('timestamp' in body, `'timestamp' must be present in body`);
 		assert('content' in body, `'content' must be present in body`);
 		assert('path' in body, `'path' must be present in body`);
 	}
@@ -316,8 +323,8 @@ app.get('/api/oauth', function (req, res, next) {
 								return res.redirect('/install');
 							}
 							console.log('before retrieving usr DB');
-							// await DB.collection('users').find({major : {$exists: true}}).toArray()
-							await DB.collection('users').find({ uid: result.team.id + '_' + result.user.id }).toArray()
+							await DB.collection('users').find({major : {$exists: true}}).toArray()
+							// await DB.collection('users').find({ uid: result.team.id + '_' + result.user.id }).toArray()
 								.then(async (users_docs, err) => {
 									console.log(`the user is read from MongoDB: ${util.inspect(users_docs[0], { depth: 2 })}`);
 									if (err) console.error(err);
