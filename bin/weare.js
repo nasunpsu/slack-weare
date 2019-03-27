@@ -34,6 +34,7 @@ const express = require('express');
 const ldap = require('../server/ldap');
 const assert = require('assert');
 
+
 app.use(expressIp().getIpInfoMiddleware);
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -77,9 +78,11 @@ var sess = {
 		url: process.env.MONGO_DB,
 		collection: 'sessions'
 	}),
-	cookie: { maxAge: 24 * 60 * 60 * 1000 } //<=24h, 60000 1min
+	// cookie: { maxAge: 24 * 60 * 60 * 1000 } //<=24h, 60000 1min
+	cookie: { maxAge: 1000 } //<=24h, 60000 1min
 	// cookie: { secure: true }
 };
+
 
 app.set('trust proxy', 1);//comment this out...
 if (app.get('env') === 'production') {
@@ -87,7 +90,35 @@ if (app.get('env') === 'production') {
 	sess.cookie.secure = true // serve secure cookies
 }
 app.use(morgan('dev'));//combined				        
-app.use(session(sess));
+app.use((req, res, next) => {
+   const maxAge = 24 * 60 * 60 * 1000 } //<=24h, 60000 1min
+   const sess = {
+	secret: 'keyboard cat',
+	resave: false,
+	saveUninitialized: true,
+	store: new MongoStore({
+		url: process.env.MONGO_DB,
+		collection: 'sessions'
+	}),
+	cookie: { maxAge } 
+   };
+   sess.store.on('create', (sessionId) => {
+      console.log(`create ${sessionId}`);
+      setTimeout(() => {
+	 if(!!req.session.user){
+	   const type = 'Session Expired'
+	   const timeStamp = new Date();
+	   const time = timeStamp.toString();
+	   const content = `Session ${sessionId} for user ${req.session.user.email} expired`;
+	   const path = req.path;
+	   const log = {type, time, timeStamp, content, path };
+	    console.log('destory')
+	   logEvent(log, req);
+	 }
+      }, maxAge)
+   });
+   session(sess)(req, res, next);
+});
 app.use((req, res, next) => {
 	const { method, body, params, query, path } = req;
 	if (path === '/log') {
@@ -114,6 +145,7 @@ app.use((req, res, next) => {
 	logEvent(log, req);
 	next();
 });
+
 
 const web = new SlackWebClient(process.env.BOT_USER_OAUTH_ACCESS_TOKEN);
 const web_slack = new SlackWebClient(process.env.SLACK_OAUTH_ACCESS_TOKEN);
@@ -181,7 +213,7 @@ const logEvent = (body, req) => {
 		body.sessionID = req.sessionID;
 	}
    let ipInfo = null;
-	if (!('error' in req.ipInfo)) {
+	if ('ipInfo' in req && !('error' in req.ipInfo)) {
 		ipInfo = modIpInfo(req.ipInfo);
 	}
 	if (!!req.session && !!req.session.user) {
@@ -211,25 +243,30 @@ const logEvent = (body, req) => {
 				{ returnOriginal: false }).then((user) => {
 					return Promise.resolve(user.value);
 				});
-			req.session.user = newUser;
+		   req.session.user = newUser;
 		})();
 
 	}
-	return DB.collection('logging').insertOne(body);
+   return DB.collection('logging').insertOne(body);
 }
 
 const modIpInfo = (ipInfo) => {
-	delete ipInfo.range;
-	delete ipInfo.eu;
-	delete ipInfo.metro;
-	delete ipInfo.area;
-	ipInfo.tz_offset = -getOffset(ipInfo.timezone, new Date()) / 60;
-	ipInfo.tz = ipInfo.timezone;
-	ipInfo.latitude = ipInfo.ll[0];
-	ipInfo.longitude = ipInfo.ll[1];
-	delete ipInfo.timezone;
-	delete ipInfo.ll;
-	return ipInfo;
+   try{
+      delete ipInfo.range;
+      delete ipInfo.eu;
+      delete ipInfo.metro;
+      delete ipInfo.area;
+      ipInfo.tz_offset = -getOffset(ipInfo.timezone, new Date()) / 60;
+      ipInfo.tz = ipInfo.timezone;
+      ipInfo.latitude = ipInfo.ll[0];
+      ipInfo.longitude = ipInfo.ll[1];
+      delete ipInfo.timezone;
+      delete ipInfo.ll;
+      return ipInfo;
+   }
+   catch(e){
+      return null;
+   }
 }
 
 // app.engine('handlebars', exphbs({ helpers: { json: function (context) { return JSON.stringify(context); } } }));
