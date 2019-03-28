@@ -335,8 +335,8 @@ app.get('/api/oauth', function (req, res, next) {
 								return res.redirect('/install');
 							}
 							console.log('before retrieving usr DB');
-							await DB.collection('users').find({major : {$exists: true}}).toArray()
-							// await DB.collection('users').find({ uid: result.team.id + '_' + result.user.id }).toArray()
+							//await DB.collection('users').find({major : {$exists: true}}).toArray()
+							await DB.collection('users').find({ uid: result.team.id + '_' + result.user.id }).toArray()
 								.then(async (users_docs, err) => {
 									console.log(`the user is read from MongoDB: ${util.inspect(users_docs[0], { depth: 2 })}`);
 									if (err) console.error(err);
