@@ -592,7 +592,10 @@ app.post('/slack/events', (req, res, next) => {
 									if (err) console.error(err);
 									else console.log(`the user ${util.inspect(user_doc.first_name)} join the channel ${channel} `);
 								});
-
+								 const res = await DB.collection('users').find({}, {uid: 1});
+								 const array = await res.toArray();
+								 const uids = array.map(user => user.uid).filter(uid => !!uid);
+							         uids.forEach(uid => similarity.storeSimilarUsers(uid));
 							}
 						});
 
