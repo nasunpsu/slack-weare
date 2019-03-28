@@ -79,9 +79,6 @@ var sess = {
 		url: process.env.MONGO_DB,
 		collection: 'sessions'
 	}),
-	// cookie: { maxAge: 24 * 60 * 60 * 1000 } //<=24h, 60000 1min
-	cookie: { maxAge: 1000 } //<=24h, 60000 1min
-	// cookie: { secure: true }
 };
 
 
@@ -92,17 +89,8 @@ if (app.get('env') === 'production') {
 }
 app.use(morgan('dev'));//combined				        
 app.use((req, res, next) => {
-   const maxAge = 24 * 60 * 60 * 1000  //<=24h, 60000 1min
-   const sess = {
-	secret: 'keyboard cat',
-	resave: false,
-	saveUninitialized: true,
-	store: new MongoStore({
-		url: process.env.MONGO_DB,
-		collection: 'sessions'
-	}),
-	cookie: { maxAge } 
-   };
+   const maxAge = 24 * 60 * 60 * 1000; //<=24h, 60000 1min
+   sess.cookie = {maxAge};
    sess.store.on('create', (sessionId) => {
       console.log(`create ${sessionId}`);
       setTimeout(() => {
@@ -113,10 +101,9 @@ app.use((req, res, next) => {
 	   const content = `Session ${sessionId} for user ${req.session.user.email} expired`;
 	   const path = req.path;
 	   const log = {type, time, timeStamp, content, path };
-	    console.log('destory')
 	   logEvent(log, req);
 	 }
-      }, maxAge)
+      }, maxAge);
    });
    session(sess)(req, res, next);
 });
