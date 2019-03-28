@@ -618,7 +618,7 @@ app.post('/slack/events', (req, res, next) => {
 								}
 							},
 							{
-								upsert: true,
+								upsert: false,
 								returnOriginal: false
 							},
 							function (err, updatedC) {
@@ -701,6 +701,105 @@ app.post('/slack/events', (req, res, next) => {
 				case 'channel_rename':
 					break;
 				case 'channel_archive':
+					break;
+				case 'message':
+					web_slack.conversations.history({ // pay attention the user token (for reading history from channel/groups) but the bot is used to write
+						channel: event.channel, //#test-bot (left) #learning-tech C0A34HJVA
+						limit: 1,
+						// cursor: cursor
+					}).then(async res => {
+						console.log(`the latest conversation message is ${util.inspect(res, { depth: null })}`);
+						const LatestMsg = res.messages[0];
+						const user = await DB.collection('users').findOne({ uid: req.body.team_id + '_' + LatestMsg.user });
+						const channel = await DB.collection('channels').findOne({ cid: req.body.team_id + '_' + event.channel });
+						// console.log(`the user ${req.body.team_id} + '_' + ${LatestMsg.user} constructing it is ${util.inspect(user, { depth: null })}`);
+						// console.log(`the channel ${req.body.team_id} + '_' + ${event.channel} constructing it is ${util.inspect(channel, { depth: 2 })}`);
+						if (LatestMsg.type == 'message' && !LatestMsg.bot_id && !LatestMsg.subtype) { // only look at the plain text msgs from real users
+							const msg_obj = {
+								uid: LatestMsg.user,
+								username: user.real_name,
+								user_avatar: user.image_48,
+								cid: req.body.team_id + '_' + event.channel,
+								cname: channel.cname,
+								text: LatestMsg.text,
+								ts: LatestMsg.ts,
+								thread_ts: LatestMsg.thread_ts,
+								is_starred: LatestMsg.is_starred,
+								reactions: LatestMsg.reactions
+							}
+							DB.collection('msgs').updateOne(
+								{ mid: LatestMsg.client_msg_id },
+								{
+									$set: msg_obj
+								},
+								{ upsert: true },
+								function (err, res) {
+									if (err) console.error(err);
+									else console.log('msg updated!');
+								});
+							DB.collection('channels').updateOne(
+								{ cid: req.body.team_id + '_' + event.channel },
+								{
+									$inc: {
+										num_msgs: 1
+									},
+									$set: {
+										latest_msg_ts: LatestMsg.ts
+									}
+								},
+								{ upsert: true },
+								function (err, res) {
+									if (err) console.error(err);
+									else console.log('msg updated!');
+								});
+						}
+					})
+						.catch(err => console.error(err));
+
+					res.sendStatus(200);
+					break;
+
+				case 'message_changed':
+					break;
+				case 'reaction_added':
+					DB.collection('interactions').updateOne(
+						{ iid: makeid() },
+						{
+							$set: {
+								from: req.body.team_id + '_' + event.user,
+								content: event.type,
+								to: req.body.team_id + '_' + event.item_user,
+								reaction: event.reaction,
+								item: event.item,
+								ts: event.event_ts
+							}
+						},
+						{ upsert: true },
+						function (err, doc) {
+							if (err) console.error(err);
+							else console.log('reaction added!');
+						});
+					res.sendStatus(200);
+					break;
+				case 'reaction_removed':
+					DB.collection('interactions').updateOne(
+						{ iid: makeid() },
+						{
+							$set: {
+								from: req.body.team_id + '_' + event.user,
+								content: event.type,
+								to: req.body.team_id + '_' + event.item_user,
+								reaction: event.reaction,
+								item: event.item,
+								ts: event.event_ts
+							}
+						},
+						{ upsert: true },
+						function (err, doc) {
+							if (err) console.error(err);
+							else console.log('reaction removed!');
+						});
+					res.sendStatus(200);
 					break;
 				default:
 					console.log(`unknown event type`);
@@ -1014,6 +1113,16 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 							if (err) console.error(err);
 							else console.log('User decided to leave weare');
 						});
+					DB.collection('userlogs').updateOne({ log_id: makeid() }, {
+						$set: {
+							uid: body.team.id + '_' + body.user.id,
+							action: `leave the team- faild to consent`,
+							ts: new Date()
+						},
+					}, { upsert: true }, function (err, res) {
+						if (err) console.error(err);
+						else console.log(`the user ${util.inspect(tobeDEL.first_name)} left the channel ${channel} `);
+					});
 				}, 5000);
 				break;
 			case 'weare-welcome':
@@ -1023,7 +1132,9 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 						$set: {
 							from: body.team.id + '_' + body.user.id,
 							content: 'weare-welcome',
-							to: body.callback_id
+							to: body.callback_id,
+							channel: body.team.id + '_' + body.channel.id,
+							ts: new Date()
 						}
 					},
 					{ upsert: true },
@@ -1031,6 +1142,13 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 						if (err) console.error(err);
 						else console.log('Welcome weAre!');
 					});
+				console.log(`the user ${body.user.id} reacting to ${body.callback_id.split('_')[1]} weare in the channel ${body.channel.id} `);
+				web_slack.chat.postEphemeral({
+					as_user: false,
+					channel: body.channel.id,
+					user: body.callback_id.split('_')[1],
+					text: `Wow! <@${body.user.id}> just sent you some WeAre!`,
+				}).catch(err => console.error(err));
 				break;
 			case 'heart':
 				DB.collection('interactions').updateOne(
@@ -1039,7 +1157,9 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 						$set: {
 							from: body.team.id + '_' + body.user.id,
 							content: 'heart',
-							to: body.callback_id
+							to: body.callback_id,
+							channel: body.team.id + '_' + body.channel.id,
+							ts: new Date()
 						}
 					},
 					{ upsert: true },
@@ -1047,6 +1167,13 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 						if (err) console.error(err);
 						else console.log('Welcome heart!');
 					});
+				console.log(`the user ${body.user.id} reacting to ${body.callback_id.split('_')[1]} heart in the channel ${body.channel.id} `);
+				web_slack.chat.postEphemeral({
+					as_user: false,
+					channel: body.channel.id,
+					user: body.callback_id.split('_')[1],
+					text: `Wow! <@${body.user.id}> just sent you some :heart:!`,
+				}).catch(err => console.error(err));
 				break;
 			case 'dismiss-welcome':
 				DB.collection('interactions').updateOne(
@@ -1055,7 +1182,9 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 						$set: {
 							from: body.team.id + '_' + body.user.id,
 							content: 'dismiss-welcome',
-							to: body.callback_id
+							to: body.callback_id,
+							channel: body.team.id + '_' + body.channel.id,
+							ts: new Date()
 						}
 					},
 					{ upsert: true },
@@ -1325,7 +1454,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 						{
 							"text": `Send ${body.user.name} some We Are! or some positive vibes! :fireworks: :tada: :wave: :clap:`,
 							"fallback": "Shame... buttons aren't supported in this land",
-							"callback_id": `${body.team.id} + '_' + ${body.user.id}`,
+							"callback_id": `${body.team.id}_${body.user.id}`,
 							"color": "#3AA3E3",
 							"actions": [
 								{
@@ -2639,8 +2768,8 @@ async function UpdateChannelRecentMsgs(c_id, cname, token, limit = 200) {
 	if (c_id) console.log(`channel id passed in is ${c_id}`);
 	else console.log(`channel id passed in is EMPTY; I going to update messages in the subscribed channels only`);
 	snapshot_db['users'] = await DB.collection('users').find({}).toArray();
-	if (!c_id) { //c_id is not defined, pull all the channels msgs
-		snapshot_db['channels'] = await DB.collection('channels').find({}).toArray();
+	snapshot_db['channels'] = await DB.collection('channels').find({}).toArray();
+	if (!c_id) { //c_id is not defined, pull all the channels msg
 		snapshot_db['channels'].forEach(async c => {
 			const obj = await Go_through_channel_msgs(c.cid, c.cname);
 			DB.collection('channels').updateOne(
@@ -2674,6 +2803,10 @@ async function UpdateChannelRecentMsgs(c_id, cname, token, limit = 200) {
 			});
 	}
 	async function Go_through_channel_msgs(c_id, cname) {
+		if (!cname) {
+			const thisChannel = snapshot_db['channels'].filter(c => c.cid == c_id)[0];
+			cname = thisChannel.cname;
+		}
 		let first = true, count = 0, num_msgs = 0, latest = null;
 		var check_cursor = "fake";
 		while (check_cursor) {
@@ -3108,7 +3241,7 @@ function initDB() {
 	DB.createCollection('channels', function (err, collection) { });
 	DB.createCollection('teamnames', function (err, collection) { });
 	DB.createCollection('oauthtokens', function (err, collection) { });
-	// DB.createCollection('tildaposts', function (err, collection) { });
+	DB.createCollection('interactions', function (err, collection) { });
 }
 
 
