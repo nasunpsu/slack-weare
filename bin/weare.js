@@ -750,7 +750,7 @@ app.post('/slack/events', (req, res, next) => {
 								{ upsert: true },
 								function (err, res) {
 									if (err) console.error(err);
-									else console.log('msg updated!');
+									else console.log('channel num_msgs updated!');
 								});
 						}
 					})
