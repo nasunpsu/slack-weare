@@ -358,7 +358,7 @@ app.get('/api/oauth', function (req, res, next) {
 						console.log(`team id is ${result.team_id}, and Initiating ALL`);
 						await InitTeamMembers(result.team_id, result.access_token, null);
 						await InitTeamChannels(result.team_id, result.access_token, null);
-						await InitRecentMsgs(null, 'general', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200);
+						await UpdateChannelRecentMsgs(null, 'general', result.access_token, 200);
 						await DB.collection('users').find({ uid: result.team_id + '_' + result.user_id }).toArray()
 							.then(async (user_docs, err) => {
 								if (err) console.error(err);
@@ -394,11 +394,13 @@ app.get('/test', (req, res) => {
 	res.status(200).end();
 	(async () => {									//TODO: MOVE this Block to the Init Module
 		await InitTeamMembers('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200);
-		await InitTeamChannels('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, null);
-		await InitRecentMsgs(null, 'general', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200);
 	})();
-
-	//cid example:"T0A286J8K_C0A28BAHG"
+	(async () => {
+		await InitTeamChannels('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, null);
+	})();
+	(async () => {
+		await UpdateChannelRecentMsgs(null, 'general', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200); //cid example:"T0A286J8K_C0A28BAHG"		
+	})();
 
 
 
@@ -411,7 +413,7 @@ async function initAll() {
 
 	await InitTeamChannels('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, null);
 
-	await InitRecentMsgs(null, 'general', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200); //cid example:"T0A286J8K_C0A28BAHG"
+	await UpdateChannelRecentMsgs(null, 'general', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200); //cid example:"T0A286J8K_C0A28BAHG"
 }
 
 app.post('/slack/events', (req, res, next) => {
@@ -576,7 +578,8 @@ app.post('/slack/events', (req, res, next) => {
 										first_name: tobeDEL.first_name,
 										last_name: tobeDEL.last_name,
 										action: `leave the channel`,
-										channel: team + '_' + channel
+										channel: team + '_' + channel,
+										ts: new Date()
 									},
 								}, { upsert: true }, function (err, res) {
 									if (err) console.error(err);
@@ -588,7 +591,7 @@ app.post('/slack/events', (req, res, next) => {
 						DB.collection('users').findOneAndUpdate({ uid: team + '_' + user },
 							{
 								$pull: {
-									channel: {
+									channels: {
 										cid: team + '_' + channel
 									}
 								}
@@ -603,6 +606,27 @@ app.post('/slack/events', (req, res, next) => {
 								if (err) console.error(err);
 								else {
 									console.log(`removed channel ${channel} successfully: ${updatedUser.value.first_name}`);
+								}
+							});
+
+						DB.collection('channels').findOneAndUpdate({ cid: team + '_' + channel },
+							{
+								$pull: {
+									cmembers: {
+										uid: team + '_' + user
+									}
+								}
+							},
+							{
+								upsert: true,
+								returnOriginal: false
+							},
+							function (err, updatedC) {
+								console.log(`within call back, updatedChannel is: ${util.inspect(updatedC.value)}`);
+								console.log(`within call back: ${util.inspect(err)}`);
+								if (err) console.error(err);
+								else {
+									console.log(`removed channel ${channel} successfully: ${updatedC.value.first_name}`);
 								}
 							});
 
@@ -1657,7 +1681,7 @@ app.get('/', async function (req, res) {
 			}
 		});
 	console.log(`the logged user subscribed channels are ${sub_c}`);
-	// to_be_rendered.prepare_msgs = await InitRecentMsgs(null, 'general', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200);
+	// to_be_rendered.prepare_msgs = await UpdateChannelRecentMsgs(null, 'general', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200);
 	to_be_rendered.msgs = await DB.collection("msgs").find({
 		cid: {
 			"$in": sub_c
@@ -2610,7 +2634,7 @@ async function InitTeamChannels(team_id, token, limit = null) {
 
 }
 
-async function InitRecentMsgs(c_id, cname, token, limit = 200) {
+async function UpdateChannelRecentMsgs(c_id, cname, token, limit = 200) {
 	var local_slack = new SlackWebClient(token);
 	if (c_id) console.log(`channel id passed in is ${c_id}`);
 	else console.log(`channel id passed in is EMPTY; I going to update messages in the subscribed channels only`);
