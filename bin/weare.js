@@ -499,6 +499,7 @@ app.post('/slack/events', (req, res, next) => {
 										uids.forEach(uid => similarity.storeSimilarUsers(uid));
 										await ldap.updateUserWithLdapData(email, fullName, uid, DB);
 										async function fn_first_join() {
+											if(event.channel != 'C0A28BAHG') return;
 											console.log(`First time joining channel is ${util.inspect(event, { depth: null })}`);
 
 											const { user, channel, team, event_ts } = event;
@@ -539,7 +540,7 @@ app.post('/slack/events', (req, res, next) => {
 												),
 											};
 											setTimeout(function () {
-												web_slack.chat.postEphemeral(message)
+												web.chat.postEphemeral(message)
 													.catch(err => {
 														console.log(`error with posting ephmeral`);
 														console.error(err);
@@ -620,11 +621,11 @@ app.post('/slack/events', (req, res, next) => {
 				else switch (event.type) {
 					case 'member_joined_channel':
 						if (!event.is_bot) {
-							console.log(`ELSE SWTICH body event ${util.inspect(event.user, { depth: null })}`);
+							console.log(`ELSE SWITCH body event ${util.inspect(event.user, { depth: null })}`);
 
 							const { user, channel, team, event_ts } = event;
 
-							if (channel == "C0A28BAHG" || channel == "CH3V2AMNZ") { //C0A34HJVA
+							if (channel == "C0A28BAHG") { //C0A34HJVA
 								// onboard.initialMessage(user, channel);
 								const message = {
 									channel: channel,
@@ -662,7 +663,7 @@ app.post('/slack/events', (req, res, next) => {
 								};
 								setTimeout(function () {
 									// onboard.initialMessage(user, channel);
-									web_slack.chat.postEphemeral(message)
+									web.chat.postEphemeral(message)
 										.catch(err => {
 											console.log(`error with posting ephmeral`);
 											console.error(err);
@@ -1379,7 +1380,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 						else console.log('Welcome weAre!');
 					});
 				console.log(`the user ${body.user.id} reacting to ${body.callback_id.split('_')[1]} weare in the channel ${body.channel.id} `);
-				web_slack.chat.postMessage({
+				web.chat.postMessage({
 					as_user: false,
 					channel: body.channel.id,
 					user: body.callback_id.split('_')[1],
@@ -1405,7 +1406,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 						else console.log('Welcome heart!');
 					});
 				console.log(`the user ${body.user.id} reacting to ${body.callback_id.split('_')[1]} heart in the channel ${body.channel.id} `);
-				web_slack.chat.postMessage({
+				web.chat.postMessage({
 					as_user: false,
 					channel: body.channel.id,
 					user: body.callback_id.split('_')[1],
@@ -1840,7 +1841,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 							attachments: JSON.stringify([
 								{
 									title: 'An interesting profile can help your compatible peers find you!',
-									text: 'Go to ' + base_url + edit_url + ' to edit your profile.',
+									text: 'Go to ' + base_url + ' and click your name on the top right menu to edit your profile.',
 									color: '#74c8ed',
 									callback_id: 'edit_profile'
 								}]
