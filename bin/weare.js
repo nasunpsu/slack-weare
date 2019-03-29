@@ -554,7 +554,7 @@ app.post('/slack/events', (req, res, next) => {
 														console.log(`error with posting ephmeral`);
 														console.error(err);
 													});
-											}, 7000);
+											}, 3000);
 
 
 											console.log(`finding the user is ${util.inspect(userInfo, { depth: null })}`);
@@ -676,7 +676,7 @@ app.post('/slack/events', (req, res, next) => {
 											console.log(`error with posting ephmeral`);
 											console.error(err);
 										});
-								}, 7000);
+								}, 3000);
 
 
 							}
