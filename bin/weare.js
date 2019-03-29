@@ -508,7 +508,7 @@ app.post('/slack/events', (req, res, next) => {
 										uids.forEach(uid => similarity.storeSimilarUsers(uid));
 										await ldap.updateUserWithLdapData(email, fullName, uid, DB);
 										async function fn_first_join() {
-											console.log(`Joining channel event body is ${util.inspect(event.user, { depth: null })}`);
+											console.log(`First time joining channel is ${util.inspect(event, { depth: null })}`);
 
 											const { user, channel, team, event_ts } = event;
 
@@ -629,7 +629,7 @@ app.post('/slack/events', (req, res, next) => {
 				else switch (event.type) {
 					case 'member_joined_channel':
 						if (!event.is_bot) {
-							console.log(`Joining channel event body is ${util.inspect(event.user, { depth: null })}`);
+							console.log(`ELSE SWTICH body event ${util.inspect(event.user, { depth: null })}`);
 
 							const { user, channel, team, event_ts } = event;
 
@@ -1037,6 +1037,10 @@ app.post('/slack/events', (req, res, next) => {
 							});
 						res.sendStatus(200);
 						break;
+					case 'user_change':
+							//event - event.user
+						res.sendStatus(200);
+						break;
 					default:
 						console.log(`unknown event type`);
 				}
@@ -1281,6 +1285,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 						else console.log('User accepted to consent their participation');
 					});
 				break;
+
 			case 'decline':
 				web.chat.postEphemeral({
 					as_user: false,
@@ -1381,7 +1386,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 					channel: body.channel.id,
 					user: body.callback_id.split('_')[1],
 					thread_ts: body.original_message.ts,
-					text: `:football:<@${body.user.id}> said :weare::psu_avatar: to <@${body.callback_id.split('_')[1]}>!`,
+					text: `<@${body.user.id}> said :weare::psu_avatar: to <@${body.callback_id.split('_')[1]}>!`,
 				}).catch(err => console.error(err));
 				break;
 			case 'heart':
@@ -1407,7 +1412,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 					channel: body.channel.id,
 					user: body.callback_id.split('_')[1],
 					thread_ts: body.original_message.ts,
-					text: `:psu_love: <@${body.callback_id.split('_')[1]}> got :heart::yellow_heart::blue_heart::purple_heart: from <@${body.user.id}>!`,
+					text: `<@${body.callback_id.split('_')[1]}> got :blue_heart: from <@${body.user.id}>!`,
 				}).catch(err => console.error(err));
 				break;
 			case 'dismiss-welcome':
@@ -1425,9 +1430,9 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 					{ upsert: true },
 					function (err, doc) {
 						if (err) console.error(err);
-						else console.log('Welcome heart!');
+						else console.log('Dismiss welcome....../');
 					});
-				sendMessageToSlackResponseURL(body.response_url, { text: `You dismissed the suggestion on welcoming <@${body.callback_id.split('_')[1]}>`, as_user: false, replace_original: true });
+				// sendMessageToSlackResponseURL(body.response_url, { text: `You dismissed the suggestion on welcoming <@${body.callback_id.split('_')[1]}>`, as_user: false, replace_original: true });
 				break;
 			case 'now': console.log('now selected');
 				OnlineNow(body.channel.id, body.user.id, body.response_url);//body.response_url
@@ -1703,7 +1708,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 								},
 								{
 									"name": "heart",
-									"text": ":heart:",
+									"text": ":blue_heart:",
 									"type": "button",
 									"value": "heart",
 									"style": "danger"
@@ -1730,7 +1735,16 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 				});
 
 				break;
-
+			case 'no-hello':
+				let msg_tablelist = {
+					as_user: false,
+					replace_original: true,
+					channel: body.channel.id,
+					user: body.user.id,
+					text: `More details in the profile will help your peers get to know you. Go to ${base_url}/tablelist to find more about your peers.`,
+				};
+				sendMessageToSlackResponseURL(body.response_url, msg_tablelist);
+				break;
 			case 'specify-now':
 				const msg = {
 					title: 'Schedule a meeting',
@@ -1848,7 +1862,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 							// },
 							{
 								title: `Would you like me to introduce you in #${body.channel.name}?`,
-								text: 'Go and get some :heart: and *We Are* from your peers!',
+								text: 'Go and get some :blue_heart: and *We Are* from your peers!',
 								color: '#18B87E',
 								callback_id: 'hello',
 								actions: [{
