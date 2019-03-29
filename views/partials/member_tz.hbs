@@ -7,7 +7,7 @@
             <div class="content">
                 <div class="header"></div>
                 <div class="meta">
-                    <span>{{tz_members.[0]}} hours</span>
+                    {{!-- <span>{{tz_members.[0]}} hours</span> --}}
                     {{#if (eq tz_members.[0] ../userInfo.tz_offset)}}<div class="ui teal label clock" locale='{{tz_members.[1].0.locale}}' tz='{{tz_members.[1].0.tz}}'></div>
                     {{else}}
                     <div class="ui label clock" locale='{{tz_members.[1].0.locale}}' tz='{{tz_members.[1].0.tz}}'></div>

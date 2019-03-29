@@ -11,6 +11,11 @@
   color:blue;
 }
 
+main.login-wrapper .sign-in.button.ui > a{
+  color: white;
+  font-size: xx-large;
+}
+
 /* Class for each shared channel for the table list view (only to show if the channel is shared between the user in the table and the signed in user) */
 .channel1 { color: #6435c9; }
 .channel2 { color: #6435c9; }
@@ -197,6 +202,10 @@
   margin-top: 50px;
   margin-bottom: 20px;
   /* white-space: nowrap; */
+}
+
+#tz-wrapper .ui.card .meta {
+  font-size: 1.2em!important;
 }
 
 #nw-wrapper{
