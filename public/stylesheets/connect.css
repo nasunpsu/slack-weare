@@ -1,3 +1,8 @@
+@font-face{
+    font-family: "Proxima Nova";
+    src: url(https://use.typekit.net/ufx2dge.css);
+  }
+
 body{
     margin: 0;
 }
