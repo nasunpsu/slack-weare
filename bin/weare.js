@@ -1029,6 +1029,10 @@ app.post('/slack/events', (req, res, next) => {
 							});
 						res.sendStatus(200);
 						break;
+					case 'user_change':
+							//event - event.user
+						res.sendStatus(200);
+						break;
 					default:
 						console.log(`unknown event type`);
 				}
@@ -1380,7 +1384,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 					channel: body.channel.id,
 					user: body.callback_id.split('_')[1],
 					thread_ts: body.original_message.ts,
-					text: `:football:<@${body.user.id}> said :weare::psu_avatar: to <@${body.callback_id.split('_')[1]}>!`,
+					text: `<@${body.user.id}> said :weare::psu_avatar: to <@${body.callback_id.split('_')[1]}>!`,
 				}).catch(err => console.error(err));
 				break;
 			case 'heart':
@@ -1406,7 +1410,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 					channel: body.channel.id,
 					user: body.callback_id.split('_')[1],
 					thread_ts: body.original_message.ts,
-					text: `:psu_love: <@${body.callback_id.split('_')[1]}> got :heart::yellow_heart::blue_heart::purple_heart: from <@${body.user.id}>!`,
+					text: `<@${body.callback_id.split('_')[1]}> got :blue_heart: from <@${body.user.id}>!`,
 				}).catch(err => console.error(err));
 				break;
 			case 'dismiss-welcome':
@@ -1702,7 +1706,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 								},
 								{
 									"name": "heart",
-									"text": ":heart:",
+									"text": ":blue_heart:",
 									"type": "button",
 									"value": "heart",
 									"style": "danger"
@@ -1856,7 +1860,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 							// },
 							{
 								title: `Would you like me to introduce you in #${body.channel.name}?`,
-								text: 'Go and get some :heart: and *We Are* from your peers!',
+								text: 'Go and get some :blue_heart: and *We Are* from your peers!',
 								color: '#18B87E',
 								callback_id: 'hello',
 								actions: [{
