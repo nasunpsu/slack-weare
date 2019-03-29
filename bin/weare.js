@@ -620,7 +620,7 @@ app.post('/slack/events', (req, res, next) => {
 				else switch (event.type) {
 					case 'member_joined_channel':
 						if (!event.is_bot) {
-							console.log(`Joining channel event body is ${util.inspect(event.user, { depth: null })}`);
+							console.log(`ELSE SWTICH body event ${util.inspect(event.user, { depth: null })}`);
 
 							const { user, channel, team, event_ts } = event;
 
