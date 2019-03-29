@@ -197,7 +197,7 @@ let fields = [
     { name: 'profession', identifier: 'profession' },
     { name: 'military', identifier: 'military' },
     { name: 'fun', identifier: 'fun' },
-    { name: 'unique', identifier: 'unique' },
+    { name: 'title', identifier: 'title' },
     { name: 'goal', identifier: 'goal' },
     { name: 'pastCities', identifier: 'past cities' },
     { name: 'likeplaces', identifier: 'places' },

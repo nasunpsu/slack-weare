@@ -429,381 +429,611 @@ app.post('/slack/events', (req, res, next) => {
 			// Verify the signing secret
 			// if (signature.isVerified(req)) {
 			const event = req.body.event;
+			if (event.is_bot) break;
 			console.log(`within event callback: ${event}`);
-			// `team_join` is fired whenever a new user (incl. a bot) joins the team
-			switch (event.type) {
-				case 'member_joined_channel':
-					if (!event.is_bot) {
-						console.log(`the event body is ${util.inspect(event.user, { depth: null })}`);
-						const { user, channel, team, event_ts } = event;
+			(async () => {
+				var userID = null, teamID = null;
+				if (event.type == 'team_join') {
+					userID = event.user.id;
+					teamID = event.user.team_id;
+				}
+				else {
+					userID = event.user;
+					teamID = event.team;
+				}
+				// `team_join` is fired whenever a new user (incl. a bot) joins the team, but the sequence of member_joined_channel and team_join for new member is undecided
+				const exist_length = await DB.collection('users').find({ uid: teamID + '_' + userID }, { uid: 1 }).limit(1).toArray();
+				console.log(`teamID is ${teamID} and userID is ${userID}`);
+				console.log(`user length is ${util.inspect(exist_length, { depth: 2 })}`);
+				if (exist_length.length == 0 && (event.type == 'member_joined_channel' || event.type == 'team_join')) {
 
-						if (channel == "C0A28BAHG" || channel == "CH3V2AMNZ") { //C0A34HJVA
-							// onboard.initialMessage(user, channel);
-							const message = {
-								channel: channel,
-								user: user,
-								link_names: true,
-								text: 'Consent form of Participating WeAre! Research Project',
-								as_user: false,
-								attachments: JSON.stringify([
+					await web.users.info({ user: userID, include_locale: true })
+						.then(result => {
+							console.log(`calling web.users.info the result is ${result}`);
+							let userInfo = result.user;
+							if (!userInfo.is_bot) {
+								console.log(`Updating Locale etc for ${userInfo.profile.real_name}`);
+								DB.collection('users').updateOne(
+									{ uid: teamID + '_' + userID },
 									{
-										title: 'Procedure',
-										text: 'We invite you to participate in a research study that takes place this spring semester. Our research goal is to explore and assess ways to build a sense of community among World Campus students. Participants must be over the age of 18 to participate, and not stay or live in European Economic Area to participate. As a participant in the research project, you will be asked to use Slack and answer two questionnaires before and after usingt Slack (Each survey should 10 minutes to complete). As a compensation for your participation in the survey, we will draw 15 names in the first survey participants for a $30 Amazon Gift Card, and for those who answered both we will draw additional 15 names for a $50 Amazon Gift Card. During your use of Slack tool and visualization dashboard, we will collect your usage data (e.g. interactive moves in the dashboard, log-in time), but these data will always remain confidential and stored anonymously for data analysis. Only researchers of this project in the Human-Centered Lab of Penn State will have access to the data. No third party or university authorities will have access to the data.',
-										color: '#3060f0',
-									},
-									{
-										title: 'Questions or concerns?',
-										text: 'If you have questions or concerns, you may contact Na Sun at nzs162@psu.edu. If you have questions regarding your rights as a research subject or concerns regarding your privacy, you may contact the Penn State Office for Research Protections at 814-865-1775. Your participation is voluntary and you may decide to withdraw at any time without penalty. You do not have to answer any questions that you do not want to answer. Note that you can no longer modify the content once you complete the survey content. Your participation implies your voluntary consent to participate in the research.',
-										color: '#74c8ed',
-										callback_id: 'terms-of-service',
-										actions: [{
-											name: 'accept',
-											text: 'Accept',
-											type: 'button',
-											value: 'accept',
-											style: 'primary',
-										},
-										{
-											name: 'Decline',
-											text: 'Decline',
-											type: 'button',
-											value: 'decline',
-											style: 'default'
-										}],
-									}]
-								),
-							};
-							setTimeout(function () {
-								// onboard.initialMessage(user, channel);
-								web.chat.postEphemeral(message)
-									.catch(err => {
-										console.log(`error with posting ephmeral`);
-										console.error(err);
-									});
-							}, 7000);
-
-
-						}
-						DB.collection('users').findOne({ uid: team + '_' + user }, function (err, user_doc) {
-							console.log(`finding the user is ${util.inspect(user_doc, { depth: null })}`);
-							console.log(`error is ${util.inspect(err, { depth: null })}`);
-							if (err) console.error(err);
-							else if (user_doc) {
-								// console.log(`the retrieved docs is ${util.inspect(docs, { depth: null })}`)
-								DB.collection('channels').findOneAndUpdate(
-									{ cid: team + '_' + channel },
-									{
-										$push: {
-											cmembers: {
-												real_name: user_doc.real_name,
-												first_name: user_doc.first_name,
-												last_name: user_doc.last_name,
-												uid: user_doc.uid,
-												email: user_doc.email
-											}
-										},
-										$inc: {
-											num_members: 1
+										$set: {
+											team_id: teamID,
+											name: userInfo.name,
+											email: userInfo.profile.email,
+											real_name: userInfo.real_name,
+											tz: userInfo.tz,
+											tz_label: userInfo.tz_label,
+											local_area: userInfo.tz ? userInfo.tz.match(/([a-zA-Z]+)\//)[1] : 'unknown',
+											tz_offset: userInfo.tz_offset / (60 * 60),
+											title: userInfo.profile.title,
+											phone: userInfo.profile.phone,
+											status_text: userInfo.profile.status_text,
+											status_emoji: userInfo.profile.status_emoji,
+											status_expiration: userInfo.profile.status_expiration,
+											first_name: userInfo.profile.first_name ? userInfo.profile.first_name : userInfo.profile.real_name.split(' ')[0],
+											last_name: userInfo.profile.last_name,
+											image_48: userInfo.profile.image_48,
+											image_512: userInfo.profile.image_512,
+											is_custom_image: userInfo.profile.is_custom_image,
+											is_bot: userInfo.is_bot,
+											last_updated: userInfo.updated,
+											locale: userInfo.locale,
+											// channels: user_channels,
+											join_ts: new Date()
 										}
 									},
-									{ upsert: true, returnOriginal: false },
-									function (err, updatedChannel) {
-										if (err) console.error(err);
-										else {
-											DB.collection('users').updateOne(
-												{ uid: team + '_' + user },
+									{ upsert: true })
+									.then(async () => {
+										console.log('user updated succesfully');
+										const uid = teamID + '_' + userID;
+										const email = userInfo.profile.email;
+										const fullName = userInfo.profile.real_name;
+
+										console.log('user updated with LDAP succesfully');
+										const join_channel = event.type == 'member_joined_channel' ? await fn_first_join() : true;
+
+										const obj_whatever = await similarity.storeSimilarUsers(uid);
+										const res = await DB.collection('users').find({}, { uid: 1 });
+										const array = await res.toArray();
+										const uids = array.map(user => user.uid).filter(uid => !!uid);
+										uids.forEach(uid => similarity.storeSimilarUsers(uid));
+										await ldap.updateUserWithLdapData(email, fullName, uid, DB);
+										async function fn_first_join() {
+											console.log(`Joining channel event body is ${util.inspect(event.user, { depth: null })}`);
+
+											const { user, channel, team, event_ts } = event;
+
+											//It could be all the default join channels because it is not clear which one is going to be the first
+											const message = {
+												channel: channel,
+												user: user,
+												link_names: true,
+												text: 'Consent form of Participating WeAre! Research Project',
+												as_user: false,
+												attachments: JSON.stringify([
+													{
+														title: 'Procedure',
+														text: 'We invite you to participate in a research study that takes place this spring semester. Our research goal is to explore and assess ways to build a sense of community among World Campus students. Participants must be over the age of 18 to participate, and not stay or live in European Economic Area to participate. As a participant in the research project, you will be asked to use Slack and answer two questionnaires before and after usingt Slack (Each survey should 10 minutes to complete). As a compensation for your participation in the survey, we will draw 15 names in the first survey participants for a $30 Amazon Gift Card, and for those who answered both we will draw additional 15 names for a $50 Amazon Gift Card. During your use of Slack tool and visualization dashboard, we will collect your usage data (e.g. interactive moves in the dashboard, log-in time), but these data will always remain confidential and stored anonymously for data analysis. Only researchers of this project in the Human-Centered Lab of Penn State will have access to the data. No third party or university authorities will have access to the data.',
+														color: '#3060f0',
+													},
+													{
+														title: 'Questions or concerns?',
+														text: 'If you have questions or concerns, you may contact Na Sun at nzs162@psu.edu. If you have questions regarding your rights as a research subject or concerns regarding your privacy, you may contact the Penn State Office for Research Protections at 814-865-1775. Your participation is voluntary and you may decide to withdraw at any time without penalty. You do not have to answer any questions that you do not want to answer. Note that you can no longer modify the content once you complete the survey content. Your participation implies your voluntary consent to participate in the research.',
+														color: '#74c8ed',
+														callback_id: 'terms-of-service',
+														actions: [{
+															name: 'accept',
+															text: 'Accept',
+															type: 'button',
+															value: 'accept',
+															style: 'primary',
+														},
+														{
+															name: 'Decline',
+															text: 'Decline',
+															type: 'button',
+															value: 'decline',
+															style: 'default'
+														}],
+													}]
+												),
+											};
+											setTimeout(function () {
+												web_slack.chat.postEphemeral(message)
+													.catch(err => {
+														console.log(`error with posting ephmeral`);
+														console.error(err);
+													});
+											}, 7000);
+
+
+											console.log(`finding the user is ${util.inspect(userInfo, { depth: null })}`);
+
+											const join_channel = await DB.collection('channels').findOneAndUpdate(
+												{ cid: team + '_' + channel },
 												{
 													$push: {
-														channels: {
-															cid: updatedChannel.value.cid,
-															cname: updatedChannel.value.cname
+														cmembers: {
+															real_name: userInfo.real_name,
+															first_name: userInfo.first_name,
+															last_name: userInfo.last_name,
+															uid: userInfo.uid,
+															email: userInfo.email
 														}
+													},
+													$inc: {
+														num_members: 1
 													}
 												},
-												{ upsert: true },
-												function (err, doc) {
-													if (err) console.error(err);
-													else console.log('pushed channel to the user after the joining event');
+												{ upsert: true, returnOriginal: false }).then((updatedChannel) => {
+													DB.collection('users').updateOne(
+														{ uid: team + '_' + user },
+														{
+															$push: {
+																channels: {
+																	cid: updatedChannel.value.cid,
+																	cname: updatedChannel.value.cname
+																}
+															}
+														},
+														{ upsert: true },
+														function (err, doc) {
+															if (err) console.error(err);
+															else console.log('pushed channel to the user after the joining event');
+														});
 												});
+											const userlog_update = await DB.collection('userlogs').updateOne({ log_id: makeid() }, {
+												$set: {
+													uid: team + '_' + user,
+													email: userInfo.email,
+													real_name: userInfo.real_name,
+													first_name: userInfo.first_name,
+													last_name: userInfo.last_name,
+													action: `join the channel`,
+													channel: team + '_' + channel,
+													ts: new Date()
+												},
+											}, { upsert: true }, function (err, res) {
+												if (err) console.error(err);
+												else console.log(`the user ${util.inspect(userInfo.first_name)} join the channel ${channel} `);
+											});
+											return Promise.resolve({
+												user_log: userlog_update,
+												channel_update: join_channel
+											});
 										}
-									});
-								DB.collection('userlogs').updateOne({ log_id: makeid() }, {
-									$set: {
-										uid: team + '_' + user,
-										email: user_doc.email,
-										real_name: user_doc.real_name,
-										first_name: user_doc.first_name,
-										last_name: user_doc.last_name,
-										action: `join the channel`,
-										channel: team + '_' + channel,
-										ts: new Date()
-									},
-								}, { upsert: true }, function (err, res) {
-									if (err) console.error(err);
-									else console.log(`the user ${util.inspect(user_doc.first_name)} join the channel ${channel} `);
-								});
+										//end of join channel event 
+										// return Promise.resolve({
+										// 	similar: obj_whatever,
+										// 	channel_update: join_channel
+										// });
 
+									})
+									.catch(err => {
+										console.log(`error duing the inserting new user from Team_JOIN`);
+										console.error(err);
+									});
 							}
 						});
-
-
-					}
 					res.sendStatus(200);
-					break;
-				case 'member_left_channel':
-					if (!event.is_bot) {
-						const { user, channel, team } = event;
-						console.log(`the event body is ${util.inspect(event, { depth: null })}`);
-						DB.collection('users').findOne({ uid: team + '_' + user }, function (err, tobeDEL) {
-							if (err) console.error(err);
-							else {
-								if (tobeDEL.channels.length == 1) { //this will be the last channel that the user is leaving, meaning that he/she is being deactivating
-									DB.collection('users_deactivated').updateOne({ uid: team + '_' + user }, {
+				}
+				else switch (event.type) {
+					case 'member_joined_channel':
+						if (!event.is_bot) {
+							console.log(`Joining channel event body is ${util.inspect(event.user, { depth: null })}`);
+
+							const { user, channel, team, event_ts } = event;
+
+							if (channel == "C0A28BAHG" || channel == "CH3V2AMNZ") { //C0A34HJVA
+								// onboard.initialMessage(user, channel);
+								const message = {
+									channel: channel,
+									user: user,
+									link_names: true,
+									text: 'Consent form of Participating WeAre! Research Project',
+									as_user: false,
+									attachments: JSON.stringify([
+										{
+											title: 'Procedure',
+											text: 'We invite you to participate in a research study that takes place this spring semester. Our research goal is to explore and assess ways to build a sense of community among World Campus students. Participants must be over the age of 18 to participate, and not stay or live in European Economic Area to participate. As a participant in the research project, you will be asked to use Slack and answer two questionnaires before and after usingt Slack (Each survey should 10 minutes to complete). As a compensation for your participation in the survey, we will draw 15 names in the first survey participants for a $30 Amazon Gift Card, and for those who answered both we will draw additional 15 names for a $50 Amazon Gift Card. During your use of Slack tool and visualization dashboard, we will collect your usage data (e.g. interactive moves in the dashboard, log-in time), but these data will always remain confidential and stored anonymously for data analysis. Only researchers of this project in the Human-Centered Lab of Penn State will have access to the data. No third party or university authorities will have access to the data.',
+											color: '#3060f0',
+										},
+										{
+											title: 'Questions or concerns?',
+											text: 'If you have questions or concerns, you may contact Na Sun at nzs162@psu.edu. If you have questions regarding your rights as a research subject or concerns regarding your privacy, you may contact the Penn State Office for Research Protections at 814-865-1775. Your participation is voluntary and you may decide to withdraw at any time without penalty. You do not have to answer any questions that you do not want to answer. Note that you can no longer modify the content once you complete the survey content. Your participation implies your voluntary consent to participate in the research.',
+											color: '#74c8ed',
+											callback_id: 'terms-of-service',
+											actions: [{
+												name: 'accept',
+												text: 'Accept',
+												type: 'button',
+												value: 'accept',
+												style: 'primary',
+											},
+											{
+												name: 'Decline',
+												text: 'Decline',
+												type: 'button',
+												value: 'decline',
+												style: 'default'
+											}],
+										}]
+									),
+								};
+								setTimeout(function () {
+									// onboard.initialMessage(user, channel);
+									web_slack.chat.postEphemeral(message)
+										.catch(err => {
+											console.log(`error with posting ephmeral`);
+											console.error(err);
+										});
+								}, 7000);
+
+
+							}
+							DB.collection('users').findOne({ uid: team + '_' + user }, function (err, user_doc) {
+								console.log(`finding the user is ${util.inspect(user_doc, { depth: null })}`);
+								console.log(`error is ${util.inspect(err, { depth: null })}`);
+								if (err) console.error(err);
+								else if (user_doc) {
+									// console.log(`the retrieved docs is ${util.inspect(docs, { depth: null })}`)
+									DB.collection('channels').findOneAndUpdate(
+										{ cid: team + '_' + channel },
+										{
+											$push: {
+												cmembers: {
+													real_name: user_doc.real_name,
+													first_name: user_doc.first_name,
+													last_name: user_doc.last_name,
+													uid: user_doc.uid,
+													email: user_doc.email
+												}
+											},
+											$inc: {
+												num_members: 1
+											}
+										},
+										{ upsert: true, returnOriginal: false },
+										function (err, updatedChannel) {
+											if (err) console.error(err);
+											else {
+												DB.collection('users').updateOne(
+													{ uid: team + '_' + user },
+													{
+														$push: {
+															channels: {
+																cid: updatedChannel.value.cid,
+																cname: updatedChannel.value.cname
+															}
+														}
+													},
+													{ upsert: true },
+													async function (err, doc) {
+														if (err) console.error(err);
+														else console.log('pushed channel to the user after the joining event');
+														const res = await DB.collection('users').find({}, { uid: 1 });
+														const array = await res.toArray();
+														const uids = array.map(user => user.uid).filter(uid => !!uid);
+														uids.forEach(uid => similarity.storeSimilarUsers(uid));
+														console.log(`after the uids ${uids}`);
+													});
+											}
+										});
+
+									DB.collection('userlogs').updateOne({ log_id: makeid() }, {
 										$set: {
-											email: tobeDEL.email,
-											real_name: tobeDEL.real_name,
-											first_name: tobeDEL.first_name,
-											last_name: tobeDEL.last_name
+											uid: team + '_' + user,
+											email: user_doc.email,
+											real_name: user_doc.real_name,
+											first_name: user_doc.first_name,
+											last_name: user_doc.last_name,
+											action: `join the channel`,
+											channel: team + '_' + channel,
+											ts: new Date()
 										},
 									}, { upsert: true }, function (err, res) {
 										if (err) console.error(err);
-										else console.log(`the deleted user is ${util.inspect(tobeDEL)}`);
-									})
-								}
-								DB.collection('userlogs').updateOne({ log_id: makeid() }, {
-									$set: {
-										uid: team + '_' + user,
-										email: tobeDEL.email,
-										real_name: tobeDEL.real_name,
-										first_name: tobeDEL.first_name,
-										last_name: tobeDEL.last_name,
-										action: `leave the channel`,
-										channel: team + '_' + channel,
-										ts: new Date()
-									},
-								}, { upsert: true }, function (err, res) {
-									if (err) console.error(err);
-									else console.log(`the user ${util.inspect(tobeDEL.first_name)} left the channel ${channel} `);
-								});
-							}
-						});
+										else console.log(`the user ${util.inspect(user_doc.first_name)} join the channel ${channel} `);
+									});
 
-						DB.collection('users').findOneAndUpdate({ uid: team + '_' + user },
-							{
-								$pull: {
-									channels: {
-										cid: team + '_' + channel
-									}
-								}
-							},
-							{
-								upsert: true,
-								returnOriginal: false
-							},
-							function (err, updatedUser) {
-								console.log(`within call back, updatedUser is: ${util.inspect(updatedUser.value)}`);
-								console.log(`within call back: ${util.inspect(err)}`);
-								if (err) console.error(err);
-								else {
-									console.log(`removed channel ${channel} successfully: ${updatedUser.value.first_name}`);
 								}
 							});
 
-						DB.collection('channels').findOneAndUpdate({ cid: team + '_' + channel },
-							{
-								$pull: {
-									cmembers: {
-										uid: team + '_' + user
-									}
-								}
-							},
-							{
-								upsert: false,
-								returnOriginal: false
-							},
-							function (err, updatedC) {
-								console.log(`within call back, updatedChannel is: ${util.inspect(updatedC.value)}`);
-								console.log(`within call back: ${util.inspect(err)}`);
+						}
+						res.sendStatus(200);
+						break;
+					case 'member_left_channel':
+						if (!event.is_bot) {
+							const { user, channel, team } = event;
+							console.log(`the event body is ${util.inspect(event, { depth: null })}`);
+							DB.collection('users').findOne({ uid: team + '_' + user }, function (err, tobeDEL) {
 								if (err) console.error(err);
 								else {
-									console.log(`removed channel ${channel} successfully: ${updatedC.value.first_name}`);
-								}
-							});
-
-					}
-					res.sendStatus(200);
-					break;
-				case 'team_join':
-
-					if (!event.is_bot) {
-						// console.log(`the event body is ${util.inspect(event, { depth: null })}`);
-						const { user } = event;
-						console.log(`the user just joined the team is ${util.inspect(user, { depth: null })}`);
-
-						web.users.info({ user: user.id, include_locale: true })
-							.then(result => {
-								let userInfo = result.user;
-								if (!userInfo.is_bot) {
-									console.log(`Updating Locale etc for ${userInfo.profile.real_name}`);
-									DB.collection('users').updateOne(
-										{ uid: user.team_id + '_' + user.id },
-										{
+									if (tobeDEL.channels.length == 1) { //this will be the last channel that the user is leaving, meaning that he/she is being deactivating
+										DB.collection('users_deactivated').updateOne({ uid: team + '_' + user }, {
 											$set: {
-												team_id: user.team_id,
-												name: userInfo.name,
-												email: userInfo.profile.email,
-												real_name: userInfo.real_name,
-												tz: userInfo.tz,
-												tz_label: userInfo.tz_label,
-												local_area: userInfo.tz ? user.tz.match(/([a-zA-Z]+)\//)[1] : 'unknown',
-												tz_offset: userInfo.tz_offset / (60 * 60),
-												title: userInfo.profile.title,
-												phone: userInfo.profile.phone,
-												status_text: userInfo.profile.status_text,
-												status_emoji: userInfo.profile.status_emoji,
-												status_expiration: userInfo.profile.status_expiration,
-												first_name: userInfo.profile.first_name ? userInfo.profile.first_name : userInfo.profile.real_name.split(' ')[0],
-												last_name: userInfo.profile.last_name,
-												image_48: userInfo.profile.image_48,
-												image_512: userInfo.profile.image_512,
-												is_custom_image: userInfo.profile.is_custom_image,
-												is_bot: userInfo.is_bot,
-												last_updated: userInfo.updated,
-												locale: userInfo.locale,
-												// channels: user_channels,
-												join_ts: new Date()
+												email: tobeDEL.email,
+												real_name: tobeDEL.real_name,
+												first_name: tobeDEL.first_name,
+												last_name: tobeDEL.last_name
+											},
+										}, { upsert: true }, function (err, res) {
+											if (err) console.error(err);
+											else console.log(`the deleted user is ${util.inspect(tobeDEL)}`);
+										})
+									}
+									DB.collection('userlogs').updateOne({ log_id: makeid() }, {
+										$set: {
+											uid: team + '_' + user,
+											email: tobeDEL.email,
+											real_name: tobeDEL.real_name,
+											first_name: tobeDEL.first_name,
+											last_name: tobeDEL.last_name,
+											action: `leave the channel`,
+											channel: team + '_' + channel,
+											ts: new Date()
+										},
+									}, { upsert: true }, function (err, res) {
+										if (err) console.error(err);
+										else console.log(`the user ${util.inspect(tobeDEL.first_name)} left the channel ${channel} `);
+									});
+								}
+							});
+
+							DB.collection('users').findOneAndUpdate({ uid: team + '_' + user },
+								{
+									$pull: {
+										channels: {
+											cid: team + '_' + channel
+										}
+									}
+								},
+								{
+									upsert: true,
+									returnOriginal: false
+								},
+								function (err, updatedUser) {
+									console.log(`within call back, updatedUser is: ${util.inspect(updatedUser.value)}`);
+									console.log(`within call back: ${util.inspect(err)}`);
+									if (err) console.error(err);
+									else {
+										console.log(`removed channel ${channel} successfully: ${updatedUser.value.first_name}`);
+									}
+								});
+
+							DB.collection('channels').findOneAndUpdate({ cid: team + '_' + channel },
+								{
+									$pull: {
+										cmembers: {
+											uid: team + '_' + user
+										}
+									}
+								},
+								{
+									upsert: false,
+									returnOriginal: false
+								},
+								function (err, updatedC) {
+									console.log(`within call back, updatedChannel is: ${util.inspect(updatedC.value)}`);
+									console.log(`within call back: ${util.inspect(err)}`);
+									if (err) console.error(err);
+									else {
+										console.log(`removed channel ${channel} successfully: ${updatedC.value.first_name}`);
+									}
+								});
+
+						}
+						res.sendStatus(200);
+						break;
+					case 'team_join':
+						console.log('team_join event happening');
+						// if (!event.is_bot) {
+						// 	// console.log(`the event body is ${util.inspect(event, { depth: null })}`);
+						// 	const { user } = event;
+						// 	console.log(`the user just joined the team is ${util.inspect(user, { depth: null })}`);
+
+						// 	web.users.info({ user: user.id, include_locale: true })
+						// 		.then(result => {
+						// 			let userInfo = result.user;
+						// 			if (!userInfo.is_bot) {
+						// 				console.log(`Updating Locale etc for ${userInfo.profile.real_name}`);
+						// 				DB.collection('users').updateOne(
+						// 					{ uid: user.team_id + '_' + user.id },
+						// 					{
+						// 						$set: {
+						// 							team_id: user.team_id,
+						// 							name: userInfo.name,
+						// 							email: userInfo.profile.email,
+						// 							real_name: userInfo.real_name,
+						// 							tz: userInfo.tz,
+						// 							tz_label: userInfo.tz_label,
+						// 							local_area: userInfo.tz ? user.tz.match(/([a-zA-Z]+)\//)[1] : 'unknown',
+						// 							tz_offset: userInfo.tz_offset / (60 * 60),
+						// 							title: userInfo.profile.title,
+						// 							phone: userInfo.profile.phone,
+						// 							status_text: userInfo.profile.status_text,
+						// 							status_emoji: userInfo.profile.status_emoji,
+						// 							status_expiration: userInfo.profile.status_expiration,
+						// 							first_name: userInfo.profile.first_name ? userInfo.profile.first_name : userInfo.profile.real_name.split(' ')[0],
+						// 							last_name: userInfo.profile.last_name,
+						// 							image_48: userInfo.profile.image_48,
+						// 							image_512: userInfo.profile.image_512,
+						// 							is_custom_image: userInfo.profile.is_custom_image,
+						// 							is_bot: userInfo.is_bot,
+						// 							last_updated: userInfo.updated,
+						// 							locale: userInfo.locale,
+						// 							// channels: user_channels,
+						// 							join_ts: new Date()
+						// 						}
+						// 					},
+						// 					{ upsert: true })
+						// 					.then(async () => {
+						// 						console.log('user updated succesfully');
+						// 						const uid = user.team_id + '_' + user.id;
+						// 						const email = user.profile.email;
+						// 						const fullName = user.profile.real_name;
+						// 						await ldap.updateUserWithLdapData(email, fullName, user.team_id + '_' + user.id, DB);
+						// 						await similarity.storeSimilarUsers(user.team_id + '_' + user.id);
+						// 						console.log('user updated with LDAP succesfully');
+
+						// 					})
+						// 					.catch(err => {
+						// 						console.log(`error duing the inserting new user from Team_JOIN`);
+						// 						console.error(err);
+						// 					});
+						// 			}
+						// 		});
+						// }
+						res.sendStatus(200);
+						break;
+					case 'channel_created':
+						break;
+					case 'channel_deleted':
+						break;
+					case 'channel_rename':
+						break;
+					case 'channel_archive':
+						break;
+					case 'message':
+						if (event.parent_user_id) {
+							(async () => {
+								let msg_creator = await DB.collection('users').find({ uid: req.body.team_id + '_' + event.user },
+									{
+										real_name: 1,
+										image_48: 1
+									}).limit(1).toArray();
+								let channel = await DB.collection('channels').find({ cid: req.body.team_id + '_' + event.channel },
+									{
+										cname: 1,
+									}).limit(1).toArray();
+								let msg_obj = {
+									uid: event.user,
+									username: msg_creator[0].real_name,
+									user_avatar: msg_creator[0].image_48,
+									cid: req.body.team_id + '_' + event.channel,
+									cname: channel[0].cname,
+									text: event.text,
+									ts: event.ts,
+									thread_ts: event.thread_ts,
+									parent_user_id: event.parent_user_id
+								}
+								DB.collection('msgs').updateOne(
+									{ mid: event.client_msg_id },
+									{
+										$set: msg_obj
+									},
+									{ upsert: true },
+									function (err, res) {
+										if (err) console.error(err);
+										else console.log('msg updated!');
+									});
+							})();
+						}
+						else {
+							web_slack.conversations.history({ // pay attention the user token (for reading history from channel/groups) but the bot is used to write
+								channel: event.channel, //#test-bot (left) #learning-tech C0A34HJVA
+								limit: 1,
+								// cursor: cursor
+							}).then(async res => {
+								console.log(`the latest conversation message is ${util.inspect(res, { depth: null })}`);
+								const LatestMsg = res.messages[0];
+								const user = await DB.collection('users').findOne({ uid: req.body.team_id + '_' + LatestMsg.user });
+								const channel = await DB.collection('channels').findOne({ cid: req.body.team_id + '_' + event.channel });
+								// console.log(`the user ${req.body.team_id} + '_' + ${LatestMsg.user} constructing it is ${util.inspect(user, { depth: null })}`);
+								// console.log(`the channel ${req.body.team_id} + '_' + ${event.channel} constructing it is ${util.inspect(channel, { depth: 2 })}`);
+								if (LatestMsg.type == 'message' && !LatestMsg.bot_id && !LatestMsg.subtype) { // only look at the plain text msgs from real users
+									const msg_obj = {
+										uid: LatestMsg.user,
+										username: user.real_name,
+										user_avatar: user.image_48,
+										cid: req.body.team_id + '_' + event.channel,
+										cname: channel.cname,
+										text: LatestMsg.text,
+										ts: LatestMsg.ts,
+										thread_ts: LatestMsg.thread_ts,
+										is_starred: LatestMsg.is_starred,
+										reactions: LatestMsg.reactions
+									}
+									DB.collection('msgs').updateOne(
+										{ mid: LatestMsg.client_msg_id },
+										{
+											$set: msg_obj
+										},
+										{ upsert: true },
+										function (err, res) {
+											if (err) console.error(err);
+											else console.log('msg updated!');
+										});
+									DB.collection('channels').updateOne(
+										{ cid: req.body.team_id + '_' + event.channel },
+										{
+											$inc: {
+												num_msgs: 1
+											},
+											$set: {
+												latest_msg_ts: LatestMsg.ts
 											}
 										},
-										{ upsert: true })
-										.then(async () => {
-											console.log('user updated succesfully');
-											const uid = user.team_id + '_' + user.id;
-											const email = user.profile.email;
-											const fullName = user.profile.real_name;
-											await ldap.updateUserWithLdapData(email, fullName, user.team_id + '_' + user.id, DB);
-											await similarity.storeSimilarUsers(user.team_id + '_' + user.id);
-											console.log('user updated with LDAP succesfully');
-
-										})
-										.catch(err => {
-											console.log(`error duing the inserting new user from Team_JOIN`);
-											console.error(err);
+										{ upsert: true },
+										function (err, res) {
+											if (err) console.error(err);
+											else console.log('channel num_msgs updated!');
 										});
 								}
-							});
-					}
-					res.sendStatus(200);
-					break;
-				case 'channel_created':
-					break;
-				case 'channel_deleted':
-					break;
-				case 'channel_rename':
-					break;
-				case 'channel_archive':
-					break;
-				case 'message':
-					web_slack.conversations.history({ // pay attention the user token (for reading history from channel/groups) but the bot is used to write
-						channel: event.channel, //#test-bot (left) #learning-tech C0A34HJVA
-						limit: 1,
-						// cursor: cursor
-					}).then(async res => {
-						console.log(`the latest conversation message is ${util.inspect(res, { depth: null })}`);
-						const LatestMsg = res.messages[0];
-						const user = await DB.collection('users').findOne({ uid: req.body.team_id + '_' + LatestMsg.user });
-						const channel = await DB.collection('channels').findOne({ cid: req.body.team_id + '_' + event.channel });
-						// console.log(`the user ${req.body.team_id} + '_' + ${LatestMsg.user} constructing it is ${util.inspect(user, { depth: null })}`);
-						// console.log(`the channel ${req.body.team_id} + '_' + ${event.channel} constructing it is ${util.inspect(channel, { depth: 2 })}`);
-						if (LatestMsg.type == 'message' && !LatestMsg.bot_id && !LatestMsg.subtype) { // only look at the plain text msgs from real users
-							const msg_obj = {
-								uid: LatestMsg.user,
-								username: user.real_name,
-								user_avatar: user.image_48,
-								cid: req.body.team_id + '_' + event.channel,
-								cname: channel.cname,
-								text: LatestMsg.text,
-								ts: LatestMsg.ts,
-								thread_ts: LatestMsg.thread_ts,
-								is_starred: LatestMsg.is_starred,
-								reactions: LatestMsg.reactions
-							}
-							DB.collection('msgs').updateOne(
-								{ mid: LatestMsg.client_msg_id },
-								{
-									$set: msg_obj
-								},
-								{ upsert: true },
-								function (err, res) {
-									if (err) console.error(err);
-									else console.log('msg updated!');
-								});
-							DB.collection('channels').updateOne(
-								{ cid: req.body.team_id + '_' + event.channel },
-								{
-									$inc: {
-										num_msgs: 1
-									},
-									$set: {
-										latest_msg_ts: LatestMsg.ts
-									}
-								},
-								{ upsert: true },
-								function (err, res) {
-									if (err) console.error(err);
-									else console.log('channel num_msgs updated!');
-								});
+							})
+								.catch(err => console.error(err));
 						}
-					})
-						.catch(err => console.error(err));
 
-					res.sendStatus(200);
-					break;
+						res.sendStatus(200);
+						break;
 
-				case 'message_changed':
-					break;
-				case 'reaction_added':
-					DB.collection('interactions').updateOne(
-						{ iid: makeid() },
-						{
-							$set: {
-								from: req.body.team_id + '_' + event.user,
-								content: event.type,
-								to: req.body.team_id + '_' + event.item_user,
-								reaction: event.reaction,
-								item: event.item,
-								ts: event.event_ts
-							}
-						},
-						{ upsert: true },
-						function (err, doc) {
-							if (err) console.error(err);
-							else console.log('reaction added!');
-						});
-					res.sendStatus(200);
-					break;
-				case 'reaction_removed':
-					DB.collection('interactions').updateOne(
-						{ iid: makeid() },
-						{
-							$set: {
-								from: req.body.team_id + '_' + event.user,
-								content: event.type,
-								to: req.body.team_id + '_' + event.item_user,
-								reaction: event.reaction,
-								item: event.item,
-								ts: event.event_ts
-							}
-						},
-						{ upsert: true },
-						function (err, doc) {
-							if (err) console.error(err);
-							else console.log('reaction removed!');
-						});
-					res.sendStatus(200);
-					break;
-				default:
-					console.log(`unknown event type`);
-			}
+					case 'message_changed':
+						break;
+					case 'reaction_added':
+						DB.collection('interactions').updateOne(
+							{ iid: makeid() },
+							{
+								$set: {
+									from: req.body.team_id + '_' + event.user,
+									content: event.type,
+									to: req.body.team_id + '_' + event.item_user,
+									reaction: event.reaction,
+									item: event.item,
+									ts: event.event_ts
+								}
+							},
+							{ upsert: true },
+							function (err, doc) {
+								if (err) console.error(err);
+								else console.log('reaction added!');
+							});
+						res.sendStatus(200);
+						break;
+					case 'reaction_removed':
+						DB.collection('interactions').updateOne(
+							{ iid: makeid() },
+							{
+								$set: {
+									from: req.body.team_id + '_' + event.user,
+									content: event.type,
+									to: req.body.team_id + '_' + event.item_user,
+									reaction: event.reaction,
+									item: event.item,
+									ts: event.event_ts
+								}
+							},
+							{ upsert: true },
+							function (err, doc) {
+								if (err) console.error(err);
+								else console.log('reaction removed!');
+							});
+						res.sendStatus(200);
+						break;
+					default:
+						console.log(`unknown event type`);
+				}
+			})();
+
 		}
 
 			break;
@@ -924,12 +1154,13 @@ app.post('/slack/commands/intro', urlencodedParser, (req, res) => {
 			submit_label: 'Done',
 			elements: [
 				{
-					label: 'Fun fact',
+					label: 'Things I want my peers here to know about me',
 					type: 'text',
-					name: 'fun',
-					value: user.fun,
-					hint: 'Tell them something fun!'
+					name: 'title',
+					value: user.title,
+					hint: 'e.g. language, value systems, hobbies, minority roles, ethnicity'
 				},
+
 				{
 					label: 'I have lived in',
 					type: 'text',
@@ -971,13 +1202,13 @@ app.post('/slack/commands/intro', urlencodedParser, (req, res) => {
 					value: 0
 				},
 				{
-					label: 'Things I want my peers here to know about me',
+					label: 'Fun fact',
 					type: 'text',
-					name: 'unique',
+					name: 'fun',
+					value: user.fun,
 					optional: true,
-					value: user.unique,
-					hint: 'e.g. language, value systems, hobbies, minority roles, ethnicity'
-				},
+					hint: 'Tell them something fun!'
+				}
 			],
 		};
 		console.log('before dialog web method');
@@ -1143,11 +1374,12 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 						else console.log('Welcome weAre!');
 					});
 				console.log(`the user ${body.user.id} reacting to ${body.callback_id.split('_')[1]} weare in the channel ${body.channel.id} `);
-				web_slack.chat.postEphemeral({
+				web_slack.chat.postMessage({
 					as_user: false,
 					channel: body.channel.id,
 					user: body.callback_id.split('_')[1],
-					text: `Wow! <@${body.user.id}> just sent you some WeAre!`,
+					thread_ts: body.original_message.ts,
+					text: `:football:<@${body.user.id}> said :weare::psu_avatar: to <@${body.callback_id.split('_')[1]}>!`,
 				}).catch(err => console.error(err));
 				break;
 			case 'heart':
@@ -1168,11 +1400,12 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 						else console.log('Welcome heart!');
 					});
 				console.log(`the user ${body.user.id} reacting to ${body.callback_id.split('_')[1]} heart in the channel ${body.channel.id} `);
-				web_slack.chat.postEphemeral({
+				web_slack.chat.postMessage({
 					as_user: false,
 					channel: body.channel.id,
 					user: body.callback_id.split('_')[1],
-					text: `Wow! <@${body.user.id}> just sent you some :heart:!`,
+					thread_ts: body.original_message.ts,
+					text: `:psu_love: <@${body.callback_id.split('_')[1]}> got :heart::yellow_heart::blue_heart::purple_heart: from <@${body.user.id}>!`,
 				}).catch(err => console.error(err));
 				break;
 			case 'dismiss-welcome':
@@ -1192,6 +1425,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 						if (err) console.error(err);
 						else console.log('Welcome heart!');
 					});
+				sendMessageToSlackResponseURL(body.response_url, { text: `You dismissed the suggestion on welcoming <@${body.callback_id.split('_')[1]}>`, as_user: false, replace_original: true });
 				break;
 			case 'now': console.log('now selected');
 				OnlineNow(body.channel.id, body.user.id, body.response_url);//body.response_url
@@ -1378,12 +1612,13 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 						submit_label: 'Done',
 						elements: [
 							{
-								label: 'Fun fact',
+								label: 'Things I want my peers here to know about me',
 								type: 'text',
-								name: 'fun',
-								value: user.fun,
-								hint: 'Tell them something fun!'
+								name: 'title',
+								value: user.title,
+								hint: 'e.g. language, value systems, hobbies, minority roles, ethnicity'
 							},
+
 							{
 								label: 'I have lived in',
 								type: 'text',
@@ -1425,12 +1660,12 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 								value: 0
 							},
 							{
-								label: 'Things I want my peers here to know about me',
+								label: 'Fun fact',
 								type: 'text',
-								name: 'unique',
+								name: 'fun',
 								optional: true,
-								value: user.unique,
-								hint: 'e.g. language, value systems, hobbies, minority roles, ethnicity'
+								value: user.fun,
+								hint: 'Tell your peers something interesting about yourself!'
 							},
 						],
 					};
@@ -1562,7 +1797,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 							$set: {
 								fun: submission.fun,
 								profession: submission.profession,
-								unique: submission.unique,
+								title: submission.title,
 								pastCities: submission.pastCities
 							}
 						},
@@ -1579,16 +1814,36 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 					console.log(`the req session user is ${util.inspect(req.session.user, { depth: null })}`);
 					req.session.user = newUser;
 					let edit_url = `/editProfile/`;
+					web.im.open({
+						user: body.user.id
+					}).then(dm => {
+						console.log(`DM the editprofile link in ${dm.channel.id}`);
+
+						web.chat.postMessage({
+							as_user: false,
+							channel: dm.channel.id,
+							// text: `Would you like to join the meeting?`,
+							attachments: JSON.stringify([
+								{
+									title: 'An interesting profile can help your compatible peers find you!',
+									text: 'Go to ' + base_url + edit_url + ' to edit your profile.',
+									color: '#74c8ed',
+									callback_id: 'edit_profile'
+								}]
+							)
+						}).catch(err => console.error(err));
+
+					}).catch(err => console.error(err));
 					web.chat.postEphemeral({
 						as_user: false,
 						channel: body.channel.id,
 						user: body.user.id,
 						attachments: JSON.stringify([
-							{
-								title: 'An interesting profile can help your compatible peers find you!',
-								text: 'Go to ' + base_url + edit_url + ' to edit your profile.',
-								color: '#74c8ed'
-							},
+							// {
+							// 	title: 'An interesting profile can help your compatible peers find you!',
+							// 	text: 'Go to ' + base_url + edit_url + ' to edit your profile.',
+							// 	color: '#74c8ed'
+							// },
 							{
 								title: `Would you like me to introduce you in #${body.channel.name}?`,
 								text: 'Go and get some :heart: and *We Are* from your peers!',
@@ -1934,7 +2189,7 @@ app.post('/editProfile', [
 	check('fun').trim().escape(),
 	check('likeplaces').trim().escape(),
 	check('goals').trim().escape(),
-	check('unique').trim().escape(),
+	check('title').trim().escape(),
 	check('kids').isNumeric()
 ], async function (req, res) {
 	const uid = req.session.user.uid;
