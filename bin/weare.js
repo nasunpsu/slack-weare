@@ -1281,6 +1281,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 						else console.log('User accepted to consent their participation');
 					});
 				break;
+
 			case 'decline':
 				web.chat.postEphemeral({
 					as_user: false,
@@ -1423,9 +1424,9 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 					{ upsert: true },
 					function (err, doc) {
 						if (err) console.error(err);
-						else console.log('Welcome heart!');
+						else console.log('Dismiss welcome....../');
 					});
-				sendMessageToSlackResponseURL(body.response_url, { text: `You dismissed the suggestion on welcoming <@${body.callback_id.split('_')[1]}>`, as_user: false, replace_original: true });
+				// sendMessageToSlackResponseURL(body.response_url, { text: `You dismissed the suggestion on welcoming <@${body.callback_id.split('_')[1]}>`, as_user: false, replace_original: true });
 				break;
 			case 'now': console.log('now selected');
 				OnlineNow(body.channel.id, body.user.id, body.response_url);//body.response_url
@@ -1728,7 +1729,16 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 				});
 
 				break;
-
+			case 'no-hello':
+				let msg_tablelist = {
+					as_user: false,
+					replace_original: true,
+					channel: body.channel.id,
+					user: body.user.id,
+					text: `More details in the profile will help your peers get to know you. Go to ${base_url}/tablelist to find more about your peers.`,
+				};
+				sendMessageToSlackResponseURL(body.response_url, msg_tablelist);
+				break;
 			case 'specify-now':
 				const msg = {
 					title: 'Schedule a meeting',
