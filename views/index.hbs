@@ -1,7 +1,34 @@
 <main class="dashboard-wrapper">
     <h1 class="dashboard-title">We Are! Connecting you to your&nbsp;peers.</h1>
     <div class="slack-stats">
-        <div class="ui statistics">
+        <div class="ui statistics team-meta">
+            <div class="statistic yellow">
+                <div class="value">
+                    <i class="slack hash small icon"></i>{{channels_info.channels_total}} / {{total_channels_num}}
+                </div>
+                <div class="label">
+                    Subscribed / Total Channels
+                </div>
+            </div>
+            <div class="statistic teal">
+                <div class="value">
+                    <i class="users small icon"></i> {{members.members_total}}
+                </div>
+                <div class="label">
+                    {{!-- Interacted / Total Members --}}
+                    Total Members
+                </div>
+            </div>
+            <div class="statistic blue">
+                <div class="value">
+                    <i class="comments small icon"></i>{{msgs_total}}
+                </div>
+                <div class="label">
+                    Messages
+                </div>
+            </div>
+        </div>
+        {{!-- <div class="ui statistics personal-meta">
             <div class="statistic yellow">
                 <div class="value">
                     <i class="slack hash small icon"></i>{{channels_info.channels_total}}
@@ -15,7 +42,7 @@
                     <i class="users small icon"></i> {{members.members_total}}
                 </div>
                 <div class="label">
-                    Members
+                    Interacted with you
                 </div>
             </div>
             <div class="statistic blue">
@@ -23,22 +50,21 @@
                     <i class="comments small icon"></i>{{msgs_total}}
                 </div>
                 <div class="label">
-                    Messages
+                    
                 </div>
             </div>
-        </div>
+        </div> --}}
     </div>
-    <button id="open-slack" class="ui button slack-btn"><a href="slack://open" target="_blank">Open Slack of {{team.team_name}}</a></button>
+    {{!-- <button id="open-slack" class="ui button slack-btn"><a href="slack://open" target="_blank">Open Slack of {{team.team_name}}</a></button> --}}
 
     {{!-- <div id="data" class="ui segment">{{{json msgs}}}</div> --}}
-    <h2 class="post-title">Most Reacted Posts on the World Campus Slack</h2>
+    <h2 class="ui blue header post-title">
+        <div class="content">Most Reacted Messages From Your Subscribed Channels</div>
+        <div class="ui right floated blue button" id="refresh-msgs">Refresh messages</div>
+    </h2>
     <div class="post-wrapper">
         {{#each msgs as |msg|}}
         <div class="ui card message-card">
-            {{!-- <div class="image">
-                <img src="images/reactions.png">
-            </div> --}}
-            
             <div class="message medium ui basic label">
                 {{msg.text}}
             </div>
@@ -57,13 +83,15 @@
                     <span class="left floated time">{{{timeConverter msg.ts ../userInfo}}}</span>
                 </div>
                 <div class="right floated author">
-                    <img class="ui avatar image" src="{{msg.user_avatar}}"> {{msg.username}}
+                    <div class="user-dm">
+                        <a href="slack://user?team={{{get_TeamID msg.cid}}}&amp;id={{msg.uid}}" data-tooltip="Click here to message me via Slack Desktop!"><img class="ui avatar image" src="{{msg.user_avatar}}"> {{msg.username}}</a>
+                    </div>
                 </div>
             </div>
         </div>
         {{/each}}
     </div>
-    <h2 class="channel-title">Most Active Channels You're Subscribed to</h2>
+    <h2 class="channel-title ui blue header">Most Active Channels You're Subscribed to</h2>
     <div class="channel-wrapper">
         <table id="home-table" class="ui sortable celled table table-striped table-dark channel-table">
             <thead>

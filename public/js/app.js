@@ -25,21 +25,21 @@ $('.ui.dropdown')
 
 var connect = document.getElementById('connectList');
 
-var text_to_change = connect.childNodes[0];
+// var text_to_change = connect.childNodes[0];
 
-switch (window.location.pathname) {
-  case '/tablelist':
-    text_to_change.nodeValue = 'Connected in Table View';
-    break;
-  case '/network':
-    text_to_change.nodeValue = 'Connected in Network';
-    break;
-  case '/temporal':
-    text_to_change.nodeValue = 'Connected in Timezone Offset';
-    break;
-  default:
-    break;
-}
+// switch (window.location.pathname) {
+//   case '/tablelist':
+//     text_to_change.nodeValue = 'Connected by Commonality';
+//     break;
+//   case '/network':
+//     text_to_change.nodeValue = 'Connected in Network';
+//     break;
+//   case '/temporal':
+//     text_to_change.nodeValue = 'Connected by Temporal proximity';
+//     break;
+//   default:
+//     break;
+// }
 // window.addEventListener("DOMContentLoaded", function () {
 //   let connect_options = $('.connect.ui.dropdown').find('a');
 //   var updateConnect = function (e) {

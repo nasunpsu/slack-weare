@@ -24,9 +24,9 @@
 <div style="margin-top: 60px;">
     <main class="connect-wrapper">
         <div class="filter-wrapper">
-            <h3>Connect with Peers Like You</h3>
+
             <div class="filters">
-                <p>View peers who share your</p>
+                <h3>View peers who share your</h3>
                 <form id="checkboxes">
                     <div class="ui checkbox">
                         <input type="checkbox" id="locationCheck">
@@ -61,18 +61,21 @@
                         <label><a class="ui purple empty circular label mini"></a> {{this}}</label>
                     </div>
                     {{/each}}
+                    <div class="ui category search search-table right floated">
+                        <div class="ui icon right labeled input search-box">
+                            <input class="prompt" type="text" id="search" placeholder="search">
+                            <select id="searchby-dropdown" class="ui dropdown search-by-dropdown label">
+                                <option value="0">All Fields</option>
+                            </select>
+                        </div>
+                        <div class="results"></div>
+                    </div>
+                    <p style="padding-top: 20px">Note: Colored text indicates that you share the item in color.</p>
+
                 </form>
+
             </div>
-            <div class="ui category search search-table">
-                <div class="ui icon right labeled input search-box">
-                    <input class="prompt" type="text" id="search" placeholder="search">
-                    <select id="searchby-dropdown" class="ui dropdown search-by-dropdown label">
-                        <option value="0">All Fields</option>
-                    </select>
-                </div>
-                <div class="results"></div>
-            </div>
-            <p style="padding-top: 20px">Note: Colored text indicates that you share the item in color.</p>
+
         </div>
         <table class="ui sortable table ascending celled list-table">
             <thead>
