@@ -146,6 +146,9 @@ app.engine('hbs', hbs({
 		get_UserID: function (uid) {
 			return uid.split('_')[1];
 		},
+		get_TeamID: function (cid) {
+			return cid.split('_')[0];
+		},
 		timeConverter: function (UNIX_timestamp, userInfo) {
 			console.log(userInfo)
 			var a = new Date(UNIX_timestamp * 1000);
@@ -401,11 +404,26 @@ app.get('/test', (req, res) => {
 	(async () => {
 		await UpdateChannelRecentMsgs(null, 'general', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200); //cid example:"T0A286J8K_C0A28BAHG"		
 	})();
-
-
-
 	console.log('---------------test----------------');
 });
+
+app.get('/refresh', async (req, res) => {
+	let sub_c = req.session.user.channels;
+	let promiseArray = [];
+	await sub_c.forEach((c) => {
+		let promise = UpdateChannelRecentMsgs(c.cid, c.cname, process.env.SLACK_OAUTH_ACCESS_TOKEN, 200)
+		promiseArray.push(promise);
+		return Promise.resolve(promise);
+		// return promise;
+	});
+	console.log('---------------refresh msgs clicked----------------');
+	await Promise.all(promiseArray).then(result => {
+		console.log(`promiseArray cleared`);
+		res.json({ success: true });
+	})
+});
+
+
 
 async function initAll() {
 	//TODO: MOVE this Block to the Init Module
@@ -499,7 +517,7 @@ app.post('/slack/events', (req, res, next) => {
 										uids.forEach(uid => similarity.storeSimilarUsers(uid));
 										await ldap.updateUserWithLdapData(email, fullName, uid, DB);
 										async function fn_first_join() {
-											if(event.channel != 'C0A28BAHG') return;
+											if (event.channel != 'C0A28BAHG') return;
 											console.log(`First time joining channel is ${util.inspect(event, { depth: null })}`);
 
 											const { user, channel, team, event_ts } = event;
@@ -1031,7 +1049,7 @@ app.post('/slack/events', (req, res, next) => {
 						res.sendStatus(200);
 						break;
 					case 'user_change':
-							//event - event.user
+						//event - event.user
 						res.sendStatus(200);
 						break;
 					default:
@@ -2007,15 +2025,15 @@ app.get('/help', (req, res) => {
 
 app.get('/', async function (req, res) {
 	//you could do a combo of res.session.locals = res.locals() and res.locals(res.session.locals), but kinda hacky
-	console.log(`session info is ${util.inspect(req.session, { depth: 3 })}, and the locals are ${util.inspect(res.locals, { depth: 2 })}`)
+	// console.log(`session info is ${util.inspect(req.session, { depth: 3 })}, and the locals are ${util.inspect(res.locals, { depth: 2 })}`)
 	let to_be_rendered = {};
 	to_be_rendered.layout = 'default';
 	to_be_rendered.template = 'index-template';
 	to_be_rendered.team = req.session.team;
 	to_be_rendered.userInfo = req.session.user;
-	to_be_rendered.members = await DB.collection('users').find({ team_id: req.session.team ? req.session.team.team_id : 'T0A286J8K' }).toArray().then((results, err) => {
-		if (err) console.error(err);
-		else if (results.length != 0) {
+	to_be_rendered.members = await DB.collection('users').find({ team_id: req.session.team ? req.session.team.team_id : 'T0A286J8K' }).toArray().then((results) => {
+		console.log('getting users of the channels');
+		if (results.length != 0) {
 			//categorize the users based on their tz_labels, sorted by tz_offset
 			results.sort((a, b) => {
 				return a.tz_offset - b.tz_offset;
@@ -2036,16 +2054,20 @@ app.get('/', async function (req, res) {
 			return Promise.resolve(obj);
 			// res.render('index', { layout: 'default', template: 'home-template', tz_members: members_by_tz });
 		}
-	});
+	})
+	// .catch(err=>console.error(err));
 
 	let sub_c = req.session.user.channels.map(c => c.cid);
+	let all_channels  = await DB.collection('channels').find({}).toArray();
+
+	to_be_rendered.total_channels_num = all_channels.length;
 	to_be_rendered.channels_info = await DB.collection('channels').find({
 		cid: {
 			"$in": sub_c
 		}
 	})
-		.toArray().then(async (results, err) => {
-			if (err) console.error(err);
+		.toArray().then(async (results) => {
+			console.log('find subscribed channels');
 			if (results.length != 0) { //this is current all the channels of the team, but perhaps it is good to differentiate which ones the logged user belongs to vs not
 				var TopSizeChannels = [], TopActiveChannels = [], limit = 3, c_list = []; //LIMIT is the number of Top X channels
 
@@ -2078,7 +2100,8 @@ app.get('/', async function (req, res) {
 				}
 				return Promise.resolve(obj);
 			}
-		});
+		})
+		// .catch(err=>console.error(err));
 	console.log(`the logged user subscribed channels are ${sub_c}`);
 	// to_be_rendered.prepare_msgs = await UpdateChannelRecentMsgs(null, 'general', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200);
 	to_be_rendered.msgs = await DB.collection("msgs").find({
@@ -2100,13 +2123,8 @@ app.get('/', async function (req, res) {
 			for (var i = 0; i < b.reactions.length; i++) {
 				b_reaction_number += b.reactions[i].count;
 			}
-			// console.log(`reaction number is ${a_reaction_number}`);
-			// console.log(`reaction number is ${b_reaction_number}`);
 			return b_reaction_number - a_reaction_number;
 		});
-
-		// console.log(`reaction number is ${util.inspect(msgs, {depth:null})}`);
-
 		return Promise.resolve(msgs.splice(0, 6));
 
 	})

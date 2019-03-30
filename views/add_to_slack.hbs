@@ -4,12 +4,17 @@
     <div id="background" class="bg"></div>
         <div id="background" class="btn-wrapper">
             <div class="we-are-message">
-                <h3 class="instructions" style="margin-top: 40px;">Oops! <br><br>
-            It looks like you are signed in a different workspace than WeAre! <br>Be sure to sign in/choose the workspace.</h3><br>
-            <div class="ui button center teal sign-in"><a href="https://weare-pennstate.slack.com" target="_blank">Sign in to WeAre!</a></div>
+                <h3 class="instructions">
+            It looks like you are using a different workspace other than WeAre! <br> <b>Click</b> the GIF picture below and make sure to select <b>WeAre!</b> from the dropdown as shown below.</h3><br>
+            {{!-- <div class="ui button center teal sign-in"><a href="https://weconnect.ist.psu.edu:8443/">Try Signing In WeAre! Slack Space</a></div> --}}
+            <div class="ui massive image center">
+                <a href="https://weconnect.ist.psu.edu:8443/"><img src="/images/weare-signin-instruction.gif"></a>
+            </div>
+            {{#if (eq userInfo.first_name 'WeAre')}}
             <a href="https://slack.com/oauth/authorize?client_id=10076222291.494392585666&scope=bot,chat:write:bot,commands,users:read,users:read.email,users.profile:read,channels:write,incoming-webhook,channels:read,groups:read,channels:history"><img
                     alt="Add to Slack" height="40" width="139" src="https://platform.slack-edge.com/img/add_to_slack.png"
-                    srcset="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x" /></a>
+                    srcset="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x" /></a> 
+            {{/if}}
         </div>
     </div>
 </main>
