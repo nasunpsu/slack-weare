@@ -527,6 +527,49 @@ app.post('/slack/events', (req, res, next) => {
 							console.log(`calling web.users.info the result is ${result}`);
 							let userInfo = result.user;
 							if (!userInfo.is_bot) {
+								//It could be all the default join channels because it is not clear which one is going to be the first
+								const message = {
+									channel: channel,
+									user: user,
+									link_names: true,
+									text: 'Consent form of Participating WeAre! Research Project',
+									as_user: false,
+									attachments: JSON.stringify([
+										{
+											title: 'Procedure',
+											text: 'We invite you to participate in a research study that takes place this spring semester. Our research goal is to explore and assess ways to build a sense of community among World Campus students. Participants must be over the age of 18 to participate, and not stay or live in European Economic Area to participate. As a participant in the research project, you will be asked to use Slack and answer two questionnaires before and after usingt Slack (Each survey should 10 minutes to complete). As a compensation for your participation in the survey, we will draw 15 names in the first survey participants for a $30 Amazon Gift Card, and for those who answered both we will draw additional 15 names for a $50 Amazon Gift Card. During your use of Slack tool and visualization dashboard, we will collect your usage data (e.g. interactive moves in the dashboard, log-in time), but these data will always remain confidential and stored anonymously for data analysis. Only researchers of this project in the Human-Centered Lab of Penn State will have access to the data. No third party or university authorities will have access to the data.',
+											color: '#3060f0',
+										},
+										{
+											title: 'Questions or concerns?',
+											text: 'If you have questions or concerns, you may contact Na Sun at nzs162@psu.edu. If you have questions regarding your rights as a research subject or concerns regarding your privacy, you may contact the Penn State Office for Research Protections at 814-865-1775. Your participation is voluntary and you may decide to withdraw at any time without penalty. You do not have to answer any questions that you do not want to answer. Note that you can no longer modify the content once you complete the survey content. Your participation implies your voluntary consent to participate in the research.',
+											color: '#74c8ed',
+											callback_id: 'terms-of-service',
+											actions: [{
+												name: 'accept',
+												text: 'Accept',
+												type: 'button',
+												value: 'accept',
+												style: 'primary',
+											},
+											{
+												name: 'Decline',
+												text: 'Decline',
+												type: 'button',
+												value: 'decline',
+												style: 'default'
+											}],
+										}]
+									),
+								};
+								setTimeout(function () {
+									if(event.channel == 'CG82VU7HC') web.chat.postEphemeral(message)
+										.catch(err => {
+											console.log(`error with posting ephmeral`);
+											console.error(err);
+										});
+								}, 3000);
+
 								console.log(`Updating Locale etc for ${userInfo.profile.real_name}`);
 								DB.collection('users').updateOne(
 									{ uid: teamID + '_' + userID },
@@ -580,49 +623,7 @@ app.post('/slack/events', (req, res, next) => {
 
 											const { user, channel, team, event_ts } = event;
 
-											//It could be all the default join channels because it is not clear which one is going to be the first
-											const message = {
-												channel: channel,
-												user: user,
-												link_names: true,
-												text: 'Consent form of Participating WeAre! Research Project',
-												as_user: false,
-												attachments: JSON.stringify([
-													{
-														title: 'Procedure',
-														text: 'We invite you to participate in a research study that takes place this spring semester. Our research goal is to explore and assess ways to build a sense of community among World Campus students. Participants must be over the age of 18 to participate, and not stay or live in European Economic Area to participate. As a participant in the research project, you will be asked to use Slack and answer two questionnaires before and after usingt Slack (Each survey should 10 minutes to complete). As a compensation for your participation in the survey, we will draw 15 names in the first survey participants for a $30 Amazon Gift Card, and for those who answered both we will draw additional 15 names for a $50 Amazon Gift Card. During your use of Slack tool and visualization dashboard, we will collect your usage data (e.g. interactive moves in the dashboard, log-in time), but these data will always remain confidential and stored anonymously for data analysis. Only researchers of this project in the Human-Centered Lab of Penn State will have access to the data. No third party or university authorities will have access to the data.',
-														color: '#3060f0',
-													},
-													{
-														title: 'Questions or concerns?',
-														text: 'If you have questions or concerns, you may contact Na Sun at nzs162@psu.edu. If you have questions regarding your rights as a research subject or concerns regarding your privacy, you may contact the Penn State Office for Research Protections at 814-865-1775. Your participation is voluntary and you may decide to withdraw at any time without penalty. You do not have to answer any questions that you do not want to answer. Note that you can no longer modify the content once you complete the survey content. Your participation implies your voluntary consent to participate in the research.',
-														color: '#74c8ed',
-														callback_id: 'terms-of-service',
-														actions: [{
-															name: 'accept',
-															text: 'Accept',
-															type: 'button',
-															value: 'accept',
-															style: 'primary',
-														},
-														{
-															name: 'Decline',
-															text: 'Decline',
-															type: 'button',
-															value: 'decline',
-															style: 'default'
-														}],
-													}]
-												),
-											};
-											setTimeout(function () {
-												if(event.channel == 'CG82VU7HC') web.chat.postEphemeral(message)
-													.catch(err => {
-														console.log(`error with posting ephmeral`);
-														console.error(err);
-													});
-											}, 3000);
-
+											
 
 											console.log(`finding the user is ${util.inspect(userInfo, { depth: null })}`);
 
@@ -732,7 +733,7 @@ app.post('/slack/events', (req, res, next) => {
 									),
 								};
 								setTimeout(function () {
-									// onboard.initialMessage(user, channel);
+									console.log(`Now I am going to sending out consent form through the ELSE SWITCH ROUTE`);
 									web.chat.postEphemeral(message)
 										.catch(err => {
 											console.log(`error with posting ephmeral`);
