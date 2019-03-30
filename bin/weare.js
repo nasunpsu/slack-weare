@@ -3161,7 +3161,7 @@ async function UpdateChannelRecentMsgs(c_id, cname, token, limit = 200) {
 					// cursor: cursor
 				}).then(res => {
 					const msgs = res.messages;
-					latest = msgs[0].ts;
+					latest = 0;
 					// num_msgs += msgs.length;
 					console.log(`is the first messsage the latest one: ${timeConverter(res.messages[0].ts)}`)
 					console.log(`is the last messsage the latest one: ${timeConverter(res.messages[msgs.length - 1].ts)}`)
