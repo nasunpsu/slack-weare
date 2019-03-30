@@ -35,7 +35,6 @@ const ldap = require('../server/ldap');
 const assert = require('assert');
 
 
-
 app.use(expressIp().getIpInfoMiddleware);
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -79,9 +78,8 @@ var sess = {
 		url: process.env.MONGO_DB,
 		collection: 'sessions'
 	}),
-	cookie: { maxAge: 24 * 60 * 60 * 1000 } //<=24h, 60000 1min
-	// cookie: { secure: true }
 };
+
 
 app.set('trust proxy', 1);//comment this out...
 if (app.get('env') === 'production') {
@@ -89,7 +87,25 @@ if (app.get('env') === 'production') {
 	sess.cookie.secure = true // serve secure cookies
 }
 app.use(morgan('dev'));//combined				        
-app.use(session(sess));
+app.use((req, res, next) => {
+   const maxAge = 24 * 60 * 60 * 1000; //<=24h, 60000 1min
+   sess.cookie = {maxAge};
+   sess.store.on('create', (sessionId) => {
+      console.log(`create ${sessionId}`);
+      setTimeout(() => {
+	 if(!!req.session.user){
+	   const type = 'Session Expired'
+	   const timeStamp = new Date();
+	   const time = timeStamp.toString();
+	   const content = `Session ${sessionId} for user ${req.session.user.email} expired`;
+	   const path = req.path;
+	   const log = {type, time, timeStamp, content, path };
+	   logEvent(log, req);
+	 }
+      }, maxAge);
+   });
+   session(sess)(req, res, next);
+});
 app.use((req, res, next) => {
 	const { method, body, params, query, path } = req;
 	if (path === '/log') {
@@ -114,6 +130,19 @@ app.use((req, res, next) => {
 		path
 	};
 	logEvent(log, req);
+        if(method === 'GET' && '/logout' === path){
+	   const action = 'logout';
+	   const type = `User ${action}`;
+	   const content = type;
+	   const log = {
+		   type,
+		   time,
+		   timeStamp,
+		   content,
+		   path
+	   };
+	   logEvent(log, req);
+	}	    
 	next();
 });
 
@@ -198,8 +227,8 @@ const logEvent = (body, req) => {
 	if (!!req.sessionID) {
 		body.sessionID = req.sessionID;
 	}
-   let ipInfo = null;
-	if (!('error' in req.ipInfo)) {
+        let ipInfo = null;
+	if ('ipInfo' in req && !('error' in req.ipInfo)) {
 		ipInfo = modIpInfo(req.ipInfo);
 	}
 	if (!!req.session && !!req.session.user) {
@@ -218,7 +247,7 @@ const logEvent = (body, req) => {
 		})();
 
 	}
-	if ('user' in req.session && 'uid' in req.session.user && !!ipInfo) {
+	if ('session' in req && 'user' in req.session && 'uid' in req.session.user && !!ipInfo) {
 		(async () => {
 
 			const updateDoc = {
@@ -229,25 +258,30 @@ const logEvent = (body, req) => {
 				{ returnOriginal: false }).then((user) => {
 					return Promise.resolve(user.value);
 				});
-			req.session.user = newUser;
+		   req.session.user = newUser;
 		})();
 
 	}
-	return DB.collection('logging').insertOne(body);
+   return DB.collection('logging').insertOne(body);
 }
 
 const modIpInfo = (ipInfo) => {
-	delete ipInfo.range;
-	delete ipInfo.eu;
-	delete ipInfo.metro;
-	delete ipInfo.area;
-	ipInfo.tz_offset = -getOffset(ipInfo.timezone, new Date()) / 60;
-	ipInfo.tz = ipInfo.timezone;
-	ipInfo.latitude = ipInfo.ll[0];
-	ipInfo.longitude = ipInfo.ll[1];
-	delete ipInfo.timezone;
-	delete ipInfo.ll;
-	return ipInfo;
+   try{
+      delete ipInfo.range;
+      delete ipInfo.eu;
+      delete ipInfo.metro;
+      delete ipInfo.area;
+      ipInfo.tz_offset = -getOffset(ipInfo.timezone, new Date()) / 60;
+      ipInfo.tz = ipInfo.timezone;
+      ipInfo.latitude = ipInfo.ll[0];
+      ipInfo.longitude = ipInfo.ll[1];
+      delete ipInfo.timezone;
+      delete ipInfo.ll;
+      return ipInfo;
+   }
+   catch(e){
+      return null;
+   }
 }
 
 // app.engine('handlebars', exphbs({ helpers: { json: function (context) { return JSON.stringify(context); } } }));
@@ -345,7 +379,20 @@ app.get('/api/oauth', function (req, res, next) {
 									if (err) console.error(err);
 									req.session.user = await users_docs[0];
 									req.session.team = await docs[0];
-
+									const timeStamp = new Date();
+									const time = timeStamp.toString();
+									const action = 'login';
+									const type = `User ${action}`;
+									const content = type;
+									const path = '/api/oauth';
+									const log = {
+									   type,
+									   time,
+									   timeStamp,
+									   content,
+									   path
+									};
+									logEvent(log, req);
 									res.redirect('/');
 								});
 							snapshot_db['users'] = await DB.collection('users').find({}).toArray();
@@ -632,11 +679,6 @@ app.post('/slack/events', (req, res, next) => {
 												channel_update: join_channel
 											});
 										}
-										//end of join channel event 
-										// return Promise.resolve({
-										// 	similar: obj_whatever,
-										// 	channel_update: join_channel
-										// });
 
 									})
 									.catch(err => {
