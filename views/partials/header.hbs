@@ -2,10 +2,12 @@
   <div class="ui inverted borderless top fixed menu navbar">
     <a class="header item" href="/"><img src="/images/we-connect-logo-lt-06.png" class="nav-logo"></a>
     <div class="nav right menu">
-      <a class="item"
-        href="/"> Home</a>
+      <button id="open-slack-browser" class="ui button item slack-btn-web"><a href="https://slack.com/app_redirect?channel=general"
+          target="_blank">Open <i class="slack hash icon"></i> in Browser</a></button>
+
+      <a class="item" href="/"><i class="home icon"></i>Home</a>
       <div id="connectList" class="ui dropdown connect item">
-        Connect
+        <i class="handshake icon"></i>Connect
         <i class="dropdown icon"></i>
         <div class="menu">
           <a class="table item" href="/tablelist">Browse Peers</a>
@@ -17,7 +19,9 @@
       </div>
       <a href="/meetings" class="item"><i class="calendar alternate outline icon"></i> My meetings</a>
       <div id="profile_uid" class="ui dropdown profile item" data-uid="{{userInfo.uid}}">
-        {{userInfo.first_name}}
+        
+               <img class="ui mini circular image" src="{{userInfo.image_48}}">
+            <span>{{userInfo.first_name}}</span>
         <i class="dropdown icon"></i>
         <div class="menu">
           <a href="/editProfile" class="item"><i class="edit icon"></i> Edit Profile</a>
@@ -28,8 +32,7 @@
       {{!-- <a class="item"
         href="https://docs.google.com/document/d/1-nCasqUcPrLYbhDuAm9SmuvY0S5ZOevPLbp52-PpZLM/edit?usp=sharing"
         target="_blank"> Help</a> --}}
-        <a href="/help" class="item">Help</a>
+      <a href="/help" class="item"><i class="question circle outline icon"></i>Help</a>
     </div>
   </div>
 </div>
-

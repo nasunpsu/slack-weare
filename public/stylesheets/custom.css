@@ -85,7 +85,7 @@ main.login-wrapper .sign-in.button.ui > a{
   .btn-wrapper a{
     display: flex;
     width: 100%;
-    padding: 50px;
+    /* padding: 50px; */
 
   }
 
@@ -167,6 +167,16 @@ main.login-wrapper .sign-in.button.ui > a{
 
   .message-card{
     height: fit-content;
+  }
+
+  .message-card .ui.message {
+    font-size: 1.25em!important;
+    color: #767676!important;
+    /* font-family: sans-serif!important; */
+  }
+
+  .message-card .extra.content a{
+    color: #4183C4!important;
   }
 
   #timezone-main {
@@ -481,8 +491,31 @@ p{
   margin-bottom: 80px!important;
 }
 
+.slack-btn-web {
+  /* background: #18B87E!important; */
+  box-shadow: 0 1px 2px 0 rgba(0,0,0,0.50)!important;
+  border-radius: 4px!important;
+  border: none!important;
+  /* grid-column: 4/21; */
+  /* padding: 15px!important; */
+  font-family: 'Proxima Nova';
+  /* color: #FBBD08!important; */
+  font-weight: 500!important;
+  /* font-size: 16px!important; */
+  /* width: 200px; */
+  /* display: flex!important; */
+  /* justify-content: center; */
+  margin: auto!important;
+  /* margin-top: 20px!important;
+  margin-bottom: 80px!important; */
+}
+
 .slack-btn a{
   color: white;
+}
+.slack-btn-web a {
+  color: #FBBD08!important;
+
 }
 
 .post-title{
@@ -524,11 +557,12 @@ p{
   margin-top: 20px;
   border-radius: 4px;
   box-shadow: 2px 2px 2px rgba(0,0,0,.2);
+  font-size: 80%;
 }
 
 .channel-table thead{
   text-align: center;
-  font-size: 60%;  
+  /* font-size: 60%;   */
 }
 
 .channel-table th{
@@ -537,7 +571,7 @@ p{
 
 .channel-table td{
   font-weight: 100;
-  font-size: 80%;
+  
   text-align: center;
 }
 
@@ -568,6 +602,9 @@ p{
   line-height: .5!important;
 }
 
+.profile.ui.item > img {
+  margin-right: 1em;
+}
 .header-info .ui.list{
   margin-top: -20px!important;
   margin-right: 10px;
