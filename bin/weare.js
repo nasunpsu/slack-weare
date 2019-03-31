@@ -2220,7 +2220,9 @@ app.get('/tablelist', async function (req, res) {
 	const channelNames = req.session.user.channels.map(channel => channel.cname)
 		.filter(channel => channel !== 'general');
 	to_be_rendered.channelNames = channelNames;
+	console.log(`renderedUsers are ${to_be_rendered.users.length}; the first is ${util.inspect(to_be_rendered.users[0])}`);
 	to_be_rendered.users = to_be_rendered.users.map(user => {
+		if(!user.channels || user.channels.length ==0) console.log(`user channels are abnormal for ${user.real_name}`);
 		user.channelNames = user.channels.map(channel => channel.cname)
 			.filter(channel => channel !== 'general');
 		const channels = user.channelNames.map(name =>
