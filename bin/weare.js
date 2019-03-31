@@ -501,10 +501,12 @@ app.get('/refresh', async (req, res) => {
 
 app.get('/sendconsentform', async (req, res) => {
 	let users = await DB.collection('users').find(
-		{ $or : [
-			{ consent: null},
-			{consent: 'decline'}
-		]}
+		{
+			$or: [
+				{ consent: null },
+				{ consent: 'decline' }
+			]
+		}
 	).toArray().then((results) => {
 		results.forEach(user => {
 			let message = {
@@ -882,7 +884,7 @@ app.post('/slack/events', (req, res, next) => {
 							const { user, channel, team } = event;
 							console.log(`the event body is ${util.inspect(event, { depth: null })}`);
 							DB.collection('users').findOne({ uid: team + '_' + user }).then((tobeDEL) => {
-								if(tobeDEL){
+								if (tobeDEL) {
 									if (tobeDEL.channels.length == 1) { //this will be the last channel that the user is leaving, meaning that he/she is being deactivating
 										DB.collection('users_deactivated').updateOne({ uid: team + '_' + user }, {
 											$set: {
@@ -911,29 +913,30 @@ app.post('/slack/events', (req, res, next) => {
 										if (err) console.error(err);
 										else console.log(`the user ${util.inspect(tobeDEL.first_name)} left the channel ${channel} `);
 									});
+									DB.collection('users').findOneAndUpdate({ uid: team + '_' + user },
+										{
+											$pull: {
+												channels: {
+													cid: team + '_' + channel
+												}
+											}
+										},
+										{
+											upsert: true,
+											returnOriginal: false
+										},
+										function (err, updatedUser) {
+											console.log(`within call back, updatedUser is: ${util.inspect(updatedUser.value)}`);
+											console.log(`within call back: ${util.inspect(err)}`);
+											if (err) console.error(err);
+											else {
+												console.log(`removed channel ${channel} successfully: ${updatedUser.value.first_name}`);
+											}
+										});
 								}
 							});
 
-							DB.collection('users').findOneAndUpdate({ uid: team + '_' + user },
-								{
-									$pull: {
-										channels: {
-											cid: team + '_' + channel
-										}
-									}
-								},
-								{
-									upsert: true,
-									returnOriginal: false
-								},
-								function (err, updatedUser) {
-									console.log(`within call back, updatedUser is: ${util.inspect(updatedUser.value)}`);
-									console.log(`within call back: ${util.inspect(err)}`);
-									if (err) console.error(err);
-									else {
-										console.log(`removed channel ${channel} successfully: ${updatedUser.value.first_name}`);
-									}
-								});
+
 
 							DB.collection('channels').findOneAndUpdate({ cid: team + '_' + channel },
 								{
@@ -2284,7 +2287,7 @@ app.get('/tablelist', async function (req, res) {
 	to_be_rendered.channelNames = channelNames;
 	console.log(`renderedUsers are ${to_be_rendered.users.length}; the first is ${util.inspect(to_be_rendered.users[0])}`);
 	to_be_rendered.users = to_be_rendered.users.map(user => {
-		if(!user.channels || user.channels.length ==0) console.log(`user channels are abnormal for ${user.real_name}`);
+		if (!user.channels || user.channels.length == 0) console.log(`user channels are abnormal for ${user.real_name}`);
 		user.channelNames = user.channels.map(channel => channel.cname)
 			.filter(channel => channel !== 'general');
 		const channels = user.channelNames.map(name =>
@@ -2959,7 +2962,7 @@ async function InitTeamMembers(team_id, token, limit = null) {
 				counter += 1;
 				// console.log(`cursor is ${cursor} and counter is ${counter}`)
 				res.members.forEach(async (m) => {
-					if(m.deleted == true) return;
+					if (m.deleted == true) return;
 					var uid = m.team_id + '_' + m.id;
 					var user_channels = [];
 					await local_slack.users.conversations({
