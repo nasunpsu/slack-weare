@@ -484,9 +484,9 @@ app.get('/refresh', async (req, res) => {
 
 async function initAll() {
 	//TODO: MOVE this Block to the Init Module
-	await InitTeamMembers('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200);
+	await InitTeamMembers('TG6RV469K', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200);
 
-	await InitTeamChannels('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, null);
+	await InitTeamChannels('TG6RV469K', process.env.SLACK_OAUTH_ACCESS_TOKEN, null);
 
 	await UpdateChannelRecentMsgs(null, 'general', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200); //cid example:"T0A286J8K_C0A28BAHG"
 }
@@ -2082,7 +2082,7 @@ app.get('/', async function (req, res) {
 	to_be_rendered.template = 'index-template';
 	to_be_rendered.team = req.session.team;
 	to_be_rendered.userInfo = req.session.user;
-	to_be_rendered.members = await DB.collection('users').find({ team_id: req.session.team ? req.session.team.team_id : 'T0A286J8K' }).toArray().then((results) => {
+	to_be_rendered.members = await DB.collection('users').find({ team_id: req.session.team ? req.session.team.team_id : 'TG6RV469K' }).toArray().then((results) => {
 		console.log('getting users of the channels');
 		if (results.length != 0) {
 			//categorize the users based on their tz_labels, sorted by tz_offset
