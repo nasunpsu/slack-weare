@@ -2893,6 +2893,7 @@ async function InitTeamMembers(team_id, token, limit = null) {
 				counter += 1;
 				// console.log(`cursor is ${cursor} and counter is ${counter}`)
 				res.members.forEach(async (m) => {
+					if(m.deleted == true) return;
 					var uid = m.team_id + '_' + m.id;
 					var user_channels = [];
 					await local_slack.users.conversations({
