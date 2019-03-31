@@ -2113,9 +2113,9 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 
 expressWs.app.ws('/temporal/presenceUpdate', function (ws, req) {
 	ws.on('message', function (msg) {
-		console.log(msg);
+		console.log(`temporal presence update route ws on ${msg}`);
 	});
-	console.log('socket', req.session);
+	// console.log('socket', req.session);
 });
 
 app.use(checkSignIn);
