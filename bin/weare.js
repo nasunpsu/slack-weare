@@ -464,6 +464,25 @@ app.get('/test', (req, res) => {
 	console.log('---------------test----------------');
 });
 
+app.get('/initmembers', async (req, res) => {
+	await InitTeamMembers('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200);
+	console.log('---------------initTeamMembers----------------');
+	res.send('updated member list');
+});
+
+app.get('/initchannels', async (req, res) => {
+	await InitTeamChannels('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, null);
+	console.log('---------------initTeamChannels----------------');
+	res.send('updated channels list');
+});
+
+app.get('/initmsgs', async (req, res) => {
+	
+	await UpdateChannelRecentMsgs(null, 'general', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200); //cid example:"T0A286J8K_C0A28BAHG"		
+	console.log('---------------initMsgs----------------');
+	res.send('updated msgs list');
+});
+
 app.get('/refresh', async (req, res) => {
 	let sub_c = req.session.user.channels;
 	let promiseArray = [];
@@ -2911,7 +2930,7 @@ async function InitTeamMembers(team_id, token, limit = null) {
 						});
 					});
 					const onComplete = async () => {
-						console.log('user updated succesfully');
+						console.log(`user ${m.real_name} updated succesfully: next retrieving ldap and similarity`);
 						const email = m.profile.email;
 						const fullName = m.profile.real_name;
 						await ldap.updateUserWithLdapData(email, fullName, uid, DB);
@@ -2966,6 +2985,7 @@ async function InitTeamMembers(team_id, token, limit = null) {
 				counter += 1;
 				// console.log(`cursor is ${cursor} and counter is ${counter}`)
 				res.members.forEach(async (m) => {
+					if (m.deleted == true) return;
 					// console.log(`the m value inside res.members are (from users.list): ${util.inspect(m, { depth: null })}`)
 					var uid = m.team_id + '_' + m.id;
 					var user_channels = [];
@@ -2982,6 +3002,13 @@ async function InitTeamMembers(team_id, token, limit = null) {
 							});
 						});
 					});
+					const onComplete = async () => {
+						console.log(`user ${m.real_name} updated succesfully: next retrieving ldap and similarity`);
+						const email = m.profile.email;
+						const fullName = m.profile.real_name;
+						await ldap.updateUserWithLdapData(email, fullName, uid, DB);
+						await similarity.storeSimilarUsers(uid);
+					}
 					if (!m.is_bot && m.id != 'USLACKBOT') DB.collection('users').updateOne(
 						{ uid: uid },
 						{
@@ -3012,10 +3039,7 @@ async function InitTeamMembers(team_id, token, limit = null) {
 							}
 						},
 						{ upsert: true },
-						function (err, res) {
-							if (err) console.error(err);
-							console.log('user updated succesfully');
-						});
+						onComplete);
 
 				});
 			});
