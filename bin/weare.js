@@ -470,7 +470,7 @@ app.get('/initchannels', async (req, res) => {
 });
 
 app.get('/initmsgs', async (req, res) => {
-	
+
 	await UpdateChannelRecentMsgs(null, 'general', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200); //cid example:"T0A286J8K_C0A28BAHG"		
 	console.log('---------------initMsgs----------------');
 	res.send('updated msgs list');
@@ -492,16 +492,61 @@ app.get('/refresh', async (req, res) => {
 	})
 });
 
+app.get('/sendconsentform', async (req, res) => {
+	let users = await DB.collection('users').find(
+		{ $or : [
+			{ consent: null},
+			{consent: 'decline'}
+		]}
+	).toArray().then((results) => {
+		results.forEach(user => {
+			let message = {
+				channel: 'CFCP010FR',
+				user: user.uid.split('_')[1],
+				link_names: true,
+				text: 'Consent form of Participating WeAre! Research Project',
+				as_user: false,
+				attachments: JSON.stringify([
+					{
+						title: 'Procedure',
+						text: 'We invite you to participate in a research study that takes place this spring semester. Our research goal is to explore and assess ways to build a sense of community among World Campus students. Participants must be over the age of 18 to participate, and not stay or live in European Economic Area to participate. As a participant in the research project, you will be asked to use Slack and answer two questionnaires before and after usingt Slack (Each survey should 10 minutes to complete). As a compensation for your participation in the survey, we will draw 15 names in the first survey participants for a $30 Amazon Gift Card, and for those who answered both we will draw additional 15 names for a $50 Amazon Gift Card. During your use of Slack tool and visualization dashboard, we will collect your usage data (e.g. interactive moves in the dashboard, log-in time), but these data will always remain confidential and stored anonymously for data analysis. Only researchers of this project in the Human-Centered Lab of Penn State will have access to the data. No third party or university authorities will have access to the data.',
+						color: '#3060f0',
+					},
+					{
+						title: 'Questions or concerns?',
+						text: 'If you have questions or concerns, you may contact Na Sun at nzs162@psu.edu. If you have questions regarding your rights as a research subject or concerns regarding your privacy, you may contact the Penn State Office for Research Protections at 814-865-1775. Your participation is voluntary and you may decide to withdraw at any time without penalty. You do not have to answer any questions that you do not want to answer. Note that you can no longer modify the content once you complete the survey content. Your participation implies your voluntary consent to participate in the research.',
+						color: '#74c8ed',
+						callback_id: 'terms-of-service',
+						actions: [{
+							name: 'accept',
+							text: 'Accept',
+							type: 'button',
+							value: 'accept',
+							style: 'primary',
+						},
+						{
+							name: 'Decline',
+							text: 'Decline',
+							type: 'button',
+							value: 'decline',
+							style: 'default'
+						}],
+					}]
+				),
+			};
+
+			web.chat.postEphemeral(message)
+				.catch(err => {
+					console.log(`error with posting ephmeral`);
+					console.error(err);
+				});
+		})
+	});
 
 
-async function initAll() {
-	//TODO: MOVE this Block to the Init Module
-	await InitTeamMembers('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200);
-
-	await InitTeamChannels('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, null);
-
-	await UpdateChannelRecentMsgs(null, 'general', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200); //cid example:"T0A286J8K_C0A28BAHG"
-}
+	console.log('---------------Consent Form sent to Not Reacted fellows ----------------');
+	res.send('happy consent form sent out');
+});
 
 app.post('/slack/events', (req, res, next) => {
 	console.log(`an example event is ${util.inspect(req.body)}`);
@@ -683,7 +728,7 @@ app.post('/slack/events', (req, res, next) => {
 												},
 											}, { upsert: true }, function (err, res) {
 												if (err) console.error(err);
-												else console.log(`the user ${util.inspect(userInfo.first_name)} join the channel ${channel} `);
+												else console.log(`the user ${util.inspect(userInfo.real_name)} join the channel ${channel} `);
 											});
 											return Promise.resolve({
 												user_log: userlog_update,
@@ -1334,7 +1379,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 					attachments: JSON.stringify([
 						{
 							title: 'Welcome to the World Campus Students Community! We Are!',
-							text: 'Penn State is where learning gains and your career takes off. If this is your first time using Slack, take some time to read the help docs at get.slack.help and our internal <https://weconnect.ist.psu.edu:8443/help|wiki>. If you have any questions, jump into <#CGNQYDKKJ|help-slack> and we\'ll help you out',
+							text: 'Penn State is where learning gains and your career takes off. If this is your first time using Slack, take some time to read the help docs at get.slack.help and our internal <https://weconnect.ist.psu.edu:8443/help|wiki>. If you have any questions, jump into <#CGNQYDKKJ|help-slack> and we\'ll help you out.',
 							callback_id: 'consent',
 							color: '#74c8ed',
 							actions: [{
@@ -1343,16 +1388,15 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 								type: 'button',
 								value: 'intro',
 								style: 'primary'
-							},
-								// {
-								// 	name: 'later',
-								// 	text: 'Perhaps later',
-								// 	type: 'button',
-								// 	value: 'not-intro',
-								// 	style: 'default'
-								// }
+							}
 							],
-						},]
+						},
+						{
+							title: 'Visit our dashboard <https://weconnect.ist.psu.edu:8443|WeConnect> to explore your community!',
+							callback_id: 'advertise_url',
+							color: '#FBBD08',
+						}
+					]
 					)
 				}).catch(err => console.error(err));
 				DB.collection('users').updateOne(
@@ -2907,7 +2951,7 @@ async function InitTeamMembers(team_id, token, limit = null) {
 				counter += 1;
 				// console.log(`cursor is ${cursor} and counter is ${counter}`)
 				res.members.forEach(async (m) => {
-					if(m.deleted==true) return;
+					if (m.deleted == true) return;
 					var uid = m.team_id + '_' + m.id;
 					var user_channels = [];
 					await local_slack.users.conversations({
