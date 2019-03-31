@@ -883,7 +883,7 @@ app.post('/slack/events', (req, res, next) => {
 							console.log(`the event body is ${util.inspect(event, { depth: null })}`);
 							DB.collection('users').findOne({ uid: team + '_' + user }, function (err, tobeDEL) {
 								if (err) console.error(err);
-								else {
+								else if(tobeDEL){
 									if (tobeDEL.channels.length == 1) { //this will be the last channel that the user is leaving, meaning that he/she is being deactivating
 										DB.collection('users_deactivated').updateOne({ uid: team + '_' + user }, {
 											$set: {
@@ -2118,9 +2118,9 @@ const expressWs = require('express-ws')(app, httpsServer);
 
 expressWs.app.ws('/temporal/presenceUpdate', function (ws, req) {
 	ws.on('message', function (msg) {
-		console.log(msg);
+		console.log(`temporal presence update route ws on ${msg}`);
 	});
-	console.log('socket', req.session);
+	// console.log('socket', req.session);
 });
 
 
