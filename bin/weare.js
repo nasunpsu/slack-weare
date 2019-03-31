@@ -89,23 +89,23 @@ if (app.get('env') === 'production') {
 }
 app.use(morgan('dev'));//combined				        
 app.use((req, res, next) => {
-   const maxAge = 24 * 60 * 60 * 1000; //<=24h, 60000 1min
-   sess.cookie = {maxAge};
-   sess.store.on('create', (sessionId) => {
-      console.log(`create ${sessionId}`);
-      setTimeout(() => {
-	 if(!!req.session.user){
-	   const type = 'Session Expired'
-	   const timeStamp = new Date();
-	   const time = timeStamp.toString();
-	   const content = `Session ${sessionId} for user ${req.session.user.email} expired`;
-	   const path = req.path;
-	   const log = {type, time, timeStamp, content, path };
-	   logEvent(log, req);
-	 }
-      }, maxAge);
-   });
-   session(sess)(req, res, next);
+	const maxAge = 24 * 60 * 60 * 1000; //<=24h, 60000 1min
+	sess.cookie = { maxAge };
+	sess.store.on('create', (sessionId) => {
+		console.log(`create ${sessionId}`);
+		setTimeout(() => {
+			if (!!req.session.user) {
+				const type = 'Session Expired'
+				const timeStamp = new Date();
+				const time = timeStamp.toString();
+				const content = `Session ${sessionId} for user ${req.session.user.email} expired`;
+				const path = req.path;
+				const log = { type, time, timeStamp, content, path };
+				logEvent(log, req);
+			}
+		}, maxAge);
+	});
+	session(sess)(req, res, next);
 });
 app.use((req, res, next) => {
 	const { method, body, params, query, path } = req;
@@ -131,19 +131,19 @@ app.use((req, res, next) => {
 		path
 	};
 	logEvent(log, req);
-        if(method === 'GET' && '/logout' === path){
-	   const action = 'logout';
-	   const type = `User ${action}`;
-	   const content = type;
-	   const log = {
-		   type,
-		   time,
-		   timeStamp,
-		   content,
-		   path
-	   };
-	   logEvent(log, req);
-	}	    
+	if (method === 'GET' && '/logout' === path) {
+		const action = 'logout';
+		const type = `User ${action}`;
+		const content = type;
+		const log = {
+			type,
+			time,
+			timeStamp,
+			content,
+			path
+		};
+		logEvent(log, req);
+	}
 	next();
 });
 
@@ -220,7 +220,7 @@ const logEvent = (body, req) => {
 	if (!!req.sessionID) {
 		body.sessionID = req.sessionID;
 	}
-        let ipInfo = null;
+	let ipInfo = null;
 	if ('ipInfo' in req && !('error' in req.ipInfo)) {
 		ipInfo = modIpInfo(req.ipInfo);
 	}
@@ -251,30 +251,30 @@ const logEvent = (body, req) => {
 				{ returnOriginal: false }).then((user) => {
 					return Promise.resolve(user.value);
 				});
-		   req.session.user = newUser;
+			req.session.user = newUser;
 		})();
 
 	}
-   return DB.collection('logging').insertOne(body);
+	return DB.collection('logging').insertOne(body);
 }
 
 const modIpInfo = (ipInfo) => {
-   try{
-      delete ipInfo.range;
-      delete ipInfo.eu;
-      delete ipInfo.metro;
-      delete ipInfo.area;
-      ipInfo.tz_offset = -getOffset(ipInfo.timezone, new Date()) / 60;
-      ipInfo.tz = ipInfo.timezone;
-      ipInfo.latitude = ipInfo.ll[0];
-      ipInfo.longitude = ipInfo.ll[1];
-      delete ipInfo.timezone;
-      delete ipInfo.ll;
-      return ipInfo;
-   }
-   catch(e){
-      return null;
-   }
+	try {
+		delete ipInfo.range;
+		delete ipInfo.eu;
+		delete ipInfo.metro;
+		delete ipInfo.area;
+		ipInfo.tz_offset = -getOffset(ipInfo.timezone, new Date()) / 60;
+		ipInfo.tz = ipInfo.timezone;
+		ipInfo.latitude = ipInfo.ll[0];
+		ipInfo.longitude = ipInfo.ll[1];
+		delete ipInfo.timezone;
+		delete ipInfo.ll;
+		return ipInfo;
+	}
+	catch (e) {
+		return null;
+	}
 }
 
 // app.engine('handlebars', exphbs({ helpers: { json: function (context) { return JSON.stringify(context); } } }));
@@ -366,7 +366,7 @@ app.get('/api/oauth', function (req, res, next) {
 							}
 							console.log('before retrieving usr DB');
 							await DB.collection('users').find({ major: { $exists: true } }).toArray()
-							// await DB.collection('users').find({ uid: result.team.id + '_' + result.user.id }).toArray()
+								// await DB.collection('users').find({ uid: result.team.id + '_' + result.user.id }).toArray()
 								.then(async (users_docs, err) => {
 									console.log(`the user is read from MongoDB: ${util.inspect(users_docs[0], { depth: 2 })}`);
 									if (err) console.error(err);
@@ -379,11 +379,11 @@ app.get('/api/oauth', function (req, res, next) {
 									const content = type;
 									const path = '/api/oauth';
 									const log = {
-									   type,
-									   time,
-									   timeStamp,
-									   content,
-									   path
+										type,
+										time,
+										timeStamp,
+										content,
+										path
 									};
 									logEvent(log, req);
 									res.redirect('/');
@@ -455,6 +455,25 @@ app.get('/test', (req, res) => {
 		await UpdateChannelRecentMsgs(null, 'general', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200); //cid example:"T0A286J8K_C0A28BAHG"		
 	})();
 	console.log('---------------test----------------');
+});
+
+app.get('/initmembers', async (req, res) => {
+	await InitTeamMembers('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200);
+	console.log('---------------initTeamMembers----------------');
+	res.send('updated member list');
+});
+
+app.get('/initchannels', async (req, res) => {
+	await InitTeamChannels('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, null);
+	console.log('---------------initTeamChannels----------------');
+	res.send('updated channels list');
+});
+
+app.get('/initmsgs', async (req, res) => {
+	
+	await UpdateChannelRecentMsgs(null, 'general', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200); //cid example:"T0A286J8K_C0A28BAHG"		
+	console.log('---------------initMsgs----------------');
+	res.send('updated msgs list');
 });
 
 app.get('/refresh', async (req, res) => {
@@ -2103,7 +2122,7 @@ app.get('/', async function (req, res) {
 	// .catch(err=>console.error(err));
 
 	let sub_c = req.session.user.channels.map(c => c.cid);
-	let all_channels  = await DB.collection('channels').find({}).toArray();
+	let all_channels = await DB.collection('channels').find({}).toArray();
 
 	to_be_rendered.total_channels_num = all_channels.length;
 	to_be_rendered.channels_info = await DB.collection('channels').find({
@@ -2146,7 +2165,7 @@ app.get('/', async function (req, res) {
 				return Promise.resolve(obj);
 			}
 		})
-		// .catch(err=>console.error(err));
+	// .catch(err=>console.error(err));
 	console.log(`the logged user subscribed channels are ${sub_c}`);
 	// to_be_rendered.prepare_msgs = await UpdateChannelRecentMsgs(null, 'general', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200);
 	to_be_rendered.msgs = await DB.collection("msgs").find({
@@ -2888,6 +2907,7 @@ async function InitTeamMembers(team_id, token, limit = null) {
 				counter += 1;
 				// console.log(`cursor is ${cursor} and counter is ${counter}`)
 				res.members.forEach(async (m) => {
+					if(m.deleted==true) return;
 					var uid = m.team_id + '_' + m.id;
 					var user_channels = [];
 					await local_slack.users.conversations({
@@ -2903,7 +2923,7 @@ async function InitTeamMembers(team_id, token, limit = null) {
 						});
 					});
 					const onComplete = async () => {
-						console.log('user updated succesfully');
+						console.log(`user ${m.real_name} updated succesfully: next retrieving ldap and similarity`);
 						const email = m.profile.email;
 						const fullName = m.profile.real_name;
 						await ldap.updateUserWithLdapData(email, fullName, uid, DB);
@@ -2958,6 +2978,7 @@ async function InitTeamMembers(team_id, token, limit = null) {
 				counter += 1;
 				// console.log(`cursor is ${cursor} and counter is ${counter}`)
 				res.members.forEach(async (m) => {
+					if (m.deleted == true) return;
 					// console.log(`the m value inside res.members are (from users.list): ${util.inspect(m, { depth: null })}`)
 					var uid = m.team_id + '_' + m.id;
 					var user_channels = [];
@@ -2974,6 +2995,13 @@ async function InitTeamMembers(team_id, token, limit = null) {
 							});
 						});
 					});
+					const onComplete = async () => {
+						console.log(`user ${m.real_name} updated succesfully: next retrieving ldap and similarity`);
+						const email = m.profile.email;
+						const fullName = m.profile.real_name;
+						await ldap.updateUserWithLdapData(email, fullName, uid, DB);
+						await similarity.storeSimilarUsers(uid);
+					}
 					if (!m.is_bot && m.id != 'USLACKBOT') DB.collection('users').updateOne(
 						{ uid: uid },
 						{
@@ -3004,10 +3032,7 @@ async function InitTeamMembers(team_id, token, limit = null) {
 							}
 						},
 						{ upsert: true },
-						function (err, res) {
-							if (err) console.error(err);
-							console.log('user updated succesfully');
-						});
+						onComplete);
 
 				});
 			});
