@@ -881,9 +881,8 @@ app.post('/slack/events', (req, res, next) => {
 						if (!event.is_bot) {
 							const { user, channel, team } = event;
 							console.log(`the event body is ${util.inspect(event, { depth: null })}`);
-							DB.collection('users').findOne({ uid: team + '_' + user }, function (err, tobeDEL) {
-								if (err) console.error(err);
-								else if(tobeDEL){
+							DB.collection('users').findOne({ uid: team + '_' + user }).then((tobeDEL) => {
+								if(tobeDEL){
 									if (tobeDEL.channels.length == 1) { //this will be the last channel that the user is leaving, meaning that he/she is being deactivating
 										DB.collection('users_deactivated').updateOne({ uid: team + '_' + user }, {
 											$set: {
