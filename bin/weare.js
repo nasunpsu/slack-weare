@@ -365,8 +365,8 @@ app.get('/api/oauth', function (req, res, next) {
 								return res.redirect('/install');
 							}
 							console.log('before retrieving usr DB');
-							await DB.collection('users').find({ major: { $exists: true } }).toArray()
-								// await DB.collection('users').find({ uid: result.team.id + '_' + result.user.id }).toArray()
+							// await DB.collection('users').find({ major: { $exists: true } }).toArray()
+								await DB.collection('users').find({ uid: result.team.id + '_' + result.user.id }).toArray()
 								.then(async (users_docs, err) => {
 									console.log(`the user is read from MongoDB: ${util.inspect(users_docs[0], { depth: 2 })}`);
 									if (err) console.error(err);
@@ -1819,7 +1819,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 							"color": '#FBBD08'
 						},
 						{
-							"text": `Send ${body.user.name} some We Are! or some positive vibes! :fireworks: :tada: :wave: :clap:`,
+							"text": `Send ${user.first_name} some We Are! or some positive vibes! :fireworks: :tada: :wave: :clap:`,
 							"fallback": "Shame... buttons aren't supported in this land",
 							"callback_id": `${body.team.id}_${body.user.id}`,
 							"color": "#3AA3E3",
@@ -2109,6 +2109,14 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 	}
 	res.status(200).end(); // best practice to respond with 200 status
 
+});
+
+app.get('/helppreview', (req, res) => {
+	let to_be_rendered = {
+		layout: 'default',
+		template: 'help-template',
+	};
+	res.render('help', to_be_rendered);
 });
 
 expressWs.app.ws('/temporal/presenceUpdate', function (ws, req) {
@@ -3450,7 +3458,7 @@ function OnlineNow(channel_id, user_id, responseURL) {
 				'text': 'Nobody is online :point_left: :shrug: ',
 				'attachments': [
 					{
-						'text': 'Would you like to send an email to set up something later',
+						'text': 'Would you like to set up a meeting and invite your attendees with direct messages',
 						"fallback": "Shame... buttons aren't supported in this land",
 						"callback_id": "Nobody-Online",
 						"color": "#3AA3E3",
