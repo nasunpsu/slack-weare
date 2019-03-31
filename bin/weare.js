@@ -88,23 +88,23 @@ if (app.get('env') === 'production') {
 }
 app.use(morgan('dev'));//combined				        
 app.use((req, res, next) => {
-   const maxAge = 24 * 60 * 60 * 1000; //<=24h, 60000 1min
-   sess.cookie = {maxAge};
-   sess.store.on('create', (sessionId) => {
-      console.log(`create ${sessionId}`);
-      setTimeout(() => {
-	 if(!!req.session.user){
-	   const type = 'Session Expired'
-	   const timeStamp = new Date();
-	   const time = timeStamp.toString();
-	   const content = `Session ${sessionId} for user ${req.session.user.email} expired`;
-	   const path = req.path;
-	   const log = {type, time, timeStamp, content, path };
-	   logEvent(log, req);
-	 }
-      }, maxAge);
-   });
-   session(sess)(req, res, next);
+	const maxAge = 24 * 60 * 60 * 1000; //<=24h, 60000 1min
+	sess.cookie = { maxAge };
+	sess.store.on('create', (sessionId) => {
+		//   console.log(`create ${sessionId}`);
+		setTimeout(() => {
+			if (!!req.session.user) {
+				const type = 'Session Expired'
+				const timeStamp = new Date();
+				const time = timeStamp.toString();
+				const content = `Session ${sessionId} for user ${req.session.user.email} expired`;
+				const path = req.path;
+				const log = { type, time, timeStamp, content, path };
+				logEvent(log, req);
+			}
+		}, maxAge);
+	});
+	session(sess)(req, res, next);
 });
 app.use((req, res, next) => {
 	const { method, body, params, query, path } = req;
@@ -113,10 +113,10 @@ app.use((req, res, next) => {
 		return;
 	}
 	const type = `${method} Request`;
-        const label = type + ' to ' + path; 
-        const content = {body, query, params, label};
-	for(const key in content){
-		if(!content[key] || Object.keys(content[key]).length === 0){
+	const label = type + ' to ' + path;
+	const content = { body, query, params, label };
+	for (const key in content) {
+		if (!content[key] || Object.keys(content[key]).length === 0) {
 			delete content[key];
 		}
 	}
@@ -130,26 +130,26 @@ app.use((req, res, next) => {
 		path
 	};
 	logEvent(log, req);
-        if(method === 'GET' && '/logout' === path){
-	   const action = 'logout';
-	   const type = `User ${action}`;
-	   const content = type;
-	   const log = {
-		   type,
-		   time,
-		   timeStamp,
-		   content,
-		   path
-	   };
-	   logEvent(log, req);
-	}	    
+	if (method === 'GET' && '/logout' === path) {
+		const action = 'logout';
+		const type = `User ${action}`;
+		const content = type;
+		const log = {
+			type,
+			time,
+			timeStamp,
+			content,
+			path
+		};
+		logEvent(log, req);
+	}
 	next();
 });
 
 // Set up express server here
 const options = {
-    cert: fs.readFileSync('/etc/pki/tls/certs/weconnect.pem'),
-    key: fs.readFileSync('/etc/pki/tls/private/weconnect.key')
+	cert: fs.readFileSync('/etc/pki/tls/certs/weconnect.pem'),
+	key: fs.readFileSync('/etc/pki/tls/private/weconnect.key')
 };
 //app.listen(process.env.PORT, () => {
 //	console.log(`WeAre! server is running on PORT ${process.env.PORT}`);
@@ -227,7 +227,7 @@ const logEvent = (body, req) => {
 	if (!!req.sessionID) {
 		body.sessionID = req.sessionID;
 	}
-        let ipInfo = null;
+	let ipInfo = null;
 	if ('ipInfo' in req && !('error' in req.ipInfo)) {
 		ipInfo = modIpInfo(req.ipInfo);
 	}
@@ -258,30 +258,30 @@ const logEvent = (body, req) => {
 				{ returnOriginal: false }).then((user) => {
 					return Promise.resolve(user.value);
 				});
-		   req.session.user = newUser;
+			req.session.user = newUser;
 		})();
 
 	}
-   return DB.collection('logging').insertOne(body);
+	return DB.collection('logging').insertOne(body);
 }
 
 const modIpInfo = (ipInfo) => {
-   try{
-      delete ipInfo.range;
-      delete ipInfo.eu;
-      delete ipInfo.metro;
-      delete ipInfo.area;
-      ipInfo.tz_offset = -getOffset(ipInfo.timezone, new Date()) / 60;
-      ipInfo.tz = ipInfo.timezone;
-      ipInfo.latitude = ipInfo.ll[0];
-      ipInfo.longitude = ipInfo.ll[1];
-      delete ipInfo.timezone;
-      delete ipInfo.ll;
-      return ipInfo;
-   }
-   catch(e){
-      return null;
-   }
+	try {
+		delete ipInfo.range;
+		delete ipInfo.eu;
+		delete ipInfo.metro;
+		delete ipInfo.area;
+		ipInfo.tz_offset = -getOffset(ipInfo.timezone, new Date()) / 60;
+		ipInfo.tz = ipInfo.timezone;
+		ipInfo.latitude = ipInfo.ll[0];
+		ipInfo.longitude = ipInfo.ll[1];
+		delete ipInfo.timezone;
+		delete ipInfo.ll;
+		return ipInfo;
+	}
+	catch (e) {
+		return null;
+	}
 }
 
 // app.engine('handlebars', exphbs({ helpers: { json: function (context) { return JSON.stringify(context); } } }));
@@ -386,11 +386,11 @@ app.get('/api/oauth', function (req, res, next) {
 									const content = type;
 									const path = '/api/oauth';
 									const log = {
-									   type,
-									   time,
-									   timeStamp,
-									   content,
-									   path
+										type,
+										time,
+										timeStamp,
+										content,
+										path
 									};
 									logEvent(log, req);
 									res.redirect('/');
@@ -524,51 +524,10 @@ app.post('/slack/events', (req, res, next) => {
 
 					await web.users.info({ user: userID, include_locale: true })
 						.then(result => {
-							console.log(`calling web.users.info the result is ${result}`);
+							console.log(`calling web.users.info the result FROM THE VERY FIRST TIME SIGN UP is ${result}`);
 							let userInfo = result.user;
 							if (!userInfo.is_bot) {
-								//It could be all the default join channels because it is not clear which one is going to be the first
-								const message = {
-									channel: channel,
-									user: user,
-									link_names: true,
-									text: 'Consent form of Participating WeAre! Research Project',
-									as_user: false,
-									attachments: JSON.stringify([
-										{
-											title: 'Procedure',
-											text: 'We invite you to participate in a research study that takes place this spring semester. Our research goal is to explore and assess ways to build a sense of community among World Campus students. Participants must be over the age of 18 to participate, and not stay or live in European Economic Area to participate. As a participant in the research project, you will be asked to use Slack and answer two questionnaires before and after usingt Slack (Each survey should 10 minutes to complete). As a compensation for your participation in the survey, we will draw 15 names in the first survey participants for a $30 Amazon Gift Card, and for those who answered both we will draw additional 15 names for a $50 Amazon Gift Card. During your use of Slack tool and visualization dashboard, we will collect your usage data (e.g. interactive moves in the dashboard, log-in time), but these data will always remain confidential and stored anonymously for data analysis. Only researchers of this project in the Human-Centered Lab of Penn State will have access to the data. No third party or university authorities will have access to the data.',
-											color: '#3060f0',
-										},
-										{
-											title: 'Questions or concerns?',
-											text: 'If you have questions or concerns, you may contact Na Sun at nzs162@psu.edu. If you have questions regarding your rights as a research subject or concerns regarding your privacy, you may contact the Penn State Office for Research Protections at 814-865-1775. Your participation is voluntary and you may decide to withdraw at any time without penalty. You do not have to answer any questions that you do not want to answer. Note that you can no longer modify the content once you complete the survey content. Your participation implies your voluntary consent to participate in the research.',
-											color: '#74c8ed',
-											callback_id: 'terms-of-service',
-											actions: [{
-												name: 'accept',
-												text: 'Accept',
-												type: 'button',
-												value: 'accept',
-												style: 'primary',
-											},
-											{
-												name: 'Decline',
-												text: 'Decline',
-												type: 'button',
-												value: 'decline',
-												style: 'default'
-											}],
-										}]
-									),
-								};
-								setTimeout(function () {
-									if(event.channel == 'CG82VU7HC') web.chat.postEphemeral(message)
-										.catch(err => {
-											console.log(`error with posting ephmeral`);
-											console.error(err);
-										});
-								}, 3000);
+
 
 								console.log(`Updating Locale etc for ${userInfo.profile.real_name}`);
 								DB.collection('users').updateOne(
@@ -603,6 +562,48 @@ app.post('/slack/events', (req, res, next) => {
 									{ upsert: true })
 									.then(async () => {
 										console.log('user updated succesfully');
+										//It could be all the default join channels because it is not clear which one is going to be the first
+										const message = {
+											channel: channel,
+											user: user,
+											link_names: true,
+											text: 'Consent form of Participating WeAre! Research Project',
+											as_user: false,
+											attachments: JSON.stringify([
+												{
+													title: 'Procedure',
+													text: 'We invite you to participate in a research study that takes place this spring semester. Our research goal is to explore and assess ways to build a sense of community among World Campus students. Participants must be over the age of 18 to participate, and not stay or live in European Economic Area to participate. As a participant in the research project, you will be asked to use Slack and answer two questionnaires before and after usingt Slack (Each survey should 10 minutes to complete). As a compensation for your participation in the survey, we will draw 15 names in the first survey participants for a $30 Amazon Gift Card, and for those who answered both we will draw additional 15 names for a $50 Amazon Gift Card. During your use of Slack tool and visualization dashboard, we will collect your usage data (e.g. interactive moves in the dashboard, log-in time), but these data will always remain confidential and stored anonymously for data analysis. Only researchers of this project in the Human-Centered Lab of Penn State will have access to the data. No third party or university authorities will have access to the data.',
+													color: '#3060f0',
+												},
+												{
+													title: 'Questions or concerns?',
+													text: 'If you have questions or concerns, you may contact Na Sun at nzs162@psu.edu. If you have questions regarding your rights as a research subject or concerns regarding your privacy, you may contact the Penn State Office for Research Protections at 814-865-1775. Your participation is voluntary and you may decide to withdraw at any time without penalty. You do not have to answer any questions that you do not want to answer. Note that you can no longer modify the content once you complete the survey content. Your participation implies your voluntary consent to participate in the research.',
+													color: '#74c8ed',
+													callback_id: 'terms-of-service',
+													actions: [{
+														name: 'accept',
+														text: 'Accept',
+														type: 'button',
+														value: 'accept',
+														style: 'primary',
+													},
+													{
+														name: 'Decline',
+														text: 'Decline',
+														type: 'button',
+														value: 'decline',
+														style: 'default'
+													}],
+												}]
+											),
+										};
+										setTimeout(function () {
+											if (event.channel == 'CG82VU7HC') web.chat.postEphemeral(message)
+												.catch(err => {
+													console.log(`error with posting ephmeral`);
+													console.error(err);
+												});
+										}, 5000);
 										const uid = teamID + '_' + userID;
 										const email = userInfo.profile.email;
 										const fullName = userInfo.profile.real_name;
@@ -617,15 +618,13 @@ app.post('/slack/events', (req, res, next) => {
 										uids.forEach(uid => similarity.storeSimilarUsers(uid));
 										await ldap.updateUserWithLdapData(email, fullName, uid, DB);
 										async function fn_first_join() {
-											
-											if (event.channel != 'C0A28BAHG') return;
-											console.log(`First time joining channel is ${util.inspect(event, { depth: null })}`);
+
+											if (event.channel != 'CG82VU7HC') return;
+											console.log(`${event.user} First time joining channel ${event.channel}`);
 
 											const { user, channel, team, event_ts } = event;
 
-											
-
-											console.log(`finding the user is ${util.inspect(userInfo, { depth: null })}`);
+											console.log(`finding the user is ${util.inspect(userInfo, { depth: 2 })}; updating the channels for this person`);
 
 											const join_channel = await DB.collection('channels').findOneAndUpdate(
 												{ cid: team + '_' + channel },
@@ -697,7 +696,7 @@ app.post('/slack/events', (req, res, next) => {
 
 							const { user, channel, team, event_ts } = event;
 
-							if (channel == "CG82VU7HC") { 
+							if (channel == "CG82VU7HC") {
 								const message = {
 									channel: channel,
 									user: user,
@@ -1172,10 +1171,10 @@ app.post('/slack/commands/WhoIsOnline', urlencodedParser, (req, res) => {
 });
 
 app.post('/slack/commands/intro', urlencodedParser, (req, res) => {
-	
+
 	res.status(200).end(); // best practice to respond with empty 200 status code
 	var reqBody = req.body;
-	console.log(`within intro: reqbody is ${util.inspect(reqBody, {depth: null})}`);
+	console.log(`within intro: reqbody is ${util.inspect(reqBody, { depth: null })}`);
 	// var msg = {
 	// 	title: 'I am, We Are!',
 	// 	callback_id: 'self_intro',
@@ -1325,13 +1324,13 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 								value: 'intro',
 								style: 'primary'
 							},
-							// {
-							// 	name: 'later',
-							// 	text: 'Perhaps later',
-							// 	type: 'button',
-							// 	value: 'not-intro',
-							// 	style: 'default'
-							// }
+								// {
+								// 	name: 'later',
+								// 	text: 'Perhaps later',
+								// 	type: 'button',
+								// 	value: 'not-intro',
+								// 	style: 'default'
+								// }
 							],
 						},]
 					)
@@ -2110,7 +2109,7 @@ app.get('/', async function (req, res) {
 	// .catch(err=>console.error(err));
 
 	let sub_c = req.session.user.channels.map(c => c.cid);
-	let all_channels  = await DB.collection('channels').find({}).toArray();
+	let all_channels = await DB.collection('channels').find({}).toArray();
 
 	to_be_rendered.total_channels_num = all_channels.length;
 	to_be_rendered.channels_info = await DB.collection('channels').find({
@@ -2153,7 +2152,7 @@ app.get('/', async function (req, res) {
 				return Promise.resolve(obj);
 			}
 		})
-		// .catch(err=>console.error(err));
+	// .catch(err=>console.error(err));
 	console.log(`the logged user subscribed channels are ${sub_c}`);
 	to_be_rendered.msgs = await DB.collection("msgs").find({
 		cid: {
