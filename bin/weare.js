@@ -465,13 +465,13 @@ app.get('/test', (req, res) => {
 });
 
 app.get('/initmembers', async (req, res) => {
-	await InitTeamMembers('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200);
+	await InitTeamMembers('TG6RV469K', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200);
 	console.log('---------------initTeamMembers----------------');
 	res.send('updated member list');
 });
 
 app.get('/initchannels', async (req, res) => {
-	await InitTeamChannels('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, null);
+	await InitTeamChannels('TG6RV469K', process.env.SLACK_OAUTH_ACCESS_TOKEN, null);
 	console.log('---------------initTeamChannels----------------');
 	res.send('updated channels list');
 });
