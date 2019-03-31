@@ -2195,6 +2195,7 @@ app.get('/tablelist', async function (req, res) {
 	const fields = ['uid', 'real_name', 'city', 'channels', 'major', 'local_area', 'affiliation', 'campus'];
 	let users = await similarity.getSimilarUsers(req.session.user.uid, DB, numUsers, fields);
 	// to_be_rendered.users = similarity.createSimilarityField(req.session.user, users, fields);
+	console.log(`users length is ${users.length}`);
 	to_be_rendered.users = users.map(user => {
 		if (!!user.city) {
 			return;
@@ -2207,12 +2208,12 @@ app.get('/tablelist', async function (req, res) {
 			user.city = user.local_area;
 			return;
 		}
-	}).catch(err=>console.error(err));
+	});
 
 	to_be_rendered.users = similarity.createIsSharedField(req.session.user, users, fields);
+	console.log(`number of channels for ${req.session.user.real_name} is ${req.session.user.channels}`);
 	const channelNames = req.session.user.channels.map(channel => channel.cname)
-		.filter(channel => channel !== 'general')
-		.catch(err=>console.error(err));
+		.filter(channel => channel !== 'general');
 	to_be_rendered.channelNames = channelNames;
 	to_be_rendered.users = to_be_rendered.users.map(user => {
 		user.channelNames = user.channels.map(channel => channel.cname)
@@ -2232,7 +2233,7 @@ app.get('/tablelist', async function (req, res) {
 		user.displayChannels = channels;
 		user.extraChannels = [];
 		return user;
-	}).catch(err=>console.error(err));
+	});
 	to_be_rendered.user = JSON.stringify(req.session.user);
 	to_be_rendered.usersString = JSON.stringify(to_be_rendered.users);
 	res.render('table', to_be_rendered);
