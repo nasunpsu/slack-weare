@@ -508,7 +508,7 @@ app.get('/sendconsentform', async (req, res) => {
 	).toArray().then((results) => {
 		results.forEach(user => {
 			let message = {
-				channel: 'CFCP010FR',
+				channel: 'CG6KTGRTL', //CG6KTGRTL is the announcement channel
 				user: user.uid.split('_')[1],
 				link_names: true,
 				text: 'Consent form of Participating WeAre! Research Project',
