@@ -92,7 +92,6 @@ app.use((req, res, next) => {
    const maxAge = 24 * 60 * 60 * 1000; //<=24h, 60000 1min
    sess.cookie = {maxAge};
    sess.store.on('create', (sessionId) => {
-      console.log(`create ${sessionId}`);
       setTimeout(() => {
 	 if(!!req.session.user){
 	   const type = 'Session Expired'
