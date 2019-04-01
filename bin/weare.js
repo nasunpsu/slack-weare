@@ -34,7 +34,10 @@ const getOffset = require('get-timezone-offset');
 const express = require('express');
 const ldap = require('../server/ldap');
 const assert = require('assert');
-
+//event listener leak
+require('events').EventEmitter.defaultMaxListeners = 15;
+// process.setMaxListeners(0);
+// require('events').EventEmitter.prototype._maxListeners = 100;
 
 app.use(expressIp().getIpInfoMiddleware);
 app.use(bodyParser.json());
@@ -67,6 +70,7 @@ mongoClient.connect(process.env.MONGO_DB, { useNewUrlParser: true }, function (e
 		console.log('Mongo Connected');
 		DB = db.db("weare");
 		initDB();
+		// rtmConnectFn('T0A286J8K', 'init');
 	}
 	else console.log(err);
 });
@@ -79,6 +83,8 @@ var sess = {
 		url: process.env.MONGO_DB,
 		collection: 'sessions'
 	}),
+	cookie: { maxAge: 24 * 60 * 60 * 1000 } //<=24h, 60000 1min
+	// cookie: { secure: true }
 };
 
 
@@ -87,26 +93,27 @@ if (app.get('env') === 'production') {
 	app.set('trust proxy', 1) // trust first proxy
 	sess.cookie.secure = true // serve secure cookies
 }
-app.use(morgan('dev'));//combined				        
-app.use((req, res, next) => {
-	const maxAge = 24 * 60 * 60 * 1000; //<=24h, 60000 1min
-	sess.cookie = { maxAge };
-	sess.store.on('create', (sessionId) => {
-		console.log(`create ${sessionId}`);
-		setTimeout(() => {
-			if (!!req.session.user) {
-				const type = 'Session Expired'
-				const timeStamp = new Date();
-				const time = timeStamp.toString();
-				const content = `Session ${sessionId} for user ${req.session.user.email} expired`;
-				const path = req.path;
-				const log = { type, time, timeStamp, content, path };
-				logEvent(log, req);
-			}
-		}, maxAge);
-	});
-	session(sess)(req, res, next);
-});
+app.use(morgan('dev'));//combined
+app.use(session(sess));
+// app.use((req, res, next) => {
+// 	const maxAge = 24 * 60 * 60 * 1000; //<=24h, 60000 1min
+// 	sess.cookie = { maxAge };
+// 	sess.store.on('create', (sessionId) => {
+// 		console.log(`create ${sessionId}`);
+// 		setTimeout(() => {
+// 			if (!!req.session.user) {
+// 				const type = 'Session Expired'
+// 				const timeStamp = new Date();
+// 				const time = timeStamp.toString();
+// 				const content = `Session ${sessionId} for user ${req.session.user.email} expired`;
+// 				const path = req.path;
+// 				const log = { type, time, timeStamp, content, path };
+// 				logEvent(log, req);
+// 			}
+// 		}, maxAge);
+// 	});
+// 	session(sess)(req, res, next);
+// });
 app.use((req, res, next) => {
 	const { method, body, params, query, path } = req;
 	if (path === '/log') {
@@ -366,7 +373,7 @@ app.get('/api/oauth', function (req, res, next) {
 							}
 							console.log('before retrieving usr DB');
 							// await DB.collection('users').find({ major: { $exists: true } }).toArray()
-								await DB.collection('users').find({ uid: result.team.id + '_' + result.user.id }).toArray()
+							await DB.collection('users').find({ uid: result.team.id + '_' + result.user.id }).toArray()
 								.then(async (users_docs, err) => {
 									console.log(`the user is read from MongoDB: ${util.inspect(users_docs[0], { depth: 2 })}`);
 									if (err) console.error(err);
@@ -494,10 +501,12 @@ app.get('/refresh', async (req, res) => {
 
 app.get('/sendconsentform', async (req, res) => {
 	let users = await DB.collection('users').find(
-		{ $or : [
-			{ consent: null},
-			{consent: 'decline'}
-		]}
+		{
+			$or: [
+				{ consent: null },
+				{ consent: 'decline' }
+			]
+		}
 	).toArray().then((results) => {
 		results.forEach(user => {
 			let message = {
@@ -2869,12 +2878,13 @@ app.get('/temporal', async function (req, res) {
 
 });
 
+// let ws; 
+
 app.post('/rtmconnect', (req, res) => {
-	rtmConnectFn(req);
+	rtmConnectFn(req.session.team.team_id, 'update');
 });
 
-async function rtmConnectFn(req) {
-
+async function rtmConnectFn(team_id, when) {
 	if (typeof ws == 'undefined' || ws.readyState != WebSocket.OPEN) {
 		snapshot_db['users'] = await DB.collection('users').find({}).toArray();
 		console.log('Connecting rtm.connect now:');
@@ -2906,20 +2916,61 @@ async function rtmConnectFn(req) {
 
 					// var promise = results.filter(x => x.uid == obj_data.team + '_' + obj_data.user)
 					if (obj_data.type != "hello") {
-						obj_data.team = req.session.team.team_id;
+						obj_data.team = team_id;
 
 						// console.log(`data message type is ${obj_data.type}`)
 						switch (obj_data.type) {
 							case 'presence_change':
 								let aWss = expressWs.getWss('/temporal/presenceUpdate');
-								presence_snapshot[obj_data.team + '_' + obj_data.user] = obj_data.presence;
-								var foundIndex = snapshot_db['users'].findIndex(x => x.uid == obj_data.team + '_' + obj_data.user);
-								snapshot_db['users'][foundIndex].presence = obj_data.presence;
+								// console.log(`prior to the change: ${snapshot_db['users'][foundIndex].presence}; after would be ${obj_data.presence}`)
+								
+								// var foundIndex = snapshot_db['users'].findIndex(x => x.uid == obj_data.team + '_' + obj_data.user);
+								// if (when == 'init') {
+									
+								// 	DB.collection('userlogs').updateOne(
+								// 		{ log_id: makeid() },
+								// 		{
+								// 			$set: {
+								// 				uid: `${obj_data.team}_${obj_data.user}`,
+								// 				details: `init_snapshot_presence`,
+								// 				action: `presence_query`,
+								// 				type: 'init',
+								// 				status: obj_data.presence,
+								// 				ts: new Date()
+								// 			},
+								// 		},
+								// 		{ upsert: true },
+								// 		function (err, res) {
+								// 			if (err) console.error(err);
+								// 			else console.log(`${obj_data.team}_${obj_data.user} initial presence status is ${obj_data.presence}`)
+								// 		});
+								// 		snapshot_db['users'][foundIndex].presence = obj_data.presence;
+								// }
+								// else if (snapshot_db['users'][foundIndex].presence != obj_data.presence) DB.collection('userlogs').updateOne(
+								// 	{ log_id: makeid() },
+								// 	{
+								// 		$set: {
+								// 			uid: `${obj_data.team}_${obj_data.user}`,
+								// 			details: snapshot_db['users'][foundIndex].presence!=undefined? `init_snapshot_presence`:`change_presence`,
+								// 			action: `presence_query`,
+								// 			type: 'update',
+								// 			status: obj_data.presence,
+								// 			ts: new Date()
+								// 		},
+								// 	},
+								// 	{ upsert: true },
+								// 	function (err, res) {
+								// 		if (err) console.error(err);
+								// 		else console.log(`${obj_data.team}_${obj_data.user} just changed presence to be ${obj_data.presence}`);
+								// 		snapshot_db['users'][foundIndex].presence = obj_data.presence;
+								// 	});
+								
 								// console.log(`the clients in the browsers includes ${util.inspect(aWss.clients, {depth: 3})} in total; and the presence status is ${obj_data.presence}`);
 								aWss.clients.forEach(function (client) {
 									// console.log(`sending to client the presence is : ${obj_data.presence}`);
 									client.send(JSON.stringify(obj_data));
 								});
+
 								break;
 							case 'text':
 								aWss.clients.forEach(function (client) {
@@ -3638,6 +3689,7 @@ app.listen(process.env.PORT, () => {
 	console.log(`WeAre! server is running on PORT ${process.env.PORT}`);
 });
 
+process.on('warning', e => console.warn(e.stack));
 process.on('exit', () => {
 	ldap.closeLdapConnection();
 });
