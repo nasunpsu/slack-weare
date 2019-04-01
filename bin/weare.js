@@ -1912,16 +1912,17 @@ app.get('/tablelist', async function (req, res) {
 	// to_be_rendered.users = similarity.createSimilarityField(req.session.user, users, fields);
 	to_be_rendered.users = users.map(user => {
 		if (!!user.city) {
-			return;
+			return user;
 		}
 		if (!!user.region) {
 			user.city = user.region;
-			return;
+			return user;
 		}
 		if (!!user.local_area) {
 			user.city = user.local_area;
-			return;
+			return user;
 		}
+	        return user;
 	});
 
 	to_be_rendered.users = similarity.createIsSharedField(req.session.user, users, fields);
@@ -1929,8 +1930,13 @@ app.get('/tablelist', async function (req, res) {
 		.filter(channel => channel !== 'general');
 	to_be_rendered.channelNames = channelNames;
 	to_be_rendered.users = to_be_rendered.users.map(user => {
-		user.channelNames = user.channels.map(channel => channel.cname)
-			.filter(channel => channel !== 'general');
+		if(!user.channels){
+		   user.channelNames = [];
+		}
+		else{
+		     user.channelNames = user.channels.map(channel => channel.cname)
+		      .filter(channel => channel !== 'general');
+		}
 		const channels = user.channelNames.map(name =>
 			({
 				name,
