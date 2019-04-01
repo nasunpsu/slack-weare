@@ -84,6 +84,11 @@ function addTime() {
 }
 
 function removeTime(target) {
+    // number of lines that say "I am available on..."
+    const numAvailability = $('.availability').length - 1;
+    if(numAvailability <= 1){
+        return;
+    }
     const inputs = [...$(target).find('.input')];
     inputs.forEach(input => {
         const name = $(input).attr('name');
