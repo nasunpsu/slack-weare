@@ -11,6 +11,11 @@
   color:blue;
 }
 
+main.login-wrapper .sign-in.button.ui > a{
+  color: white;
+  font-size: xx-large;
+}
+
 /* Class for each shared channel for the table list view (only to show if the channel is shared between the user in the table and the signed in user) */
 .channel1 { color: #6435c9; }
 .channel2 { color: #6435c9; }
@@ -80,7 +85,7 @@
   .btn-wrapper a{
     display: flex;
     width: 100%;
-    padding: 50px;
+    /* padding: 50px; */
 
   }
 
@@ -164,6 +169,16 @@
     height: fit-content;
   }
 
+  .message-card .ui.message {
+    font-size: 1.25em!important;
+    color: #767676!important;
+    /* font-family: sans-serif!important; */
+  }
+
+  .message-card .extra.content a{
+    color: #4183C4!important;
+  }
+
   #timezone-main {
     font-family: 'Open Sans', sans-serif;
     font-size: 12px;
@@ -197,6 +212,10 @@
   margin-top: 50px;
   margin-bottom: 20px;
   /* white-space: nowrap; */
+}
+
+#tz-wrapper .ui.card .meta {
+  font-size: 1.2em!important;
 }
 
 #nw-wrapper{
@@ -476,8 +495,31 @@ p{
   margin-bottom: 80px!important;
 }
 
+.slack-btn-web {
+  /* background: #18B87E!important; */
+  box-shadow: 0 1px 2px 0 rgba(0,0,0,0.50)!important;
+  border-radius: 4px!important;
+  border: none!important;
+  /* grid-column: 4/21; */
+  /* padding: 15px!important; */
+  font-family: 'Proxima Nova';
+  /* color: #FBBD08!important; */
+  font-weight: 500!important;
+  /* font-size: 16px!important; */
+  /* width: 200px; */
+  /* display: flex!important; */
+  /* justify-content: center; */
+  margin: auto!important;
+  /* margin-top: 20px!important;
+  margin-bottom: 80px!important; */
+}
+
 .slack-btn a{
   color: white;
+}
+.slack-btn-web a {
+  color: #FBBD08!important;
+
 }
 
 .post-title{
@@ -519,11 +561,12 @@ p{
   margin-top: 20px;
   border-radius: 4px;
   box-shadow: 2px 2px 2px rgba(0,0,0,.2);
+  font-size: 80%;
 }
 
 .channel-table thead{
   text-align: center;
-  font-size: 60%;  
+  /* font-size: 60%;   */
 }
 
 .channel-table th{
@@ -532,7 +575,7 @@ p{
 
 .channel-table td{
   font-weight: 100;
-  font-size: 80%;
+  
   text-align: center;
 }
 
@@ -563,6 +606,9 @@ p{
   line-height: .5!important;
 }
 
+.profile.ui.item > img {
+  margin-right: 1em;
+}
 .header-info .ui.list{
   margin-top: -20px!important;
   margin-right: 10px;
