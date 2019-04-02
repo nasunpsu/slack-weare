@@ -623,11 +623,12 @@ app.post('/slack/events', (req, res, next) => {
 										console.log('user updated with LDAP succesfully');
 										const join_channel = event.type == 'member_joined_channel' ? await fn_first_join() : true;
 
-										const obj_whatever = await similarity.storeSimilarUsers(uid);
+										const obj_whatever = await similarity.storeSimilarUsers([uid]);
 										const res = await DB.collection('users').find({}, { uid: 1 });
 										const array = await res.toArray();
 										const uids = array.map(user => user.uid).filter(uid => !!uid);
-										uids.forEach(uid => similarity.storeSimilarUsers(uid));
+										// uids.forEach(uid => similarity.storeSimilarUsers(uid));
+										similarity.storeSimilarUsers(uids);
 										await ldap.updateUserWithLdapData(email, fullName, uid, DB);
 										async function fn_first_join() {
 											if (event.channel != 'C0A28BAHG') return;
@@ -841,7 +842,8 @@ app.post('/slack/events', (req, res, next) => {
 														const res = await DB.collection('users').find({}, { uid: 1 });
 														const array = await res.toArray();
 														const uids = array.map(user => user.uid).filter(uid => !!uid);
-														uids.forEach(uid => similarity.storeSimilarUsers(uid));
+														// uids.forEach(uid => similarity.storeSimilarUsers(uid));
+														similarity.storeSimilarUsers(uids);
 														console.log(`after the uids ${uids}`);
 													});
 											}
@@ -2983,8 +2985,12 @@ async function InitTeamMembers(team_id, token, limit = null) {
 						console.log(`user ${m.real_name} updated succesfully: next retrieving ldap and similarity`);
 						const email = m.profile.email;
 						const fullName = m.profile.real_name;
-						await ldap.updateUserWithLdapData(email, fullName, uid, DB);
-						await similarity.storeSimilarUsers(uid);
+						 try{
+						   await ldap.updateUserWithLdapData(email, fullName, uid, DB);
+						 }catch(e){
+						    console.log('error', e.toString());
+						 }
+						await similarity.storeSimilarUsers([uid]);
 					}
 					if (!m.is_bot && m.id != 'USLACKBOT') DB.collection('users').updateOne(
 						{ uid: uid },
@@ -3057,7 +3063,7 @@ async function InitTeamMembers(team_id, token, limit = null) {
 						const email = m.profile.email;
 						const fullName = m.profile.real_name;
 						await ldap.updateUserWithLdapData(email, fullName, uid, DB);
-						await similarity.storeSimilarUsers(uid);
+						await similarity.storeSimilarUsers([uid]);
 					}
 					if (!m.is_bot && m.id != 'USLACKBOT') DB.collection('users').updateOne(
 						{ uid: uid },
