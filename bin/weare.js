@@ -1823,7 +1823,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 				DB.collection('users').findOne({ uid: body.team.id + '_' + body.user.id }, async (err, user) => {
 					const attach = [
 						{
-							"title": `Let's welcome ${user.first_name} who has been to ${user.pastCities}.`,
+							"title": `Let's welcome <@${body.user.id}> who has been to ${user.pastCities}.`,
 							"text": `Meet ${user.first_name} at <${base_url}/profile/${body.team.id}_${body.user.id}|profile page>.`,
 							"color": '#FBBD08'
 						},
@@ -1861,7 +1861,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 					console.log(`The user has confirmed to say hello and receive welcome! ${body.channel.id}`)
 					web.chat.postMessage({
 						channel: body.channel.id,
-						text: `I'd like to introduce ${user.real_name}!`,
+						text: `I'd like to introduce *${user.real_name}*!`,
 						attachments: JSON.stringify(attach)
 					})
 						.catch(err => console.error(err));
@@ -1875,7 +1875,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 					replace_original: true,
 					channel: body.channel.id,
 					user: body.user.id,
-					text: `More details in the profile will help your peers get to know you. Go to ${base_url}/tablelist to find more about your peers.`,
+					text: `More details in the profile will help your peers get to know you. \n - Enter /intro to initiate the prompt of self-intro, or go to ${base_url}/editprofile to edit yor profile. \n- Go to ${base_url}/tablelist to find more about your peers.`,
 				};
 				sendMessageToSlackResponseURL(body.response_url, msg_tablelist);
 				break;
