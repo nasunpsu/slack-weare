@@ -4,6 +4,15 @@ const profileUrl = window.location.origin + '/editProfile';
 let user = document.getElementById('data').getAttribute('data-attribute');
 
 user = JSON.parse(user);
+
+
+window.addEventListener("DOMContentLoaded", function () {
+    document.getElementById("other-self").addEventListener("click", function (e) {
+        location.href = `/profile/${user.uid}`;
+    });
+});
+
+
 function reloadCalendar() {
     let ls_wd = $('.week-day');
     for (let i = 0; i < ls_wd.length; i += 1) {

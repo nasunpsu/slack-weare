@@ -851,6 +851,23 @@ div.ui.dropdown.weekday.selection {
   margin-bottom: 40px!important;
 }
 
+.profile-edit-wrapper .other-self {
+  /* height: max-content;
+  position: absolute;
+  top: 5em;
+  right: 2em!important;
+  background-color: #FBBD08!important;
+  color: white; */
+  margin-bottom: 10px!important;
+}
+
+
+.profile-edit-wrapper .ui.message.info {
+  position: absolute;
+  top: 5em;
+  margin-right:2em;
+}
+
 .help-wrapper {
   /* overflow-x: auto;
   display: flex;

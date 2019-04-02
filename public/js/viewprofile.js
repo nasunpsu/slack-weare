@@ -26,3 +26,9 @@ $('.military.ui.dropdown')
 
 $('.profession.ui.dropdown')
     .dropdown('set selected', user.profession);
+
+window.addEventListener("DOMContentLoaded", function () {
+    document.getElementById("edit-profile").addEventListener("click", function (e) {
+        location.href = "/editProfile";
+    });
+});
