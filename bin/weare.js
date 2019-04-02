@@ -258,7 +258,7 @@ const logEvent = (body, req) => {
 				{ returnOriginal: false }).then((user) => {
 					return Promise.resolve(user.value);
 				});
-			req.session.user = newUser;
+			// req.session.user = newUser;
 		})();
 
 	}
