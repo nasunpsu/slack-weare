@@ -1308,7 +1308,7 @@ app.post('/slack/commands/intro', urlencodedParser, (req, res) => {
 					label: 'Things I want my peers here to know about me',
 					type: 'text',
 					name: 'title',
-					value: he.decode(user.title),
+					value: user.title?he.decode(user.title):null,
 					hint: 'e.g. language, value systems, hobbies, minority roles, ethnicity'
 				},
 
@@ -1317,7 +1317,7 @@ app.post('/slack/commands/intro', urlencodedParser, (req, res) => {
 					type: 'text',
 					name: 'pastCities',
 					optional: true,
-					value: he.decode(user.pastCities),
+					value: user.pastCities? he.decode(user.pastCities):null,
 					hint: 'Separate places with ";"! (e.g. Pittsburgh, PA; Victoria, BC)'
 				},
 				{
@@ -1356,7 +1356,7 @@ app.post('/slack/commands/intro', urlencodedParser, (req, res) => {
 					label: 'Fun fact',
 					type: 'text',
 					name: 'fun',
-					value: he.decode(user.fun),
+					value: user.fun? he.decode(user.fun):null,
 					optional: true,
 					hint: 'Tell them something fun!'
 				}
@@ -1760,7 +1760,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 								label: 'Things I want my peers here to know about me',
 								type: 'text',
 								name: 'title',
-								value: he.decode(user.title),
+								value: user.title? he.decode(user.title):null,
 								hint: 'e.g. language, value systems, hobbies, minority roles, ethnicity'
 							},
 
@@ -1769,7 +1769,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 								type: 'text',
 								name: 'pastCities',
 								optional: true,
-								value: he.decode(user.pastCities),
+								value: user.pastCities? he.decode(user.pastCities):null,
 								hint: 'Separate places with ";"! (e.g. Pittsburgh, PA; Victoria, BC)'
 							},
 							{
@@ -1809,7 +1809,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 								type: 'text',
 								name: 'fun',
 								optional: true,
-								value: he.decode(user.fun),
+								value: user.fun? he.decode(user.fun):null,
 								hint: 'Tell your peers something interesting about yourself!'
 							},
 						],
