@@ -25,7 +25,7 @@
       </div>
       <div class="ui list">
         <div class="item">
-          <br><a href="mailto:{{email}}"><i class="ui envelope icon" style="opacity: .75;"></i> {{email}} </a>
+          <br><a href="mailto:{{email}}" style="color: white"><i class="ui envelope icon" style="opacity: .75;"></i> {{email}} </a>
         </div>
       </div>
     </div>
@@ -34,7 +34,7 @@
 
   </div>
   {{#if (eq uid ../userInfo.uid)}}
-  <button class="ui right floated white labeled icon button edit-profile">
+  <button class="ui right floated white labeled icon button edit-profile" id="edit-profile">
     <i class="pencil icon"></i>
     <a href="/editProfile">Edit</a>
   </button>
