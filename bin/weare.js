@@ -34,6 +34,7 @@ const getOffset = require('get-timezone-offset');
 const express = require('express');
 const ldap = require('../server/ldap');
 const assert = require('assert');
+const he = require('he');
 //event listener leak
 require('events').EventEmitter.defaultMaxListeners = 15;
 // process.setMaxListeners(0);
@@ -1298,7 +1299,7 @@ app.post('/slack/commands/intro', urlencodedParser, (req, res) => {
 					label: 'Things I want my peers here to know about me',
 					type: 'text',
 					name: 'title',
-					value: user.title,
+					value: he.decode(user.title),
 					hint: 'e.g. language, value systems, hobbies, minority roles, ethnicity'
 				},
 
@@ -1307,7 +1308,7 @@ app.post('/slack/commands/intro', urlencodedParser, (req, res) => {
 					type: 'text',
 					name: 'pastCities',
 					optional: true,
-					value: user.pastCities,
+					value: he.decode(user.pastCities),
 					hint: 'Separate places with ";"! (e.g. Pittsburgh, PA; Victoria, BC)'
 				},
 				{
@@ -1346,7 +1347,7 @@ app.post('/slack/commands/intro', urlencodedParser, (req, res) => {
 					label: 'Fun fact',
 					type: 'text',
 					name: 'fun',
-					value: user.fun,
+					value: he.decode(user.fun),
 					optional: true,
 					hint: 'Tell them something fun!'
 				}
@@ -1756,7 +1757,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 								label: 'Things I want my peers here to know about me',
 								type: 'text',
 								name: 'title',
-								value: user.title,
+								value: he.decode(user.title),
 								hint: 'e.g. language, value systems, hobbies, minority roles, ethnicity'
 							},
 
@@ -1765,7 +1766,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 								type: 'text',
 								name: 'pastCities',
 								optional: true,
-								value: user.pastCities,
+								value: he.decode(user.pastCities),
 								hint: 'Separate places with ";"! (e.g. Pittsburgh, PA; Victoria, BC)'
 							},
 							{
@@ -1805,7 +1806,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 								type: 'text',
 								name: 'fun',
 								optional: true,
-								value: user.fun,
+								value: he.decode(user.fun),
 								hint: 'Tell your peers something interesting about yourself!'
 							},
 						],
@@ -1945,9 +1946,9 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 						{ uid: body.team.id + '_' + body.user.id },
 						{
 							$set: {
-								fun: submission.fun,
+								fun: escape(submission.fun),
 								profession: submission.profession,
-								title: submission.title,
+								title: escape(submission.title),
 								pastCities: submission.pastCities
 							}
 						},
@@ -2923,10 +2924,10 @@ async function rtmConnectFn(team_id, when) {
 							case 'presence_change':
 								let aWss = expressWs.getWss('/temporal/presenceUpdate');
 								// console.log(`prior to the change: ${snapshot_db['users'][foundIndex].presence}; after would be ${obj_data.presence}`)
-								
+
 								// var foundIndex = snapshot_db['users'].findIndex(x => x.uid == obj_data.team + '_' + obj_data.user);
 								// if (when == 'init') {
-									
+
 								// 	DB.collection('userlogs').updateOne(
 								// 		{ log_id: makeid() },
 								// 		{
@@ -2964,7 +2965,7 @@ async function rtmConnectFn(team_id, when) {
 								// 		else console.log(`${obj_data.team}_${obj_data.user} just changed presence to be ${obj_data.presence}`);
 								// 		snapshot_db['users'][foundIndex].presence = obj_data.presence;
 								// 	});
-								
+
 								// console.log(`the clients in the browsers includes ${util.inspect(aWss.clients, {depth: 3})} in total; and the presence status is ${obj_data.presence}`);
 								aWss.clients.forEach(function (client) {
 									// console.log(`sending to client the presence is : ${obj_data.presence}`);
@@ -3677,7 +3678,7 @@ app.use((err, req, res, next) => {
 	const status = err.status | 500;
 	res.locals.error = req.app.get('env') === 'development' ? err : {};
 	res.status(status);
-	return res.render('error')
+	return res.render('error');
 });
 
 // Set up express server here
@@ -3689,7 +3690,11 @@ app.listen(process.env.PORT, () => {
 	console.log(`WeAre! server is running on PORT ${process.env.PORT}`);
 });
 
-process.on('warning', e => console.warn(e.stack));
+process.on('warning', warning => {
+	console.warn(warning.name);    // Print the warning name
+	console.warn(warning.message);
+	console.warn(warning.stack);
+});
 process.on('exit', () => {
 	ldap.closeLdapConnection();
 });
