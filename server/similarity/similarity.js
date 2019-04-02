@@ -1,4 +1,5 @@
 const { exec } = require('child_process');
+const fetch = require('node-fetch');
 const { resolve } = require('path');
 const util = require('util');
 
@@ -6,22 +7,27 @@ const util = require('util');
  * Stores similar users to current user in database
  * @param {string} uid uid of the user to store
  */
-const storeSimilarUsers = (uid) => {
-    const command = createCommand(uid);
-    const pythonProcess = exec(command, {shell: '/bin/bash'});
-    return new Promise((resolve, reject) => {
-        pythonProcess.stdout.on('data', (data) => {
-            if(data.toString() === 'finished'){
-                resolve();
-                return;
-            }
-            console.log(data.toString());
-        });
-        pythonProcess.stderr.on('data', (data) => {
-            console.log(data.toString());
-        });
+const storeSimilarUsers = (uids) => {
+    if(!Array.isArray(uids)){
+        throw new Error('argument must be an array of uids');
+    }
+    const stringUids = JSON.stringify(uids);
+    fetch(`http://localhost:50000?uids=${stringUids}`);
+    // const command = createCommand(uid);
+    // const pythonProcess = exec(command, {shell: '/bin/bash'});
+    // return new Promise((resolve, reject) => {
+    //     pythonProcess.stdout.on('data', (data) => {
+    //         if(data.toString() === 'finished'){
+    //             resolve();
+    //             return;
+    //         }
+    //         console.log(data.toString());
+    //     });
+    //     pythonProcess.stderr.on('data', (data) => {
+    //         console.log(data.toString());
+    //     });
 
-    });
+    // });
 }
 
 /**

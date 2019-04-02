@@ -33,6 +33,7 @@ const getOffset = require('get-timezone-offset');
 const express = require('express');
 const ldap = require('../server/ldap');
 const assert = require('assert');
+const he = require('he');
 //event listener leak
 require('events').EventEmitter.defaultMaxListeners = 15;
 // process.setMaxListeners(0);
@@ -643,11 +644,12 @@ app.post('/slack/events', (req, res, next) => {
 										console.log('user updated with LDAP succesfully');
 										const join_channel = event.type == 'member_joined_channel' ? await fn_first_join() : true;
 
-										const obj_whatever = await similarity.storeSimilarUsers(uid);
+										const obj_whatever = await similarity.storeSimilarUsers([uid]);
 										const res = await DB.collection('users').find({}, { uid: 1 });
 										const array = await res.toArray();
 										const uids = array.map(user => user.uid).filter(uid => !!uid);
-										uids.forEach(uid => similarity.storeSimilarUsers(uid));
+										// uids.forEach(uid => similarity.storeSimilarUsers(uid));
+										similarity.storeSimilarUsers(uids);
 										await ldap.updateUserWithLdapData(email, fullName, uid, DB);
 										async function fn_first_join() {
 
@@ -858,7 +860,8 @@ app.post('/slack/events', (req, res, next) => {
 														const res = await DB.collection('users').find({}, { uid: 1 });
 														const array = await res.toArray();
 														const uids = array.map(user => user.uid).filter(uid => !!uid);
-														uids.forEach(uid => similarity.storeSimilarUsers(uid));
+														// uids.forEach(uid => similarity.storeSimilarUsers(uid));
+														similarity.storeSimilarUsers(uids);
 														console.log(`after the uids ${uids}`);
 													});
 											}
@@ -1305,7 +1308,7 @@ app.post('/slack/commands/intro', urlencodedParser, (req, res) => {
 					label: 'Things I want my peers here to know about me',
 					type: 'text',
 					name: 'title',
-					value: user.title,
+					value: he.decode(user.title),
 					hint: 'e.g. language, value systems, hobbies, minority roles, ethnicity'
 				},
 
@@ -1314,7 +1317,7 @@ app.post('/slack/commands/intro', urlencodedParser, (req, res) => {
 					type: 'text',
 					name: 'pastCities',
 					optional: true,
-					value: user.pastCities,
+					value: he.decode(user.pastCities),
 					hint: 'Separate places with ";"! (e.g. Pittsburgh, PA; Victoria, BC)'
 				},
 				{
@@ -1353,7 +1356,7 @@ app.post('/slack/commands/intro', urlencodedParser, (req, res) => {
 					label: 'Fun fact',
 					type: 'text',
 					name: 'fun',
-					value: user.fun,
+					value: he.decode(user.fun),
 					optional: true,
 					hint: 'Tell them something fun!'
 				}
@@ -1757,7 +1760,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 								label: 'Things I want my peers here to know about me',
 								type: 'text',
 								name: 'title',
-								value: user.title,
+								value: he.decode(user.title),
 								hint: 'e.g. language, value systems, hobbies, minority roles, ethnicity'
 							},
 
@@ -1766,7 +1769,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 								type: 'text',
 								name: 'pastCities',
 								optional: true,
-								value: user.pastCities,
+								value: he.decode(user.pastCities),
 								hint: 'Separate places with ";"! (e.g. Pittsburgh, PA; Victoria, BC)'
 							},
 							{
@@ -1806,7 +1809,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 								type: 'text',
 								name: 'fun',
 								optional: true,
-								value: user.fun,
+								value: he.decode(user.fun),
 								hint: 'Tell your peers something interesting about yourself!'
 							},
 						],
@@ -1824,7 +1827,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 				DB.collection('users').findOne({ uid: body.team.id + '_' + body.user.id }, async (err, user) => {
 					const attach = [
 						{
-							"title": `Let's welcome ${user.first_name} who has been to ${user.pastCities}.`,
+							"title": `Let's welcome <@${body.user.id}> who has been to ${user.pastCities}.`,
 							"text": `Meet ${user.first_name} at <${base_url}/profile/${body.team.id}_${body.user.id}|profile page>.`,
 							"color": '#FBBD08'
 						},
@@ -1862,7 +1865,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 					console.log(`The user has confirmed to say hello and receive welcome! ${body.channel.id}`)
 					web.chat.postMessage({
 						channel: body.channel.id,
-						text: `I'd like to introduce ${user.real_name}!`,
+						text: `I'd like to introduce *${user.real_name}*!`,
 						attachments: JSON.stringify(attach)
 					})
 						.catch(err => console.error(err));
@@ -1876,7 +1879,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 					replace_original: true,
 					channel: body.channel.id,
 					user: body.user.id,
-					text: `More details in the profile will help your peers get to know you. Go to ${base_url}/tablelist to find more about your peers.`,
+					text: `More details in the profile will help your peers get to know you. \n - Enter /intro to initiate the prompt of self-intro, or go to ${base_url}/editprofile to edit yor profile. \n- Go to ${base_url}/tablelist to find more about your peers.`,
 				};
 				sendMessageToSlackResponseURL(body.response_url, msg_tablelist);
 				break;
@@ -1946,9 +1949,9 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 						{ uid: body.team.id + '_' + body.user.id },
 						{
 							$set: {
-								fun: submission.fun,
+								fun: escape(submission.fun),
 								profession: submission.profession,
-								title: submission.title,
+								title: escape(submission.title),
 								pastCities: submission.pastCities
 							}
 						},
@@ -2282,16 +2285,17 @@ app.get('/tablelist', async function (req, res) {
 	console.log(`users length is ${users.length}`);
 	to_be_rendered.users = users.map(user => {
 		if (!!user.city) {
-			return;
+			return user;
 		}
 		if (!!user.region) {
 			user.city = user.region;
-			return;
+			return user;
 		}
 		if (!!user.local_area) {
 			user.city = user.local_area;
-			return;
+			return user;
 		}
+		return user;
 	});
 
 	to_be_rendered.users = similarity.createIsSharedField(req.session.user, users, fields);
@@ -2301,9 +2305,14 @@ app.get('/tablelist', async function (req, res) {
 	to_be_rendered.channelNames = channelNames;
 	console.log(`renderedUsers are ${to_be_rendered.users.length}; the first is ${util.inspect(to_be_rendered.users[0])}`);
 	to_be_rendered.users = to_be_rendered.users.map(user => {
-		if (!user.channels || user.channels.length == 0) console.log(`user channels are abnormal for ${user.real_name}`);
-		user.channelNames = user.channels.map(channel => channel.cname)
-			.filter(channel => channel !== 'general');
+		if (!user.channels) {
+			if (user.channels.length == 0) console.log(`user channels are abnormal for ${user.real_name}`);
+			user.channelNames = [];
+		}
+		else {
+			user.channelNames = user.channels.map(channel => channel.cname)
+				.filter(channel => channel !== 'general');
+		}
 		const channels = user.channelNames.map(name =>
 			({
 				name,
@@ -2929,10 +2938,10 @@ async function rtmConnectFn(team_id, when) {
 							case 'presence_change':
 								let aWss = expressWs.getWss('/temporal/presenceUpdate');
 								// console.log(`prior to the change: ${snapshot_db['users'][foundIndex].presence}; after would be ${obj_data.presence}`)
-								
+
 								// var foundIndex = snapshot_db['users'].findIndex(x => x.uid == obj_data.team + '_' + obj_data.user);
 								// if (when == 'init') {
-									
+
 								// 	DB.collection('userlogs').updateOne(
 								// 		{ log_id: makeid() },
 								// 		{
@@ -2970,7 +2979,7 @@ async function rtmConnectFn(team_id, when) {
 								// 		else console.log(`${obj_data.team}_${obj_data.user} just changed presence to be ${obj_data.presence}`);
 								// 		snapshot_db['users'][foundIndex].presence = obj_data.presence;
 								// 	});
-								
+
 								// console.log(`the clients in the browsers includes ${util.inspect(aWss.clients, {depth: 3})} in total; and the presence status is ${obj_data.presence}`);
 								aWss.clients.forEach(function (client) {
 									// console.log(`sending to client the presence is : ${obj_data.presence}`);
@@ -3035,8 +3044,12 @@ async function InitTeamMembers(team_id, token, limit = null) {
 						console.log(`user ${m.real_name} updated succesfully: next retrieving ldap and similarity`);
 						const email = m.profile.email;
 						const fullName = m.profile.real_name;
-						await ldap.updateUserWithLdapData(email, fullName, uid, DB);
-						await similarity.storeSimilarUsers(uid);
+						try {
+							await ldap.updateUserWithLdapData(email, fullName, uid, DB);
+						} catch (e) {
+							console.log('error', e.toString());
+						}
+						await similarity.storeSimilarUsers([uid]);
 					}
 					if (!m.is_bot && m.id != 'USLACKBOT') DB.collection('users').updateOne(
 						{ uid: uid },
@@ -3109,7 +3122,7 @@ async function InitTeamMembers(team_id, token, limit = null) {
 						const email = m.profile.email;
 						const fullName = m.profile.real_name;
 						await ldap.updateUserWithLdapData(email, fullName, uid, DB);
-						await similarity.storeSimilarUsers(uid);
+						await similarity.storeSimilarUsers([uid]);
 					}
 					if (!m.is_bot && m.id != 'USLACKBOT') DB.collection('users').updateOne(
 						{ uid: uid },
@@ -3763,7 +3776,7 @@ app.use((err, req, res, next) => {
 	const status = err.status | 500;
 	res.locals.error = req.app.get('env') === 'development' ? err : {};
 	res.status(status);
-	return res.render('error')
+	return res.render('error');
 });
 
 // // Set up express server here
@@ -3776,7 +3789,11 @@ app.use((err, req, res, next) => {
 // //});
 // https.createServer(options, app).listen(8443);
 
-process.on('warning', e => console.warn(e.stack));
+process.on('warning', warning => {
+	console.warn(warning.name);    // Print the warning name
+	console.warn(warning.message);
+	console.warn(warning.stack);
+});
 process.on('exit', () => {
 	ldap.closeLdapConnection();
 });
