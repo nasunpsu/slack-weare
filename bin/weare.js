@@ -244,7 +244,7 @@ const logEvent = (body, req) => {
 				{ returnOriginal: false }).then((user) => {
 					return Promise.resolve(user.value);
 				});
-			req.session.user = newUser;
+			// req.session.user = newUser;
 		})();
 
 	}
@@ -634,11 +634,12 @@ app.post('/slack/events', (req, res, next) => {
 										console.log('user updated with LDAP succesfully');
 										const join_channel = event.type == 'member_joined_channel' ? await fn_first_join() : true;
 
-										const obj_whatever = await similarity.storeSimilarUsers(uid);
+										const obj_whatever = await similarity.storeSimilarUsers([uid]);
 										const res = await DB.collection('users').find({}, { uid: 1 });
 										const array = await res.toArray();
 										const uids = array.map(user => user.uid).filter(uid => !!uid);
-										uids.forEach(uid => similarity.storeSimilarUsers(uid));
+										// uids.forEach(uid => similarity.storeSimilarUsers(uid));
+										similarity.storeSimilarUsers(uids);
 										await ldap.updateUserWithLdapData(email, fullName, uid, DB);
 										async function fn_first_join() {
 											if (event.channel != 'C0A28BAHG') return;
@@ -852,7 +853,8 @@ app.post('/slack/events', (req, res, next) => {
 														const res = await DB.collection('users').find({}, { uid: 1 });
 														const array = await res.toArray();
 														const uids = array.map(user => user.uid).filter(uid => !!uid);
-														uids.forEach(uid => similarity.storeSimilarUsers(uid));
+														// uids.forEach(uid => similarity.storeSimilarUsers(uid));
+														similarity.storeSimilarUsers(uids);
 														console.log(`after the uids ${uids}`);
 													});
 											}
@@ -2279,16 +2281,17 @@ app.get('/tablelist', async function (req, res) {
 	console.log(`users length is ${users.length}`);
 	to_be_rendered.users = users.map(user => {
 		if (!!user.city) {
-			return;
+			return user;
 		}
 		if (!!user.region) {
 			user.city = user.region;
-			return;
+			return user;
 		}
 		if (!!user.local_area) {
 			user.city = user.local_area;
-			return;
+			return user;
 		}
+	        return user;
 	});
 
 	to_be_rendered.users = similarity.createIsSharedField(req.session.user, users, fields);
@@ -2297,8 +2300,13 @@ app.get('/tablelist', async function (req, res) {
 		.filter(channel => channel !== 'general');
 	to_be_rendered.channelNames = channelNames;
 	to_be_rendered.users = to_be_rendered.users.map(user => {
-		user.channelNames = user.channels.map(channel => channel.cname)
-			.filter(channel => channel !== 'general');
+		if(!user.channels){
+		   user.channelNames = [];
+		}
+		else{
+		     user.channelNames = user.channels.map(channel => channel.cname)
+		      .filter(channel => channel !== 'general');
+		}
 		const channels = user.channelNames.map(name =>
 			({
 				name,
@@ -3030,8 +3038,12 @@ async function InitTeamMembers(team_id, token, limit = null) {
 						console.log(`user ${m.real_name} updated succesfully: next retrieving ldap and similarity`);
 						const email = m.profile.email;
 						const fullName = m.profile.real_name;
-						await ldap.updateUserWithLdapData(email, fullName, uid, DB);
-						await similarity.storeSimilarUsers(uid);
+						 try{
+						   await ldap.updateUserWithLdapData(email, fullName, uid, DB);
+						 }catch(e){
+						    console.log('error', e.toString());
+						 }
+						await similarity.storeSimilarUsers([uid]);
 					}
 					if (!m.is_bot && m.id != 'USLACKBOT') DB.collection('users').updateOne(
 						{ uid: uid },
@@ -3104,7 +3116,7 @@ async function InitTeamMembers(team_id, token, limit = null) {
 						const email = m.profile.email;
 						const fullName = m.profile.real_name;
 						await ldap.updateUserWithLdapData(email, fullName, uid, DB);
-						await similarity.storeSimilarUsers(uid);
+						await similarity.storeSimilarUsers([uid]);
 					}
 					if (!m.is_bot && m.id != 'USLACKBOT') DB.collection('users').updateOne(
 						{ uid: uid },

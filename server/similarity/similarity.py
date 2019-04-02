@@ -1,4 +1,6 @@
 import traceback
+import json
+from flask import request
 import statistics
 from pymongo import MongoClient
 from random import randint
@@ -14,15 +16,15 @@ import category_encoders as ce
 from prepocessing import clean_email, prepocess
 from gower import gower_distances
 import sys
+from flask import Flask
 
-def compute_similarity(uid):
+
+def compute_similarity(uid, users):
     """ Updates database with similar users
     Arguments:
         uid {str} -- uid to find similar users to
     """
-    users = get_data()
-    users = prepocess(users)
-    try: 
+    try:
         # Get first index of row with correct email
         user = users.loc[users.uid == uid].iloc[[0]]
     except Exception as e:
@@ -79,13 +81,13 @@ def get_db():
     db = client.weare    
     return db
 
-def get_data():
+def get_data(db):
     """ Gets relevant data from database for computing similarity
 
     Returns:
         df {Dataframe} -- Dataframe containing all users
     """
-    db = get_db()
+    # db = get_db()
     # Students is a collection of survey responses
     # Users is a collection of users data collected from slack and ldap
     student_queries, user_queries = db.students.find({}), db.users.find({})
@@ -114,8 +116,23 @@ def compute_distances(df, Y, weights=None):
     distances = gower_distances(df, Y, categorical_features=col_is_categorical, feature_weight=weights)
     return [d[0] for d in distances]
 
-if __name__ == '__main__':
-    assert len(sys.argv) == 2, 'uid should be only argument'
-    uid = sys.argv[1]
-    assert type(uid) == str, 'uid should be a string'
-    compute_similarity(uid)
+# if __name__ == '__main__':
+#     assert len(sys.argv) == 2, 'uid should be only argument'
+#     uid = sys.argv[1]
+#     assert type(uid) == str, 'uid should be a string'
+#     compute_similarity(uid)
+
+app = Flask(__name__)
+db = get_db()
+
+@app.route('/')
+def similarity():
+    uids = json.loads(request.args.get('uids'))
+    users = get_data(db)
+    users = prepocess(users)
+    for uid in uids:
+        compute_similarity(uid, users)
+    return 'complete'
+
+
+app.run(port=50000, debug=True)
