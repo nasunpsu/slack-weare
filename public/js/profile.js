@@ -1,9 +1,10 @@
 
 const profileUrl = window.location.origin + '/editProfile';
 
-let user = document.getElementById('data').getAttribute('data-attribute');
-
-user = JSON.parse(user);
+// let jsonStr = document.getElementById('data').getAttribute('data-attribute');
+// let userStr = JSON.stringify(jsonStr);
+// let user = JSON.parse(userStr);
+let user = window.userInfo;
 
 
 window.addEventListener("DOMContentLoaded", function () {

@@ -79,14 +79,14 @@
         <div class="large item">
           <div class="ui {{#if (eq major ../userInfo.major)}}yellow {{else}} blue {{/if}} small horizontal label">Major</div>
           <br>
-          <p>{{major}}</p>
+          <p>{{{unescape major}}}</p>
         </div>
       </div>
       <div class="ui list">
         <div class="item">
           <div class="ui {{#if (eq campus ../userInfo.campus)}}yellow {{else}} blue {{/if}}small horizontal label">Penn State Campus</div>
           <br>
-          <p>{{campus}}</p>
+          <p>{{{unescape campus}}}</p>
         </div>
       </div>
 
@@ -94,7 +94,7 @@
         <div class="item">
           <div class="ui {{#if (eq goals ../userInfo.goals)}}yellow {{else}} blue {{/if}}small horizontal label">What I want to gain from World Campus</div>
           <br>
-          <p>{{goals}}</p>
+          <p>{{{unescape goals}}}</p>
         </div>
       </div>
       <div class="ui list">
@@ -198,14 +198,14 @@
         <div class="large item">
           <div class="ui {{#if (eq pastCities ../userInfo.pastCities)}}yellow {{else}} blue {{/if}}small horizontal label">Places I've Lived</div>
           <br>
-          <p>{{pastCities}}</p>
+          <p>{{{unescape pastCities}}}</p>
 
         </div>
       </div>
       <div class="ui list">
         <div class="item">
           <div class="ui {{#if (eq likeplaces ../userInfo.likeplaces)}}yellow {{else}} blue {{/if}}small horizontal label">Places I'd Like to Visit</div>
-          <br><p>{{likeplaces}}</p>
+          <br><p>{{{unescape likeplaces}}}</p>
           {{!-- <p>New Zealand</p>
           <br>
           <p>California</p>
@@ -233,7 +233,7 @@
         <div class="item">
           <div class="ui {{#if (eq fun ../userInfo.fun)}}yellow {{else}} blue {{/if}}small horizontal label">Fun Fact</div>
           <br>
-          <p>{{fun}}</p>
+          <p>{{{unescape fun}}}</p>
           </a>
         </div>
       </div>
@@ -241,7 +241,7 @@
         <div class="item">
           <div class="ui {{#if (eq title ../userInfo.title)}}yellow {{else}} blue {{/if}}small horizontal label">Things my peers should know about me</div>
           <br>
-          <p>{{title}}</p>
+          <p>{{{unescape title}}}</p>
           </a>
         </div>
       </div>
