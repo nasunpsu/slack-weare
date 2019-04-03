@@ -1301,7 +1301,7 @@ app.post('/slack/commands/intro', urlencodedParser, (req, res) => {
 					label: 'Things I want my peers here to know about me',
 					type: 'text',
 					name: 'title',
-					value: user.title?unescape(user.title):null,
+					value: user.title?he.unescape(user.title):null,
 					hint: 'e.g. language, value systems, hobbies, minority roles, ethnicity'
 				},
 
@@ -1310,7 +1310,7 @@ app.post('/slack/commands/intro', urlencodedParser, (req, res) => {
 					type: 'text',
 					name: 'pastCities',
 					optional: true,
-					value: user.pastCities?unescape(user.pastCities):null,
+					value: user.pastCities?he.unescape(user.pastCities):null,
 					hint: 'Separate places with ";"! (e.g. Pittsburgh, PA; Victoria, BC)'
 				},
 				{
@@ -1349,7 +1349,7 @@ app.post('/slack/commands/intro', urlencodedParser, (req, res) => {
 					label: 'Fun fact',
 					type: 'text',
 					name: 'fun',
-					value: user.fun?unescape(user.fun):null,
+					value: user.fun?he.unescape(user.fun):null,
 					optional: true,
 					hint: 'Tell them something fun!'
 				}
@@ -1759,7 +1759,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 								label: 'Things I want my peers here to know about me',
 								type: 'text',
 								name: 'title',
-								value: user.title? he.decode(user.title):null,
+								value: user.title? he.unescape(user.title):null,
 								hint: 'e.g. language, value systems, hobbies, minority roles, ethnicity'
 							},
 
@@ -1768,7 +1768,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 								type: 'text',
 								name: 'pastCities',
 								optional: true,
-								value: user.pastCities? he.decode(user.pastCities):null,
+								value: user.pastCities? he.unescape(user.pastCities):null,
 								hint: 'Separate places with ";"! (e.g. Pittsburgh, PA; Victoria, BC)'
 							},
 							{
@@ -1808,7 +1808,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 								type: 'text',
 								name: 'fun',
 								optional: true,
-								value: user.fun? he.decode(user.fun):null,
+								value: user.fun? he.unescape(user.fun):null,
 								hint: 'Tell your peers something interesting about yourself!'
 							},
 						],
@@ -1948,10 +1948,10 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 						{ uid: body.team.id + '_' + body.user.id },
 						{
 							$set: {
-								fun: escape(submission.fun),
+								fun: he.escape(submission.fun),
 								profession: submission.profession,
-								title: escape(submission.title),
-								pastCities: escape(submission.pastCities)
+								title: he.escape(submission.title),
+								pastCities: he.escape(submission.pastCities)
 							}
 						},
 						{ upsert: true, returnOriginal: false }).then((res) => {
