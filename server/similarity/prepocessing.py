@@ -82,8 +82,9 @@ def drop_student_columns(users):
     #number of courses, credits are too dirty as many entered text instead of a number
     drop_columns = ["surveyCompletion", "Duration (in seconds)", "NumCourses", "transferCredits", "NumTranCredits",
                     "WhyProfile", "otherChannels", "otherEmploy", "NonUS", "otherIndusry", "KnownThroughProfile",
-                    "otherEth", "PPLinPerson", "otherEmail", "ActiveDuty", "OCEnabler", "similar_users", "similar_users_y", "_id", "_id_y", 
-                    "real_name", "email", "is_bot", "phone", "name", "last_name"]
+                    "otherEth", "PPLinPerson", "otherEmail", "ActiveDuty", "OCEnabler", "similar_users", "similar_users_y"
+                    "similar_users_dict", "_id", "_id_y", 
+                    "real_name", "email", "is_bot", "phone", "name", "last_name", "availability", "ipInfo"]
     #only drop these columns if they actually exist in the data
     drop_columns = [col for col in drop_columns if col in users.columns]
     users.drop(columns=drop_columns, inplace=True)
