@@ -650,7 +650,7 @@ app.post('/slack/events', (req, res, next) => {
 										const uids = array.map(user => user.uid).filter(uid => !!uid);
 										// uids.forEach(uid => similarity.storeSimilarUsers(uid));
 										similarity.storeSimilarUsers(uids);
-										await ldap.updateUserWithLdapData(email, fullName, uid, DB);
+										// await ldap.updateUserWithLdapData(email, fullName, uid, DB);
 										async function fn_first_join() {
 
 											if (event.channel != 'CG82VU7HC') return;
@@ -2941,7 +2941,29 @@ async function rtmConnectFn(team_id, when) {
 
 								// var foundIndex = snapshot_db['users'].findIndex(x => x.uid == obj_data.team + '_' + obj_data.user);
 								// if (when == 'init') {
-
+								// 	const newUser = await DB.collection('users').findOneAndUpdate({ uid: body.uid }, updateDoc,
+								// 		{ returnOriginal: false }).then((user) => {
+								// 			return Promise.resolve(user.value);
+								// 		});
+								// 	const updateDoc = {
+								// 		uid: `${obj_data.team}_${obj_data.user}`,
+								// 		// presence_trail: [],
+								// 		status: obj_data.presence,
+								// 		ts: new Date()
+								// 	};
+								// 	DB.collection('user_presence').findOneAndUpdate(
+								// 		{ uid: `${obj_data.team}_${obj_data.user}` },
+								// 		{
+								// 			$set: updateDoc,
+								// 		},
+								// 		{ upsert: true, returnOriginal: false }).then((user)=>{
+								// 			if(user.presence_trail) 
+								// 			else presence_trail = [{
+								// 				ts: updateDoc.ts,
+								// 				status: obj_data.presence
+								// 			}]
+								// 			console.log(`${obj_data.team}_${obj_data.user} initial presence status is ${obj_data.presence}`)
+								// 		});
 								// 	DB.collection('userlogs').updateOne(
 								// 		{ log_id: makeid() },
 								// 		{
