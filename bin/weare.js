@@ -232,9 +232,14 @@ const logEvent = (body, req) => {
 	if ('ipInfo' in req && !('error' in req.ipInfo)) {
 		ipInfo = modIpInfo(req.ipInfo);
 	}
-	if (!!req.session && !!req.session.user) {
-		body.email = req.session.user.email;
-	}
+   if(!!req.session && !!req.session.user){
+      if(!!req.session.user.email){
+         body.email = req.session.user.email;
+      }
+      if(!!req.session.user.uid){
+         body.uid = req.session.user.uid;
+      }
+   }
 
 	if ('uid' in body && body.type === 'Activity') {
 		(async () => {
