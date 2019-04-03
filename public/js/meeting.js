@@ -11,7 +11,7 @@ if (meeting.who == "all" | meeting.who == undefined) {
 //   var topic = document.getElementById("hidden-topic").value;
 
 let me_id = document.getElementById('profile_uid').getAttribute('data-uid');
-if (meeting.creator_uid != me_id) { //the meeting is not created by me
+if (meeting.creator_uid != me_id && meeting.attendees) { //the meeting is not created by me
     let attendee_me = meeting.attendees.filter(x => x.uid == me_id)[0];
     if (attendee_me.attend == 'accept') $('#accept').removeClass('basic');
     else if (attendee_me.attend == 'reject') $('#reject').removeClass('basic');

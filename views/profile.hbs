@@ -7,7 +7,6 @@
       page.&nbsp;&nbsp;&nbsp;&nbsp;
     </div>
   </div>
-  
   <form class="ui form profile-form">
     
     <h4 class="ui horizontal divider header">
@@ -415,3 +414,12 @@
   </form>
   <div class="data" id="data" style="display:None" data-attribute='{{{json user}}}'></div>
 </section>
+<script>
+    [window.userInfo] = (() => {
+        const [userString] = [`{{{json user}}}`];
+        const text = document.createElement('textarea');
+        text.innerHTML = userString;
+        const user = JSON.parse(text.value);
+        return [user];
+    })();
+</script>

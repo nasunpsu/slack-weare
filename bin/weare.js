@@ -3168,9 +3168,9 @@ async function InitTeamChannels(team_id, token, limit = null) {
 	var local_slack = new SlackWebClient(token);
 	while (cursor) {
 		if (first || limit) {
-			// console.log(`iteration in InitTeamChannels: round ${counter}`)
+			console.log(`iteration in InitTeamChannels: round ${counter}`)
 			await local_slack.conversations.list({ //find all the channel info given a teamID; default: public channels as 'types' param
-				limit: limit | 20
+				limit: limit | 200
 			}).then(res => {
 				cursor = res.response_metadata.next_cursor;
 				counter += 1;
@@ -3178,7 +3178,8 @@ async function InitTeamChannels(team_id, token, limit = null) {
 				res.channels.forEach(async m => {
 					var cid = team_id + '_' + m.id;
 					let cmembers = await ChannelMembers(cid, m.name);
-
+					if(cmembers) console.log(`members in ${m.name} are ${cmembers.length}`);
+					else console.log(`undefined members for ${m.name}`);
 					DB.collection('channels').updateOne(
 						{ cid: cid },
 						{
@@ -3189,7 +3190,7 @@ async function InitTeamChannels(team_id, token, limit = null) {
 								topic: m.topic.value,
 								purpose: m.purpose.value,
 								num_members: m.num_members,
-								cmembers: cmembers,
+								cmembers: cmembers?cmembers:[],
 								num_msgs: 0,
 								latest_msg_ts: null
 							}
@@ -3197,6 +3198,7 @@ async function InitTeamChannels(team_id, token, limit = null) {
 						{ upsert: true },
 						function (err, res) {
 							if (err) console.error(err);
+							else console.log(`first 20 channels`);
 						});
 				})
 			});
@@ -3228,7 +3230,7 @@ async function InitTeamChannels(team_id, token, limit = null) {
 								topic: m.topic.value,
 								purpose: m.purpose.value,
 								num_members: m.num_members,
-								cmembers: cmembers,
+								cmembers: cmembers?cmembers:[],
 								num_msgs: 0,
 								latest_msg_ts: null
 							}
