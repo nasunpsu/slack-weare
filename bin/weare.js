@@ -1952,10 +1952,10 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 						{ uid: body.team.id + '_' + body.user.id },
 						{
 							$set: {
-								fun: he.escape(submission.fun),
+								fun: submission.fun?he.escape(submission.fun):submission.fun,
 								profession: submission.profession,
-								title: he.escape(submission.title),
-								pastCities: he.escape(submission.pastCities)
+								title: submission.title?he.escape(submission.title):submission.title,
+								pastCities: submission.pastCities?he.escape(submission.pastCities):submission.pastCities
 							}
 						},
 						{ upsert: true, returnOriginal: false }).then((res) => {
