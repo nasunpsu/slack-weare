@@ -70,7 +70,7 @@ mongoClient.connect(process.env.MONGO_DB, { useNewUrlParser: true }, function (e
 		console.log('Mongo Connected');
 		DB = db.db("weare");
 		initDB();
-		// rtmConnectFn('T0A286J8K', 'init');
+		rtmConnectFn('TG6RV469K');//T0A286J8K for the CSCL lab version
 	}
 	else console.log(err);
 });
@@ -1311,7 +1311,7 @@ app.post('/slack/commands/intro', urlencodedParser, (req, res) => {
 					label: 'Things I want my peers here to know about me',
 					type: 'text',
 					name: 'title',
-					value: user.title?he.unescape(user.title):null,
+					value: user.title ? he.unescape(user.title) : null,
 					hint: 'e.g. language, value systems, hobbies, minority roles, ethnicity'
 				},
 
@@ -1320,7 +1320,7 @@ app.post('/slack/commands/intro', urlencodedParser, (req, res) => {
 					type: 'text',
 					name: 'pastCities',
 					optional: true,
-					value: user.pastCities?he.unescape(user.pastCities):null,
+					value: user.pastCities ? he.unescape(user.pastCities) : null,
 					hint: 'Separate places with ";"! (e.g. Pittsburgh, PA; Victoria, BC)'
 				},
 				{
@@ -1359,7 +1359,7 @@ app.post('/slack/commands/intro', urlencodedParser, (req, res) => {
 					label: 'Fun fact',
 					type: 'text',
 					name: 'fun',
-					value: user.fun?he.unescape(user.fun):null,
+					value: user.fun ? he.unescape(user.fun) : null,
 					optional: true,
 					hint: 'Tell them something fun!'
 				}
@@ -1763,7 +1763,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 								label: 'Things I want my peers here to know about me',
 								type: 'text',
 								name: 'title',
-								value: user.title? he.unescape(user.title):null,
+								value: user.title ? he.unescape(user.title) : null,
 								hint: 'e.g. language, value systems, hobbies, minority roles, ethnicity'
 							},
 
@@ -1772,7 +1772,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 								type: 'text',
 								name: 'pastCities',
 								optional: true,
-								value: user.pastCities? he.unescape(user.pastCities):null,
+								value: user.pastCities ? he.unescape(user.pastCities) : null,
 								hint: 'Separate places with ";"! (e.g. Pittsburgh, PA; Victoria, BC)'
 							},
 							{
@@ -1812,7 +1812,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 								type: 'text',
 								name: 'fun',
 								optional: true,
-								value: user.fun? he.unescape(user.fun):null,
+								value: user.fun ? he.unescape(user.fun) : null,
 								hint: 'Tell your peers something interesting about yourself!'
 							},
 						],
@@ -1952,10 +1952,10 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 						{ uid: body.team.id + '_' + body.user.id },
 						{
 							$set: {
-								fun: submission.fun?he.escape(submission.fun):submission.fun,
+								fun: submission.fun ? he.escape(submission.fun) : submission.fun,
 								profession: submission.profession,
-								title: submission.title?he.escape(submission.title):submission.title,
-								pastCities: submission.pastCities?he.escape(submission.pastCities):submission.pastCities
+								title: submission.title ? he.escape(submission.title) : submission.title,
+								pastCities: submission.pastCities ? he.escape(submission.pastCities) : submission.pastCities
 							}
 						},
 						{ upsert: true, returnOriginal: false }).then((res) => {
@@ -2899,10 +2899,10 @@ app.get('/temporal', async function (req, res) {
 // let ws; 
 
 app.post('/rtmconnect', (req, res) => {
-	rtmConnectFn(req.session.team.team_id, 'update');
+	rtmConnectFn(req.session.team.team_id);
 });
 
-async function rtmConnectFn(team_id, when) {
+async function rtmConnectFn(team_id) {
 	if (typeof ws == 'undefined' || ws.readyState != WebSocket.OPEN) {
 		snapshot_db['users'] = await DB.collection('users').find({}).toArray();
 		console.log('Connecting rtm.connect now:');
@@ -2940,71 +2940,57 @@ async function rtmConnectFn(team_id, when) {
 						switch (obj_data.type) {
 							case 'presence_change':
 								let aWss = expressWs.getWss('/temporal/presenceUpdate');
-								// console.log(`prior to the change: ${snapshot_db['users'][foundIndex].presence}; after would be ${obj_data.presence}`)
-
-								// var foundIndex = snapshot_db['users'].findIndex(x => x.uid == obj_data.team + '_' + obj_data.user);
-								// if (when == 'init') {
-								// 	const newUser = await DB.collection('users').findOneAndUpdate({ uid: body.uid }, updateDoc,
-								// 		{ returnOriginal: false }).then((user) => {
-								// 			return Promise.resolve(user.value);
-								// 		});
-								// 	const updateDoc = {
-								// 		uid: `${obj_data.team}_${obj_data.user}`,
-								// 		// presence_trail: [],
-								// 		status: obj_data.presence,
-								// 		ts: new Date()
-								// 	};
-								// 	DB.collection('user_presence').findOneAndUpdate(
-								// 		{ uid: `${obj_data.team}_${obj_data.user}` },
-								// 		{
-								// 			$set: updateDoc,
-								// 		},
-								// 		{ upsert: true, returnOriginal: false }).then((user)=>{
-								// 			if(user.presence_trail) 
-								// 			else presence_trail = [{
-								// 				ts: updateDoc.ts,
-								// 				status: obj_data.presence
-								// 			}]
-								// 			console.log(`${obj_data.team}_${obj_data.user} initial presence status is ${obj_data.presence}`)
-								// 		});
-								// 	DB.collection('userlogs').updateOne(
-								// 		{ log_id: makeid() },
-								// 		{
-								// 			$set: {
-								// 				uid: `${obj_data.team}_${obj_data.user}`,
-								// 				details: `init_snapshot_presence`,
-								// 				action: `presence_query`,
-								// 				type: 'init',
-								// 				status: obj_data.presence,
-								// 				ts: new Date()
-								// 			},
-								// 		},
-								// 		{ upsert: true },
-								// 		function (err, res) {
-								// 			if (err) console.error(err);
-								// 			else console.log(`${obj_data.team}_${obj_data.user} initial presence status is ${obj_data.presence}`)
-								// 		});
-								// 		snapshot_db['users'][foundIndex].presence = obj_data.presence;
-								// }
-								// else if (snapshot_db['users'][foundIndex].presence != obj_data.presence) DB.collection('userlogs').updateOne(
-								// 	{ log_id: makeid() },
-								// 	{
-								// 		$set: {
-								// 			uid: `${obj_data.team}_${obj_data.user}`,
-								// 			details: snapshot_db['users'][foundIndex].presence!=undefined? `init_snapshot_presence`:`change_presence`,
-								// 			action: `presence_query`,
-								// 			type: 'update',
-								// 			status: obj_data.presence,
-								// 			ts: new Date()
-								// 		},
-								// 	},
-								// 	{ upsert: true },
-								// 	function (err, res) {
-								// 		if (err) console.error(err);
-								// 		else console.log(`${obj_data.team}_${obj_data.user} just changed presence to be ${obj_data.presence}`);
-								// 		snapshot_db['users'][foundIndex].presence = obj_data.presence;
-								// 	});
-
+								const updateDoc = {
+									uid: `${obj_data.team}_${obj_data.user}`,
+									// presence_trail: [],
+									status: obj_data.presence,
+									ts: new Date()
+								};
+								DB.collection('user_presence').findOneAndUpdate(
+									{ uid: `${obj_data.team}_${obj_data.user}` },
+									{
+										$set: updateDoc,
+									},
+									{ upsert: true, returnOriginal: true }).then((user) => {
+										// console.log(`presence trail for the user is ${util.inspect(user, {depth: 2})}`);
+										let presence_trail = user.value.presence_trail;
+										if (user.value.presence_trail) {
+											if(user.value.presence_trail[user.value.presence_trail.length-1].status!=obj_data.presence)presence_trail.push({
+												ts: updateDoc.ts,
+												status: obj_data.presence
+											});
+											DB.collection('user_presence').updateOne(
+												{ uid: `${obj_data.team}_${obj_data.user}` },
+												{
+													$set: {
+														presence_trail: presence_trail
+													},
+												},
+												{ upsert: false },
+												function (err, res) {
+													if (err) console.error(err);
+													// else console.log(`${obj_data.team}_${obj_data.user} added a new presence status ${obj_data.presence}`)
+												});
+										}
+										else {
+											user.presence_trail = [{
+												ts: updateDoc.ts,
+												status: obj_data.presence
+											}];
+											DB.collection('user_presence').updateOne(
+												{ uid: `${obj_data.team}_${obj_data.user}` },
+												{
+													$set: {
+														presence_trail: user.presence_trail
+													},
+												},
+												{ upsert: false },
+												function (err, res) {
+													if (err) console.error(err);
+													else console.log(`${obj_data.team}_${obj_data.user} first presence status ${obj_data.presence}`)
+												});
+										}
+									}).catch(err=>console.error(err));
 								// console.log(`the clients in the browsers includes ${util.inspect(aWss.clients, {depth: 3})} in total; and the presence status is ${obj_data.presence}`);
 								aWss.clients.forEach(function (client) {
 									// console.log(`sending to client the presence is : ${obj_data.presence}`);
@@ -3203,7 +3189,7 @@ async function InitTeamChannels(team_id, token, limit = null) {
 				res.channels.forEach(async m => {
 					var cid = team_id + '_' + m.id;
 					let cmembers = await ChannelMembers(cid, m.name);
-					if(cmembers) console.log(`members in ${m.name} are ${cmembers.length}`);
+					if (cmembers) console.log(`members in ${m.name} are ${cmembers.length}`);
 					else console.log(`undefined members for ${m.name}`);
 					DB.collection('channels').updateOne(
 						{ cid: cid },
@@ -3215,7 +3201,7 @@ async function InitTeamChannels(team_id, token, limit = null) {
 								topic: m.topic.value,
 								purpose: m.purpose.value,
 								num_members: m.num_members,
-								cmembers: cmembers?cmembers:[],
+								cmembers: cmembers ? cmembers : [],
 								num_msgs: 0,
 								latest_msg_ts: null
 							}
@@ -3255,7 +3241,7 @@ async function InitTeamChannels(team_id, token, limit = null) {
 								topic: m.topic.value,
 								purpose: m.purpose.value,
 								num_members: m.num_members,
-								cmembers: cmembers?cmembers:[],
+								cmembers: cmembers ? cmembers : [],
 								num_msgs: 0,
 								latest_msg_ts: null
 							}
