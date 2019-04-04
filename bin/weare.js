@@ -232,15 +232,25 @@ const logEvent = (body, req) => {
 	if ('ipInfo' in req && !('error' in req.ipInfo)) {
 		ipInfo = modIpInfo(req.ipInfo);
 	}
-   if(!!req.session && !!req.session.user){
-      if(!!req.session.user.email){
-         body.email = req.session.user.email;
-      }
-      if(!!req.session.user.uid){
-         body.uid = req.session.user.uid;
-      }
-   }
+	 if(!!req.session && !!req.session.user){
+	    if(!!req.session.user.email){
+	       body.email = req.session.user.email;
+	    }
+	    if(!!req.session.user.uid){
+	       body.uid = req.session.user.uid;
+	    }
+	 }
 
+	 if(body.path === '/slack/events'){
+	    if(!!req.body && !!req.body.event && req.body.event.user){
+	       if(!!req.body.event.user.email){
+		  body.email = req.body.event.user.email;
+	       }
+	       if(!!req.body.event.user.id && !!req.body.event.user.team_id){
+			body.uid = req.body.event.user.id + '_' + req.body.event.user.team_id;
+	       }
+	    }
+	 }
 	if ('uid' in body && body.type === 'Activity') {
 		(async () => {
 			const isActive = body.content.type === 'Active';
