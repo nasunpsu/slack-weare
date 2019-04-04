@@ -640,7 +640,7 @@ app.post('/slack/events', (req, res, next) => {
 										const uids = array.map(user => user.uid).filter(uid => !!uid);
 										// uids.forEach(uid => similarity.storeSimilarUsers(uid));
 										similarity.storeSimilarUsers(uids);
-										// await ldap.updateUserWithLdapData(email, fullName, uid, DB);
+										await ldap.updateUserWithLdapData(email, fullName, uid, DB);
 										async function fn_first_join() {
 											if (event.channel != 'C0A28BAHG') return;
 											console.log(`First time joining channel is ${util.inspect(event, { depth: null })}`);
