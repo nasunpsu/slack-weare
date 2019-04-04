@@ -597,14 +597,14 @@ app.post('/slack/events', (req, res, next) => {
 				if (exist_length.length == 0 && (event.type == 'member_joined_channel' || event.type == 'team_join')) {
 
 					await web.users.info({ user: userID, include_locale: true })
-						.then(result => {
+						.then(async result => {
 							console.log(`calling web.users.info the result FROM THE VERY FIRST TIME SIGN UP is ${result}`);
 							let userInfo = result.user;
 							if (!userInfo.is_bot) {
 
 
 								console.log(`Updating Locale etc for ${userInfo.profile.real_name}`);
-								DB.collection('users').updateOne(
+								await DB.collection('users').updateOne(
 									{ uid: teamID + '_' + userID },
 									{
 										$set: {
@@ -644,7 +644,7 @@ app.post('/slack/events', (req, res, next) => {
 										console.log('user updated with LDAP succesfully');
 										const join_channel = event.type == 'member_joined_channel' ? await fn_first_join() : true;
 
-										const obj_whatever = await similarity.storeSimilarUsers([uid]);
+										// const obj_whatever = await similarity.storeSimilarUsers([uid]);
 										const res = await DB.collection('users').find({}, { uid: 1 });
 										const array = await res.toArray();
 										const uids = array.map(user => user.uid).filter(uid => !!uid);
@@ -701,7 +701,7 @@ app.post('/slack/events', (req, res, next) => {
 											}, 5000);
 											console.log(`finding the user is ${util.inspect(userInfo, { depth: 2 })}; updating the channels for this person`);
 
-											const join_channel = await DB.collection('channels').findOneAndUpdate(
+											const updateChannel = await DB.collection('channels').findOneAndUpdate(
 												{ cid: team + '_' + channel },
 												{
 													$push: {
@@ -751,10 +751,13 @@ app.post('/slack/events', (req, res, next) => {
 											});
 											return Promise.resolve({
 												user_log: userlog_update,
-												channel_update: join_channel
+												channel_update: updateChannel
 											});
 										}
-
+										return Promise.resolve({
+											join_channel: join_channel,
+											// obj_whatever: obj
+										});
 									})
 									.catch(err => {
 										console.log(`error duing the inserting new user from Team_JOIN`);
