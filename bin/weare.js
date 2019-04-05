@@ -961,7 +961,7 @@ app.post('/slack/events', (req, res, next) => {
 									console.log(`within call back: ${util.inspect(err)}`);
 									if (err) console.error(err);
 									else {
-										console.log(`removed channel ${channel} successfully: ${updatedC.value.first_name}`);
+										console.log(`removed channel ${channel} successfully}`);
 									}
 								});
 
@@ -3024,10 +3024,11 @@ async function rtmConnectFn(team_id) {
 									{
 										$set: updateDoc,
 									},
-									{ upsert: true, returnOriginal: true }).then((user) => {
+									{ upsert: true, returnOriginal: false }).then((user) => {
 										// console.log(`presence trail for the user is ${util.inspect(user, {depth: 2})}`);
-										let presence_trail = user.value.presence_trail;
+										
 										if (user.value.presence_trail) {
+											let presence_trail = user.value.presence_trail;
 											if (user.value.presence_trail[user.value.presence_trail.length - 1].status != obj_data.presence) presence_trail.push({
 												ts: updateDoc.ts,
 												status: obj_data.presence
