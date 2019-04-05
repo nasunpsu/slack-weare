@@ -1030,6 +1030,28 @@ app.post('/slack/events', (req, res, next) => {
 						res.sendStatus(200);
 						break;
 					case 'channel_created':
+						// const { channel } = event;
+						// let cmembers = await ChannelMembers(channel.id, channel.name);
+						// DB.collection('channels').updateOne(
+						// 	{ cid: cid },
+						// 	{
+						// 		$set: {
+						// 			cid: channel.id,
+						// 			cname: channel.name,
+						// 			team_id: team_id,
+						// 			topic: m.topic.value,
+						// 			purpose: m.purpose.value,
+						// 			num_members: m.num_members,
+						// 			cmembers: cmembers ? cmembers : [],
+						// 			num_msgs: 0,
+						// 			latest_msg_ts: null
+						// 		}
+						// 	},
+						// 	{ upsert: true },
+						// 	function (err, res) {
+						// 		if (err) console.error(err);
+						// 		else console.log(`first 20 channels`);
+						// 	});
 						break;
 					case 'channel_deleted':
 						break;
@@ -1358,8 +1380,20 @@ app.post('/slack/commands/intro', urlencodedParser, (req, res) => {
 				}
 			],
 		};
+		DB.collection('userlogs').updateOne({ log_id: makeid() }, {
+			$set: {
+				uid: reqBody.team_id + '_' + reqBody.user_id,
+				action: `open the intro dialog`,
+				details: `via slack comman /intro in ${reqBody.channel_name}`,
+				channel: reqBody.team_id + '_' + reqBody.channel_id,
+				ts: new Date()
+			},
+		}, { upsert: true }, function (err, res) {
+			if (err) console.error(err);
+			else console.log(`the user ${user.first_name} introduced in ${reqBody.channel_name} `);
+		});
 		console.log('before dialog web method');
-		console.log(util.inspect(msg2, { depth: 3 }));
+		// console.log(util.inspect(reqBody, { depth: 3 }));
 		web.dialog.open({
 			trigger_id: reqBody.trigger_id,
 			dialog: msg2
@@ -1816,6 +1850,18 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 							},
 						],
 					};
+					DB.collection('userlogs').updateOne({ log_id: makeid() }, {
+						$set: {
+							uid: body.team.id + '_' + body.user.id,
+							action: `open the intro dialog`,
+							details: `via button click after the consent form`,
+							channel: body.team.id + '_' + body.channel.id,
+							ts: new Date()
+						},
+					}, { upsert: true }, function (err, res) {
+						if (err) console.error(err);
+						else console.log(`the user ${user.first_name} introduced in ${body.channel.id} `);
+					});
 					console.log('before dialog web method');
 					console.log(util.inspect(msg2, { depth: 3 }));
 					web.dialog.open({
@@ -1827,6 +1873,18 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 			case 'hello':
 				console.log('now you are saying hello!');
 				DB.collection('users').findOne({ uid: body.team.id + '_' + body.user.id }, async (err, user) => {
+					DB.collection('userlogs').updateOne({ log_id: makeid() }, {
+						$set: {
+							uid: body.team.id + '_' + body.user.id,
+							action: `being introduced publicly`,
+							details: `${user.real_name} introduced in ${body.channel.name}`,
+							channel: body.team.id + '_' + body.channel.id,
+							ts: new Date()
+						},
+					}, { upsert: true }, function (err, res) {
+						if (err) console.error(err);
+						else console.log(`the user ${user.first_name} agreed to be introduced publicly in ${body.channel.name} `);
+					});
 					const attach = [
 						{
 							"title": `Let's welcome <@${body.user.id}> who has been to ${user.pastCities}.`,
@@ -1884,6 +1942,18 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 					text: `More details in the profile will help your peers get to know you. \n - Enter /intro to initiate the prompt of self-intro, or go to ${base_url}/editprofile to edit yor profile. \n- Go to ${base_url}/tablelist to find more about your peers.`,
 				};
 				sendMessageToSlackResponseURL(body.response_url, msg_tablelist);
+				DB.collection('userlogs').updateOne({ log_id: makeid() }, {
+					$set: {
+						uid: body.team.id + '_' + body.user.id,
+						action: `Refuse to be introduced`,
+						details: `Not introduced in ${body.channel.name}`,
+						channel: body.team.id + '_' + body.channel.id,
+						ts: new Date()
+					},
+				}, { upsert: true }, function (err, res) {
+					if (err) console.error(err);
+					else console.log(`the user is not being introduced in ${body.channel.name} `);
+				});
 				break;
 			case 'specify-now':
 				const msg = {
@@ -1957,18 +2027,27 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 								pastCities: submission.pastCities ? he.escape(submission.pastCities) : submission.pastCities
 							}
 						},
-						{ upsert: true, returnOriginal: false }).then((res) => {
-
-							console.log(`after updating the user is ${util.inspect(res, { depth: null })}`);
-							return Promise.resolve({ newUser: res.value });
+						{ upsert: true, returnOriginal: false }).then((new_user) => {
+							DB.collection('userlogs').updateOne({ log_id: makeid() }, {
+								$set: {
+									uid: body.team.id + '_' + body.user.id,
+									action: `submit the intro dialog`,
+									details: `in ${body.channel.name}`,
+									channel: body.team.id + '_' + body.channel.id,
+									ts: new Date()
+								},
+							}, { upsert: true }, function (err, res) {
+								if (err) console.error(err);
+								else console.log(`the user ${new_user.value.first_name} submmited in ${body.channel.name} `);
+							});
+							// console.log(`after updating the user is ${util.inspect(new_user, { depth: 	null })}`);
+							return Promise.resolve({ newUser: new_user.value });
 
 						}).catch(err => {
 							console.log('the error caught is ...');
 							console.error(err);
 						});
-					console.log(`new user is ${util.inspect(newUser, { depth: null })}`);
-					console.log(`the req session user is ${util.inspect(req.session.user, { depth: null })}`);
-					req.session.user = newUser;
+					// console.log(`new user is ${util.inspect(newUser, { depth: null })}`);
 					let edit_url = `/editProfile/`;
 					web.im.open({
 						user: body.user.id
@@ -2949,7 +3028,7 @@ async function rtmConnectFn(team_id) {
 										// console.log(`presence trail for the user is ${util.inspect(user, {depth: 2})}`);
 										let presence_trail = user.value.presence_trail;
 										if (user.value.presence_trail) {
-											if(user.value.presence_trail[user.value.presence_trail.length-1].status!=obj_data.presence)presence_trail.push({
+											if (user.value.presence_trail[user.value.presence_trail.length - 1].status != obj_data.presence) presence_trail.push({
 												ts: updateDoc.ts,
 												status: obj_data.presence
 											});
@@ -2984,7 +3063,7 @@ async function rtmConnectFn(team_id) {
 													else console.log(`${obj_data.team}_${obj_data.user} first presence status ${obj_data.presence}`)
 												});
 										}
-									}).catch(err=>console.error(err));
+									}).catch(err => console.error(err));
 								// console.log(`the clients in the browsers includes ${util.inspect(aWss.clients, {depth: 3})} in total; and the presence status is ${obj_data.presence}`);
 								aWss.clients.forEach(function (client) {
 									// console.log(`sending to client the presence is : ${obj_data.presence}`);
@@ -3203,7 +3282,7 @@ async function InitTeamChannels(team_id, token, limit = null) {
 						{ upsert: true },
 						function (err, res) {
 							if (err) console.error(err);
-							else console.log(`first 20 channels`);
+							// else console.log(`first 20 channels`);
 						});
 				})
 			});
