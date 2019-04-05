@@ -239,10 +239,25 @@ const logEvent = (body, req) => {
 	if ('ipInfo' in req && !('error' in req.ipInfo)) {
 		ipInfo = modIpInfo(req.ipInfo);
 	}
-	if (!!req.session && !!req.session.user) {
-		body.email = req.session.user.email;
-	}
+	 if(!!req.session && !!req.session.user){
+	    if(!!req.session.user.email){
+	       body.email = req.session.user.email;
+	    }
+	    if(!!req.session.user.uid){
+	       body.uid = req.session.user.uid;
+	    }
+	 }
 
+	 if(body.path === '/slack/events'){
+	    if(!!req.body && !!req.body.event && req.body.event.user){
+	       if(!!req.body.event.user.email){
+		  body.email = req.body.event.user.email;
+	       }
+	       if(!!req.body.event.user.id && !!req.body.event.user.team_id){
+			body.uid = req.body.event.user.id + '_' + req.body.event.user.team_id;
+	       }
+	    }
+	 }
 	if ('uid' in body && body.type === 'Activity') {
 		(async () => {
 			const isActive = body.content.type === 'Active';
@@ -1037,28 +1052,33 @@ app.post('/slack/events', (req, res, next) => {
 						res.sendStatus(200);
 						break;
 					case 'channel_created':
-						// const { channel } = event;
-						// let cmembers = await ChannelMembers(channel.id, channel.name);
-						// DB.collection('channels').updateOne(
-						// 	{ cid: cid },
-						// 	{
-						// 		$set: {
-						// 			cid: channel.id,
-						// 			cname: channel.name,
-						// 			team_id: team_id,
-						// 			topic: m.topic.value,
-						// 			purpose: m.purpose.value,
-						// 			num_members: m.num_members,
-						// 			cmembers: cmembers ? cmembers : [],
-						// 			num_msgs: 0,
-						// 			latest_msg_ts: null
-						// 		}
-						// 	},
-						// 	{ upsert: true },
-						// 	function (err, res) {
-						// 		if (err) console.error(err);
-						// 		else console.log(`first 20 channels`);
-						// 	});
+						const { channel } = event;
+						console.log(`the channel is just created : ${util.inspect(event, {depth: null})}`);
+						(async () => {
+							let team_id = req.body.event.team_id;
+							let cmembers = await ChannelMembers(channel.id, channel.name);
+							DB.collection('channels').updateOne(
+								{ cid: channel.id },
+								{
+									$set: {
+										cid: team_id + '_' + channel.id,
+										cname: channel.name,
+										team_id: team_id,
+										purpose: channel.purpose,
+										num_members: m.num_members,
+										cmembers: cmembers ? cmembers : [channel.creator],
+										num_msgs: 0,
+										creator: team_id + '_' + channel.creator,
+										created_ts: channel.created,
+										latest_msg_ts: null
+									}
+								},
+								{ upsert: true },
+								function (err, res) {
+									if (err) console.error(err);
+									else console.log(`channel created by `);
+								});
+						});
 						break;
 					case 'channel_deleted':
 						break;
@@ -1067,6 +1087,35 @@ app.post('/slack/events', (req, res, next) => {
 					case 'channel_archive':
 						break;
 					case 'message':
+						//channel_purpose setted
+						if(event.subtype == 'channel_purpose') {
+							DB.collection('channels').updateOne(
+								{ cid: req.body.team_id + '_' + event.channel },
+								{
+									$set: {
+										purpose: event.purpose
+									}
+								},
+								{ upsert: true },
+								function (err, res) {
+									if (err) console.error(err);
+									else console.log('channel purpose updated!');
+								});
+						}
+						else if (event.subtype == 'channel_topic') {
+							DB.collection('channels').updateOne(
+								{ cid: req.body.team_id + '_' + event.channel },
+								{
+									$set: {
+										topic: event.topic
+									}
+								},
+								{ upsert: true },
+								function (err, res) {
+									if (err) console.error(err);
+									else console.log('channel topic updated!');
+								});
+						}
 						if (event.parent_user_id) {
 							(async () => {
 								let msg_creator = await DB.collection('users').find({ uid: req.body.team_id + '_' + event.user },
@@ -1226,7 +1275,18 @@ app.post('/slack/commands/discuss', urlencodedParser, (req, res) => {
 	res.status(200).end(); // best practice to respond with empty 200 status code
 	var reqBody = req.body
 	var responseURL = reqBody.response_url
-
+	DB.collection('userlogs').updateOne({ log_id: makeid() }, {
+		$set: {
+			uid: reqBody.team_id + '_' + reqBody.user_id,
+			action: `we discuss command`,
+			details: `via slack command /we-discuss in ${reqBody.channel_name}`,
+			channel: reqBody.team_id + '_' + reqBody.channel_id,
+			ts: new Date()
+		},
+	}, { upsert: true }, function (err, res) {
+		if (err) console.error(err);
+		else console.log(`the user typed /we-discuss in ${reqBody.channel_name} `);
+	});
 	var message = {
 		"text": "Would you like to study with others Now or Later?",
 		"attachments": [
@@ -1268,6 +1328,18 @@ app.post('/slack/commands/discuss', urlencodedParser, (req, res) => {
 app.post('/slack/commands/WhoIsOnline', urlencodedParser, (req, res) => {
 	res.status(200).end();
 	console.log(`the req body in WhoIsOnline Command includes + ${util.inspect(req.body, { depth: null })}`);
+	DB.collection('userlogs').updateOne({ log_id: makeid() }, {
+		$set: {
+			uid: reqBody.team_id + '_' + reqBody.user_id,
+			action: `who-we-are command`,
+			// details: `via slack command /we-discuss in ${reqBody.channel_name}`,
+			channel: reqBody.team_id + '_' + reqBody.channel_id,
+			ts: new Date()
+		},
+	}, { upsert: true }, function (err, res) {
+		if (err) console.error(err);
+		else console.log(`the user typed /we-discuss in ${reqBody.channel_name} `);
+	});
 	OnlineNow(req.body.channel_id, req.body.user_id, req.body.response_url);
 });
 
@@ -1391,7 +1463,7 @@ app.post('/slack/commands/intro', urlencodedParser, (req, res) => {
 			$set: {
 				uid: reqBody.team_id + '_' + reqBody.user_id,
 				action: `open the intro dialog`,
-				details: `via slack comman /intro in ${reqBody.channel_name}`,
+				details: `via slack command /intro in ${reqBody.channel_name}`,
 				channel: reqBody.team_id + '_' + reqBody.channel_id,
 				ts: new Date()
 			},
@@ -3032,7 +3104,7 @@ async function rtmConnectFn(team_id) {
 									},
 									{ upsert: true, returnOriginal: false }).then((user) => {
 										// console.log(`presence trail for the user is ${util.inspect(user, {depth: 2})}`);
-										
+
 										if (user.value.presence_trail) {
 											let presence_trail = user.value.presence_trail;
 											if (user.value.presence_trail[user.value.presence_trail.length - 1].status != obj_data.presence) presence_trail.push({

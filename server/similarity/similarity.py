@@ -19,7 +19,7 @@ import sys
 from flask import Flask
 
 
-def compute_similarity(uid, users):
+def compute_similarity(uid, users, db):
     """ Updates database with similar users
     Arguments:
         uid {str} -- uid to find similar users to
@@ -36,10 +36,10 @@ def compute_similarity(uid, users):
     users = users.sort_values(by='distance')
     res = users[['distance', 'uid']]
     matrix = res.values
-    update_db(uid, matrix)
+    update_db(uid, matrix, db)
     print('finished', flush=True)
 
-def update_db(uid, matrix):
+def update_db(uid, matrix, db):
     """Puts matrix into database, updating the user document
 
     Arguments:
@@ -49,7 +49,6 @@ def update_db(uid, matrix):
     similar_users = create_similar_users(matrix)
     similar_users_dict = create_similar_users_dict(matrix)
     new_value = {'$set': {'similar_users': similar_users, 'similar_users_dict': similar_users_dict}}
-    db = get_db()
     query = {'uid': uid}
     result = db.users.update_many(query, new_value)
     if result.modified_count != 1:
@@ -126,15 +125,16 @@ def compute_distances(df, Y, weights=None):
 #     compute_similarity(uid)
 
 app = Flask(__name__)
-db = get_db()
 
 @app.route('/')
 def similarity():
+    db, client = get_db()
     uids = json.loads(request.args.get('uids'))
     users = get_data(db)
     users = prepocess(users)
     for uid in uids:
-        compute_similarity(uid, users)
+        compute_similarity(uid, users, db)
+    client.close()
     return 'complete'
 
 
