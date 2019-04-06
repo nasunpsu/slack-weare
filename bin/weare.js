@@ -231,7 +231,7 @@ app.engine('hbs', hbs({
 	}
 }));
 
-const logEvent = (body, req) => {
+const logEvent = async (body, req) => {
 	if (!!req.sessionID) {
 		body.sessionID = req.sessionID;
 	}
@@ -262,6 +262,7 @@ const logEvent = (body, req) => {
 		(async () => {
 			const isActive = body.content.type === 'Active';
 			const updateDoc = { $set: { isActive } }
+			await similarity.awaitDbConnection();
 			const newUser = await DB.collection('users').findOneAndUpdate({ uid: body.uid }, updateDoc,
 				{ returnOriginal: false }).then((user) => {
 					return Promise.resolve(user.value);
@@ -277,6 +278,7 @@ const logEvent = (body, req) => {
 				$addToSet: { ipInfo },
 				$set: ipInfo
 			}
+			await similarity.awaitDbConnection();
 			const newUser = await DB.collection('users').findOneAndUpdate({ uid: req.session.user.uid }, updateDoc,
 				{ returnOriginal: false }).then((user) => {
 					return Promise.resolve(user.value);
@@ -285,6 +287,7 @@ const logEvent = (body, req) => {
 		})();
 
 	}
+	await similarity.awaitDbConnection();
 	return DB.collection('logging').insertOne(body);
 }
 
@@ -382,6 +385,7 @@ app.get('/api/oauth', function (req, res, next) {
 		if (!err) {
 			if (!result.bot) { //this is signed in with slack
 				console.log(`entering signed with Slack condition -----------`);
+				await similarity.awaitDbConnection();
 				await DB.collection('oauthtokens').find({ team_id: result.team.id }).toArray()
 					.then(async (docs, err) => {
 						if (err) console.error(err);
@@ -395,7 +399,9 @@ app.get('/api/oauth', function (req, res, next) {
 								return res.redirect('/install');
 							}
 							console.log('before retrieving usr DB');
+							// await similarity.awaitDbConnection();
 							// await DB.collection('users').find({ major: { $exists: true } }).toArray()
+							await similarity.awaitDbConnection();
 							await DB.collection('users').find({ uid: result.team.id + '_' + result.user.id }).toArray()
 								.then(async (users_docs, err) => {
 									console.log(`the user is read from MongoDB: ${util.inspect(users_docs[0], { depth: 2 })}`);
@@ -418,12 +424,14 @@ app.get('/api/oauth', function (req, res, next) {
 									logEvent(log, req);
 									res.redirect('/');
 								});
+									await similarity.awaitDbConnection();
 							snapshot_db['users'] = await DB.collection('users').find({}).toArray();
 						}
 					});
 			}
 			else { //the oauth is used to install the WeAre! App to a new workspace
 				console.log(`entering install WeAre! to Slack team condition -----------`);
+				await similarity.awaitDbConnection();
 				DB.collection("oauthtokens").updateOne(
 					{ team_id: result.team_id },
 					{
@@ -442,6 +450,7 @@ app.get('/api/oauth', function (req, res, next) {
 						await InitTeamMembers(result.team_id, result.access_token, null);
 						await InitTeamChannels(result.team_id, result.access_token, null);
 						await UpdateChannelRecentMsgs(null, 'general', result.access_token, 200);
+						await similarity.awaitDbConnection();
 						await DB.collection('users').find({ uid: result.team_id + '_' + result.user_id }).toArray()
 							.then(async (user_docs, err) => {
 								if (err) console.error(err);
@@ -523,6 +532,7 @@ app.get('/refresh', async (req, res) => {
 });
 
 app.get('/sendconsentform', async (req, res) => {
+	await similarity.awaitDbConnection();
 	let users = await DB.collection('users').find(
 		{
 			$or: [
@@ -606,6 +616,7 @@ app.post('/slack/events', (req, res, next) => {
 					teamID = event.team;
 				}
 				// `team_join` is fired whenever a new user (incl. a bot) joins the team, but the sequence of member_joined_channel and team_join for new member is undecided
+				await similarity.awaitDbConnection();
 				const exist_length = await DB.collection('users').find({ uid: teamID + '_' + userID }, { uid: 1 }).limit(1).toArray();
 				console.log(`teamID is ${teamID} and userID is ${userID}`);
 				console.log(`user length is ${util.inspect(exist_length, { depth: 2 })}`);
@@ -619,7 +630,8 @@ app.post('/slack/events', (req, res, next) => {
 
 
 								console.log(`Updating Locale etc for ${userInfo.profile.real_name}`);
-								await DB.collection('users').updateOne(
+								await similarity.awaitDbConnection();
+								DB.collection('users').updateOne(
 									{ uid: teamID + '_' + userID },
 									{
 										$set: {
@@ -659,7 +671,8 @@ app.post('/slack/events', (req, res, next) => {
 										console.log('user updated with LDAP succesfully');
 										const join_channel = event.type == 'member_joined_channel' ? await fn_first_join() : true;
 
-										// const obj_whatever = await similarity.storeSimilarUsers([uid]);
+										const obj_whatever = await similarity.storeSimilarUsers([uid]);
+										await similarity.awaitDbConnection();
 										const res = await DB.collection('users').find({}, { uid: 1 });
 										const array = await res.toArray();
 										const uids = array.map(user => user.uid).filter(uid => !!uid);
@@ -716,6 +729,7 @@ app.post('/slack/events', (req, res, next) => {
 											}, 5000);
 											console.log(`finding the user is ${util.inspect(userInfo, { depth: 2 })}; updating the channels for this person`);
 
+												await similarity.awaitDbConnection();
 											const updateChannel = await DB.collection('channels').findOneAndUpdate(
 												{ cid: team + '_' + channel },
 												{
@@ -732,7 +746,8 @@ app.post('/slack/events', (req, res, next) => {
 														num_members: 1
 													}
 												},
-												{ upsert: true, returnOriginal: false }).then((updatedChannel) => {
+												{ upsert: true, returnOriginal: false }).then(async (updatedChannel) => {
+													await similarity.awaitDbConnection();
 													DB.collection('users').updateOne(
 														{ uid: team + '_' + user },
 														{
@@ -749,6 +764,7 @@ app.post('/slack/events', (req, res, next) => {
 															else console.log('pushed channel to the user after the joining event');
 														});
 												});
+												await similarity.awaitDbConnection();
 											const userlog_update = await DB.collection('userlogs').updateOne({ log_id: makeid() }, {
 												$set: {
 													uid: team + '_' + user,
@@ -835,12 +851,14 @@ app.post('/slack/events', (req, res, next) => {
 
 
 							}
-							DB.collection('users').findOne({ uid: team + '_' + user }, function (err, user_doc) {
+								await similarity.awaitDbConnection();
+							DB.collection('users').findOne({ uid: team + '_' + user }, async function (err, user_doc) {
 								console.log(`finding the user is ${util.inspect(user_doc, { depth: null })}`);
 								console.log(`error is ${util.inspect(err, { depth: null })}`);
 								if (err) console.error(err);
 								else if (user_doc) {
 									// console.log(`the retrieved docs is ${util.inspect(docs, { depth: null })}`)
+									await similarity.awaitDbConnection();
 									DB.collection('channels').findOneAndUpdate(
 										{ cid: team + '_' + channel },
 										{
@@ -858,9 +876,10 @@ app.post('/slack/events', (req, res, next) => {
 											}
 										},
 										{ upsert: true, returnOriginal: false },
-										function (err, updatedChannel) {
+										async function (err, updatedChannel) {
 											if (err) console.error(err);
 											else {
+												await similarity.awaitDbConnection();
 												DB.collection('users').updateOne(
 													{ uid: team + '_' + user },
 													{
@@ -875,6 +894,7 @@ app.post('/slack/events', (req, res, next) => {
 													async function (err, doc) {
 														if (err) console.error(err);
 														else console.log('pushed channel to the user after the joining event');
+														await similarity.awaitDbConnection();
 														const res = await DB.collection('users').find({}, { uid: 1 });
 														const array = await res.toArray();
 														const uids = array.map(user => user.uid).filter(uid => !!uid);
@@ -885,6 +905,7 @@ app.post('/slack/events', (req, res, next) => {
 											}
 										});
 
+									await similarity.awaitDbConnection();
 									DB.collection('userlogs').updateOne({ log_id: makeid() }, {
 										$set: {
 											uid: team + '_' + user,
@@ -911,9 +932,12 @@ app.post('/slack/events', (req, res, next) => {
 						if (!event.is_bot) {
 							const { user, channel, team } = event;
 							console.log(`the event body is ${util.inspect(event, { depth: null })}`);
-							DB.collection('users').findOne({ uid: team + '_' + user }).then((tobeDEL) => {
-								if (tobeDEL) {
+								await similarity.awaitDbConnection();
+							DB.collection('users').findOne({ uid: team + '_' + user }, async function (err, tobeDEL) {
+								if (err) console.error(err);
+								else {
 									if (tobeDEL.channels.length == 1) { //this will be the last channel that the user is leaving, meaning that he/she is being deactivating
+										await similarity.awaitDbConnection();
 										DB.collection('users_deactivated').updateOne({ uid: team + '_' + user }, {
 											$set: {
 												email: tobeDEL.email,
@@ -926,6 +950,7 @@ app.post('/slack/events', (req, res, next) => {
 											else console.log(`the deleted user is ${util.inspect(tobeDEL)}`);
 										})
 									}
+									await similarity.awaitDbConnection();
 									DB.collection('userlogs').updateOne({ log_id: makeid() }, {
 										$set: {
 											uid: team + '_' + user,
@@ -964,8 +989,29 @@ app.post('/slack/events', (req, res, next) => {
 								}
 							});
 
+								await similarity.awaitDbConnection();
+							DB.collection('users').findOneAndUpdate({ uid: team + '_' + user },
+								{
+									$pull: {
+										channels: {
+											cid: team + '_' + channel
+										}
+									}
+								},
+								{
+									upsert: true,
+									returnOriginal: false
+								},
+								function (err, updatedUser) {
+									console.log(`within call back, updatedUser is: ${util.inspect(updatedUser.value)}`);
+									console.log(`within call back: ${util.inspect(err)}`);
+									if (err) console.error(err);
+									else {
+										console.log(`removed channel ${channel} successfully: ${updatedUser.value.first_name}`);
+									}
+								});
 
-
+								await similarity.awaitDbConnection();
 							DB.collection('channels').findOneAndUpdate({ cid: team + '_' + channel },
 								{
 									$pull: {
@@ -1002,6 +1048,7 @@ app.post('/slack/events', (req, res, next) => {
 						// 			let userInfo = result.user;
 						// 			if (!userInfo.is_bot) {
 						// 				console.log(`Updating Locale etc for ${userInfo.profile.real_name}`);
+							// 				await similarity.awaitDbConnection();
 						// 				DB.collection('users').updateOne(
 						// 					{ uid: user.team_id + '_' + user.id },
 						// 					{
@@ -1118,11 +1165,13 @@ app.post('/slack/events', (req, res, next) => {
 						}
 						if (event.parent_user_id) {
 							(async () => {
+								await similarity.awaitDbConnection();
 								let msg_creator = await DB.collection('users').find({ uid: req.body.team_id + '_' + event.user },
 									{
 										real_name: 1,
 										image_48: 1
 									}).limit(1).toArray();
+								await similarity.awaitDbConnection();
 								let channel = await DB.collection('channels').find({ cid: req.body.team_id + '_' + event.channel },
 									{
 										cname: 1,
@@ -1138,6 +1187,7 @@ app.post('/slack/events', (req, res, next) => {
 									thread_ts: event.thread_ts,
 									parent_user_id: event.parent_user_id
 								}
+								await similarity.awaitDbConnection();
 								DB.collection('msgs').updateOne(
 									{ mid: event.client_msg_id },
 									{
@@ -1158,7 +1208,9 @@ app.post('/slack/events', (req, res, next) => {
 							}).then(async res => {
 								console.log(`the latest conversation message is ${util.inspect(res, { depth: null })}`);
 								const LatestMsg = res.messages[0];
+									await similarity.awaitDbConnection();
 								const user = await DB.collection('users').findOne({ uid: req.body.team_id + '_' + LatestMsg.user });
+									await similarity.awaitDbConnection();
 								const channel = await DB.collection('channels').findOne({ cid: req.body.team_id + '_' + event.channel });
 								// console.log(`the user ${req.body.team_id} + '_' + ${LatestMsg.user} constructing it is ${util.inspect(user, { depth: null })}`);
 								// console.log(`the channel ${req.body.team_id} + '_' + ${event.channel} constructing it is ${util.inspect(channel, { depth: 2 })}`);
@@ -1175,6 +1227,7 @@ app.post('/slack/events', (req, res, next) => {
 										is_starred: LatestMsg.is_starred,
 										reactions: LatestMsg.reactions
 									}
+									await similarity.awaitDbConnection();
 									DB.collection('msgs').updateOne(
 										{ mid: LatestMsg.client_msg_id },
 										{
@@ -1185,6 +1238,7 @@ app.post('/slack/events', (req, res, next) => {
 											if (err) console.error(err);
 											else console.log('msg updated!');
 										});
+									await similarity.awaitDbConnection();
 									DB.collection('channels').updateOne(
 										{ cid: req.body.team_id + '_' + event.channel },
 										{
@@ -1211,6 +1265,7 @@ app.post('/slack/events', (req, res, next) => {
 					case 'message_changed':
 						break;
 					case 'reaction_added':
+							await similarity.awaitDbConnection();
 						DB.collection('interactions').updateOne(
 							{ iid: makeid() },
 							{
@@ -1231,6 +1286,7 @@ app.post('/slack/events', (req, res, next) => {
 						res.sendStatus(200);
 						break;
 					case 'reaction_removed':
+							await similarity.awaitDbConnection();
 						DB.collection('interactions').updateOne(
 							{ iid: makeid() },
 							{
@@ -1343,7 +1399,7 @@ app.post('/slack/commands/WhoIsOnline', urlencodedParser, (req, res) => {
 	OnlineNow(req.body.channel_id, req.body.user_id, req.body.response_url);
 });
 
-app.post('/slack/commands/intro', urlencodedParser, (req, res) => {
+app.post('/slack/commands/intro', urlencodedParser, async (req, res) => {
 
 	res.status(200).end(); // best practice to respond with empty 200 status code
 	var reqBody = req.body;
@@ -1395,6 +1451,7 @@ app.post('/slack/commands/intro', urlencodedParser, (req, res) => {
 	// }).then(res => console.log(`successfully opened intro dialog`)).catch(err => { console.error(err); console.log(util.inspect(err, { depth: 3 })) });
 
 
+		await similarity.awaitDbConnection();
 	DB.collection('users').findOne({ uid: reqBody.team_id + '_' + reqBody.user_id }, async (err, user) => {
 		const msg2 = {
 			title: 'I am, We Are!',
@@ -1481,7 +1538,7 @@ app.post('/slack/commands/intro', urlencodedParser, (req, res) => {
 
 });
 
-app.post('/slack/actions', urlencodedParser, (req, res) => {
+app.post('/slack/actions', urlencodedParser, async (req, res) => {
 	var body = JSON.parse(req.body.payload); // parse URL-encoded payload JSON string
 	const { type, token, trigger_id } = body;
 	console.log(`the req body includes + ${util.inspect(req.body, { depth: null })}`);
@@ -1519,6 +1576,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 					]
 					)
 				}).catch(err => console.error(err));
+				await similarity.awaitDbConnection();
 				DB.collection('users').updateOne(
 					{ uid: body.team.id + '_' + body.user.id },
 					{
@@ -1563,6 +1621,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 						},]
 					)
 				}).catch(err => console.error(err));
+				await similarity.awaitDbConnection();
 				DB.collection('users').updateOne(
 					{ uid: body.team.id + '_' + body.user.id },
 					{
@@ -1583,7 +1642,8 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 					user: body.user.id,
 					text: `Sorry that you decided to leave here. We hope you have a wonderful journey as a World Campus student. Bye!`,
 				}).catch(err => console.error(err));
-				setTimeout(function () {
+				setTimeout(async function () {
+					await similarity.awaitDbConnection();
 					DB.collection('users').updateOne(
 						{ uid: body.team.id + '_' + body.user.id },
 						{
@@ -1596,8 +1656,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 							if (err) console.error(err);
 							else console.log('User decided to leave weare');
 						});
-
-
+					await similarity.awaitDbConnection();
 					DB.collection('userlogs').updateOne({ log_id: makeid() }, {
 						$set: {
 							uid: body.team.id + '_' + body.user.id,
@@ -1611,6 +1670,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 				}, 5000);
 				break;
 			case 'weare-welcome':
+				await similarity.awaitDbConnection();
 				DB.collection('interactions').updateOne(
 					{ iid: makeid() },
 					{
@@ -1637,6 +1697,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 				}).catch(err => console.error(err));
 				break;
 			case 'heart':
+				await similarity.awaitDbConnection();
 				DB.collection('interactions').updateOne(
 					{ iid: makeid() },
 					{
@@ -1663,6 +1724,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 				}).catch(err => console.error(err));
 				break;
 			case 'dismiss-welcome':
+				await similarity.awaitDbConnection();
 				DB.collection('interactions').updateOne(
 					{ iid: makeid() },
 					{
@@ -1776,9 +1838,11 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 				break;
 			case 'attend':
 				// console.log(`yeah, I want to attend this meeting! Sure! the body is ${util.inspect(body, { depth: null })}`);
+					// await similarity.awaitDbConnection();
 				// DB.collection('meetings').updateOne({mid: body.callback_id})
 				(async () => {
 					console.log(`the callback id for attend is ${body.callback_id}`);
+					await similarity.awaitDbConnection();
 					await DB.collection('meetings').findOne({ mid: body.callback_id }
 						, async function (err, doc) {
 							if (err) console.error(err);
@@ -1795,6 +1859,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 									else return atd;
 								});
 								console.log(`new attendees are: ${util.inspect(newAttendees, { depth: 2 })}`);
+									await similarity.awaitDbConnection();
 								if (newAttendees.length) await DB.collection('meetings').updateOne({ mid: body.callback_id },
 									{
 										$set: {
@@ -1822,6 +1887,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 			case 'notattend':
 				console.log(`No I am not attending this meeting! The body is ${util.inspect(body, { depth: null })}`);
 				(async () => {
+					await similarity.awaitDbConnection();
 					const meeting_info = await DB.collection('meetings').findOne({ mid: body.callback_id }, async function (err, doc) {
 						if (err) console.error(err);
 						else {
@@ -1836,6 +1902,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 								else return atd;
 							});
 							console.log(`new attendees are: ${util.inspect(newAttendees, { depth: 2 })}`);
+								await similarity.awaitDbConnection();
 							if (newAttendees.length) await DB.collection('meetings').updateOne({ mid: body.callback_id },
 								{
 									$set: {
@@ -1859,6 +1926,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 				})();
 				break;
 			case 'intro':
+								await similarity.awaitDbConnection();
 				DB.collection('users').findOne({ uid: body.team.id + '_' + body.user.id }, async (err, user) => {
 					const msg2 = {
 						title: 'I am, We Are!',
@@ -1945,6 +2013,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 				break;
 			case 'hello':
 				console.log('now you are saying hello!');
+								await similarity.awaitDbConnection();
 				DB.collection('users').findOne({ uid: body.team.id + '_' + body.user.id }, async (err, user) => {
 					DB.collection('userlogs').updateOne({ log_id: makeid() }, {
 						$set: {
@@ -2090,6 +2159,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 				console.log(`Would you like to broadcast your join of the channel?! ${body.channel.id}`);
 
 				(async () => {
+					await similarity.awaitDbConnection();
 					const newUser = await DB.collection('users').findOneAndUpdate(
 						{ uid: body.team.id + '_' + body.user.id },
 						{
@@ -2185,6 +2255,7 @@ app.post('/slack/actions', urlencodedParser, (req, res) => {
 				(async () => {
 					let meeting_id = makeid();
 					const members = await ChannelMembers(body.team.id + '_' + body.channel.id, body.channel.name);
+					await similarity.awaitDbConnection();
 					await DB.collection('meetings').updateOne(
 						{ mid: meeting_id },
 						{
@@ -2318,6 +2389,7 @@ app.get('/', async function (req, res) {
 	to_be_rendered.template = 'index-template';
 	to_be_rendered.team = req.session.team;
 	to_be_rendered.userInfo = req.session.user;
+	await similarity.awaitDbConnection();
 	to_be_rendered.members = await DB.collection('users').find({ team_id: req.session.team ? req.session.team.team_id : 'TG6RV469K' }).toArray().then((results) => {
 		console.log('getting users of the channels');
 		if (results.length != 0) {
@@ -2345,9 +2417,11 @@ app.get('/', async function (req, res) {
 	// .catch(err=>console.error(err));
 
 	let sub_c = req.session.user.channels.map(c => c.cid);
+	await similarity.awaitDbConnection();
 	let all_channels = await DB.collection('channels').find({}).toArray();
 
 	to_be_rendered.total_channels_num = all_channels.length;
+	await similarity.awaitDbConnection();
 	to_be_rendered.channels_info = await DB.collection('channels').find({
 		cid: {
 			"$in": sub_c
@@ -2390,6 +2464,8 @@ app.get('/', async function (req, res) {
 		})
 	// .catch(err=>console.error(err));
 	console.log(`the logged user subscribed channels are ${sub_c}`);
+	// to_be_rendered.prepare_msgs = await UpdateChannelRecentMsgs(null, 'general', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200);
+	await similarity.awaitDbConnection();
 	to_be_rendered.msgs = await DB.collection("msgs").find({
 		cid: {
 			"$in": sub_c
@@ -2414,6 +2490,7 @@ app.get('/', async function (req, res) {
 		return Promise.resolve(msgs.splice(0, 6));
 
 	})
+	await similarity.awaitDbConnection();
 	to_be_rendered.msgs_total = await DB.collection('msgs').find({}).toArray().then(res => {
 		return Promise.resolve(res.length);
 	});
@@ -2495,6 +2572,7 @@ app.get('/editProfile', async function (req, res) {
 	to_be_rendered.userInfo = req.session.user;
 	const uid = req.session.user.uid;
 	console.log(`the user session id is ${uid}`)
+	await similarity.awaitDbConnection();
 	const queryResult = await DB.collection('users').find({ uid });
 	const doc = await queryResult.toArray();
 	if (doc.length === 0) {
@@ -2525,6 +2603,7 @@ app.post('/editProfile', [
 	const query = { uid };
 	const insertObj = req.body;
 	insertObj.availability = JSON.parse(insertObj.availability)
+	await similarity.awaitDbConnection();
 	await DB.collection('users').findOneAndUpdate(query, { $set: insertObj }, { returnOriginal: false }, function (err, updatedObj) {
 		if (err) {
 			console.warn(`Error with update query ${JSON.stringify(query)}, inserting object ${JSON.stringify(insertObj)}`);
@@ -2549,6 +2628,7 @@ app.get('/profile/:uid', async function (req, res) {
 	to_be_rendered.layout = 'default';
 	to_be_rendered.template = 'profileview-template';
 	to_be_rendered.userInfo = req.session.user;
+	await similarity.awaitDbConnection();
 	const queryResult = await DB.collection('users').find({ uid });
 	const doc = await queryResult.toArray();
 	if (doc.length === 0) {
@@ -2566,6 +2646,7 @@ app.get('/meetings', async function (req, res) {
 	to_be_rendered.layout = 'default';
 	to_be_rendered.template = 'meetings-template';
 	to_be_rendered.userInfo = req.session.user;
+	await similarity.awaitDbConnection();
 	const meetings1 = await DB.collection('meetings').find({ creator_uid: req.session.user.uid }).toArray().then(async (results, err) => {
 		if (err) console.error(err);
 		else if (results.length != 0) {
@@ -2586,6 +2667,7 @@ app.get('/meetings', async function (req, res) {
 			to_be_rendered.empty1 = true;
 		}
 	});
+			await similarity.awaitDbConnection();
 	const meetings2 = await DB.collection('meetings').find({
 		"attendees.uid": req.session.user.uid
 		// attendees:
@@ -2627,6 +2709,7 @@ app.get('/meeting/:mid', async function (req, res) {
 	to_be_rendered.layout = 'default';
 	to_be_rendered.template = 'meeting-template';
 	to_be_rendered.userInfo = req.session.user;
+	await similarity.awaitDbConnection();
 	to_be_rendered.meeting = await DB.collection('meetings').find({ mid: req.params.mid }).toArray().then(async (results, err) => {
 		if (err) console.error(err);
 		else if (results.length != 0) {
@@ -2735,6 +2818,7 @@ app.post('/meeting/:mid', [
 
 
 
+				// await similarity.awaitDbConnection();
 		// const cmembers = await DB.collection('meetings').find({ mid: req.params.mid }).toArray().then(async (results, err) => {
 		// 	if (err) console.error(err);
 		// 	else if (results.length != 0) {
@@ -2759,6 +2843,7 @@ app.post('/meeting/:mid', [
 		// 	}
 		// });
 
+				await similarity.awaitDbConnection();
 		await DB.collection('meetings').updateOne({ mid: req.body.mid },
 			{
 				$set: updateObj
@@ -2779,6 +2864,7 @@ app.post('/meeting/:mid', [
 
 app.post('/reactmeeting', async function (req, res) {
 	console.log(`into reacting post with req.body is ${util.inspect(req.body, { depth: null })}`);
+		await similarity.awaitDbConnection();
 	await DB.collection('meetings').find({ mid: req.body.mid }).toArray().then(async (results, err) => {
 		if (err) console.error(err);
 		else if (results.length != 0) {
@@ -2794,6 +2880,7 @@ app.post('/reactmeeting', async function (req, res) {
 				else return atd;
 			});
 			console.log(`new attendees are: ${util.inspect(newAttendees, { depth: 2 })}`);
+				await similarity.awaitDbConnection();
 			if (newAttendees.length) await DB.collection('meetings').updateOne({ mid: req.body.mid },
 				{
 					$set: {
@@ -2889,6 +2976,7 @@ app.post('/invitemeeting', async (req, res) => {
 
 app.post('/deletemeeting', async function (req, res) {
 	let mid = req.body.mid;
+	await similarity.awaitDbConnection();
 	DB.collection('meetings').remove({ mid: mid }, function (err, result) {
 		if (err) console.error(err);
 		else {
@@ -2919,6 +3007,7 @@ app.get('/network', async function (req, res) {
 	to_be_rendered.layout = 'default';
 	to_be_rendered.template = 'network-template';
 	to_be_rendered.userInfo = req.session.user;
+	await similarity.awaitDbConnection();
 	to_be_rendered.data = await DB.collection('users').find({ team_id: req.session.team.team_id }).toArray().then(async (results, err) => {
 		if (err) console.error(err);
 		else if (results.length != 0) {
@@ -2972,6 +3061,7 @@ app.get('/network', async function (req, res) {
 					console.log(`the length of distL_temp is ${distL_temp.length}`);
 					await distL_temp.forEach(async (l) => {
 						// console.log(`the distance of other nodes is ${l.distIdx}`);
+						await similarity.awaitDbConnection();
 						if (typeof snapshot_db['users'] == 'undefined') snapshot_db['users'] = await DB.collection('users').find({}).toArray();
 						if (l.distIdx <= snapshot_db['users'].filter(u => u.uid == c_node.uid)[0].similar_users_dict.third_quartile) {
 							// console.log(`this met criteria and now is going to be put into link from ${l.uid} to ${c_node.uid}`);
@@ -3004,6 +3094,7 @@ app.get('/temporal', async function (req, res) {
 	to_be_rendered.layout = 'default';
 	to_be_rendered.template = 'tz-template';
 	to_be_rendered.userInfo = req.session.user;
+	await similarity.awaitDbConnection();
 	to_be_rendered.members = await DB.collection('users').find({ team_id: req.session.team.team_id }).toArray().then(async (results, err) => {
 		if (err) console.error(err);
 		else if (results.length != 0) {
@@ -3055,6 +3146,7 @@ app.post('/rtmconnect', (req, res) => {
 
 async function rtmConnectFn(team_id) {
 	if (typeof ws == 'undefined' || ws.readyState != WebSocket.OPEN) {
+		await similarity.awaitDbConnection();
 		snapshot_db['users'] = await DB.collection('users').find({}).toArray();
 		console.log('Connecting rtm.connect now:');
 		console.log(`snapshot users length is ${snapshot_db['users'].length}`);
@@ -3214,6 +3306,7 @@ async function InitTeamMembers(team_id, token, limit = null) {
 						}
 						await similarity.storeSimilarUsers([uid]);
 					}
+					await similarity.awaitDbConnection();
 					if (!m.is_bot && m.id != 'USLACKBOT') DB.collection('users').updateOne(
 						{ uid: uid },
 						{
@@ -3287,6 +3380,7 @@ async function InitTeamMembers(team_id, token, limit = null) {
 						await ldap.updateUserWithLdapData(email, fullName, uid, DB);
 						await similarity.storeSimilarUsers([uid]);
 					}
+					await similarity.awaitDbConnection();
 					if (!m.is_bot && m.id != 'USLACKBOT') DB.collection('users').updateOne(
 						{ uid: uid },
 						{
@@ -3343,6 +3437,7 @@ async function InitTeamChannels(team_id, token, limit = null) {
 					let cmembers = await ChannelMembers(cid, m.name);
 					if (cmembers) console.log(`members in ${m.name} are ${cmembers.length}`);
 					else console.log(`undefined members for ${m.name}`);
+					await similarity.awaitDbConnection();
 					DB.collection('channels').updateOne(
 						{ cid: cid },
 						{
@@ -3383,6 +3478,7 @@ async function InitTeamChannels(team_id, token, limit = null) {
 					// console.log(`the m value inside res.channels are (from conversations.list): ${util.inspect(m, { depth: null })}`)
 					var cid = team_id + '_' + m.id;
 					let cmembers = await ChannelMembers(cid, m.name);
+					await similarity.awaitDbConnection();
 					DB.collection('channels').updateOne(
 						{ cid: cid },
 						{
@@ -3414,11 +3510,14 @@ async function UpdateChannelRecentMsgs(c_id, cname, token, limit = 200) {
 	var local_slack = new SlackWebClient(token);
 	if (c_id) console.log(`channel id passed in is ${c_id}`);
 	else console.log(`channel id passed in is EMPTY; I going to update messages in the subscribed channels only`);
+	await similarity.awaitDbConnection();
 	snapshot_db['users'] = await DB.collection('users').find({}).toArray();
+	await similarity.awaitDbConnection();
 	snapshot_db['channels'] = await DB.collection('channels').find({}).toArray();
 	if (!c_id) { //c_id is not defined, pull all the channels msg
 		snapshot_db['channels'].forEach(async c => {
 			const obj = await Go_through_channel_msgs(c.cid, c.cname);
+			await similarity.awaitDbConnection();
 			DB.collection('channels').updateOne(
 				{ cid: c.cid },
 				{
@@ -3437,6 +3536,7 @@ async function UpdateChannelRecentMsgs(c_id, cname, token, limit = 200) {
 	}
 	else {
 		const obj = await Go_through_channel_msgs(c_id, cname); //once
+		await similarity.awaitDbConnection();
 		DB.collection('channels').updateOne(
 			{ cid: c_id },
 			{
@@ -3498,6 +3598,7 @@ async function UpdateChannelRecentMsgs(c_id, cname, token, limit = 200) {
 								is_starred: msg.is_starred,
 								reactions: msg.reactions
 							}
+							await similarity.awaitDbConnection();
 							await DB.collection('msgs').updateOne(
 								{ mid: msg.client_msg_id },
 								{
@@ -3534,7 +3635,7 @@ async function UpdateChannelRecentMsgs(c_id, cname, token, limit = 200) {
 						console.log(`oops!!!!!!!!!!!!! cursor is null`);
 					}
 					// console.log(`there are ${msgs.length} results from a channel history \n the first one is ${util.inspect(msgs[0], { depth: 2 })}`)
-					msgs.forEach(msg => {
+					msgs.forEach(async msg => {
 						var user = snapshot_db['users'].filter(u => u.uid.split('_')[1] == msg.user)[0];
 						if (msg.type == 'message' && !msg.bot_id && !msg.subtype) { // only look at the plain text msgs from real users
 							// console.log(`Real msg from user in the Update func is ${util.inspect(msg, {depth: 2})}`);
@@ -3552,6 +3653,7 @@ async function UpdateChannelRecentMsgs(c_id, cname, token, limit = 200) {
 								is_starred: msg.is_starred,
 								reactions: msg.reactions
 							}
+							await similarity.awaitDbConnection();
 							DB.collection('msgs').updateOne(
 								{ mid: msg.client_msg_id },
 								{
@@ -3703,6 +3805,7 @@ async function ActiveWho(channel_id, user_id) {
 }
 
 async function ChannelMembers(channel_id, channel_name) {
+	await similarity.awaitDbConnection();
 	const members = await DB.collection('users')
 		.find({
 			"channels": {
