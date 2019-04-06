@@ -3,16 +3,22 @@ const fetch = require('node-fetch');
 const { resolve } = require('path');
 const util = require('util');
 
+let isDbInUse = false;
+
 /**
  * Stores similar users to current user in database
  * @param {string} uid uid of the user to store
  */
-const storeSimilarUsers = (uids) => {
+const storeSimilarUsers = async (uids) => {
     if(!Array.isArray(uids)){
         throw new Error('argument must be an array of uids');
     }
     const stringUids = JSON.stringify(uids);
-    fetch(`http://localhost:50000?uids=${stringUids}`);
+    await awaitDbConnection();
+    isDbInUse = true;
+    const res = await fetch(`http://localhost:50000?uids=${stringUids}`);
+    isDbInUse = false;
+    return res;
     // const command = createCommand(uid);
     // const pythonProcess = exec(command, {shell: '/bin/bash'});
     // return new Promise((resolve, reject) => {
@@ -29,6 +35,17 @@ const storeSimilarUsers = (uids) => {
 
     // });
 }
+
+const awaitDbConnection = () => new Promise(resolve => {
+    const repeatTime = 50;
+    const intervalId = setInterval(() => {
+        if(!isDbInUse){
+            clearInterval(intervalId);
+            resolve(0);
+        }
+    }, repeatTime);
+});
+
 
 /**
  * Create a bash command to store similar users
@@ -186,4 +203,4 @@ const projectAndGroup = (objectKeys) => {
     ]
 }
 
-module.exports = {createIsSharedField, createSimilarityField, storeSimilarUsers,getSimilarUsers}
+module.exports = {createIsSharedField, createSimilarityField, storeSimilarUsers,getSimilarUsers, awaitDbConnection}
