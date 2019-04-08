@@ -416,7 +416,7 @@
 </section>
 <script>
     [window.userInfo] = (() => {
-        const [userString] = [`{{{json user}}}`];
+        const [userString] = [`{{json user}}`];
         const text = document.createElement('textarea');
         text.innerHTML = userString;
         const user = JSON.parse(text.value);
