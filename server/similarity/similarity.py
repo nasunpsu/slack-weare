@@ -81,7 +81,7 @@ def get_db():
     password = '123456'
     db = client.weare
     db.authenticate(username, password)    
-    return db
+    return db, client
 
 def get_data(db):
     """ Gets relevant data from database for computing similarity
