@@ -670,7 +670,7 @@ app.post('/slack/events', (req, res, next) => {
 										similarity.storeSimilarUsers(uids);
 										await ldap.updateUserWithLdapData(email, fullName, uid, DB);
 										async function fn_first_join() {
-											if (event.channel != 'C0A28BAHG') return;
+											// if (event.channel != 'C0A28BAHG') return;
 											console.log(`First time joining channel is ${util.inspect(event, { depth: null })}`);
 
 											const { user, channel, team, event_ts } = event;
@@ -711,7 +711,7 @@ app.post('/slack/events', (req, res, next) => {
 												),
 											};
 											setTimeout(function () {
-												web.chat.postEphemeral(message)
+												if (event.channel == 'C0A28BAHG') web.chat.postEphemeral(message)
 													.catch(err => {
 														console.log(`error with posting ephmeral`);
 														console.error(err);
