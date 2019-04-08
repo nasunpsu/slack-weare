@@ -1222,6 +1222,21 @@ app.post('/slack/events', (req, res, next) => {
 						break;
 					case 'user_change':
 						//event - event.user
+						if(!req.body || !req.body.event || !req.body.event.user || !req.body.event.user.profile){
+							break;
+						}
+						const user = req.body.event.user;
+						const {id, team_id, locale} = user;
+						const uid = team_id + '_' + id;
+						const profile = user.profile;
+						const { title, email, real_name, name, phone, status_text, status_emoji, first_name, last_name, image_48, image_512} = profile;
+						const insertObj = {title, id, team_id, locale, email, real_name, name, phone, status_text, status_emoji, first_name, last_name, image_48, image_512};
+						const query = {uid};
+						const options = {upsert: true}
+						const result = await DB.collection('users').updateOne(query, {$set: insertObj}, options);
+						if (!result.result.ok) {
+							console.warn('User change event had an error in its query' + res);
+						}
 						res.sendStatus(200);
 						break;
 					default:
