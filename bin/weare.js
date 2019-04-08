@@ -681,7 +681,7 @@ app.post('/slack/events', (req, res, next) => {
 										await ldap.updateUserWithLdapData(email, fullName, uid, DB);
 										async function fn_first_join() {
 
-											if (event.channel != 'CG82VU7HC') return;
+											// if (event.channel != 'CG82VU7HC') return;
 											console.log(`${event.user} First time joining channel ${event.channel}`);
 
 											const { user, channel, team, event_ts } = event;
@@ -726,7 +726,7 @@ app.post('/slack/events', (req, res, next) => {
 														console.log(`error with posting ephmeral`);
 														console.error(err);
 													});
-											}, 5000);
+											}, 7000);
 											console.log(`finding the user is ${util.inspect(userInfo, { depth: 2 })}; updating the channels for this person`);
 
 												await similarity.awaitDbConnection();
