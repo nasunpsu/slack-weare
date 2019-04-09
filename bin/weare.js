@@ -2362,7 +2362,7 @@ app.get('/tablelist', async function (req, res) {
 	to_be_rendered.layout = 'default';
 	to_be_rendered.template = 'table-template';
 	to_be_rendered.userInfo = req.session.user;
-	const numUsers = 80;
+	const numUsers = 1000;
 	const fields = ['uid', 'real_name', 'city', 'channels', 'major', 'local_area', 'affiliation', 'campus'];
 	let users = await similarity.getSimilarUsers(req.session.user.uid, DB, numUsers, fields);
 	// to_be_rendered.users = similarity.createSimilarityField(req.session.user, users, fields);
