@@ -3082,6 +3082,7 @@ app.post('/remindmeeting', async (req, res) => {
 
 app.post('/invitemeeting', async (req, res) => {
 	// var attendeeIDs = req.body.attendees.map(x => x.uid);
+	console.log(`req.body.attendees are ${util.inspect(req.body.attendees, {depth: null})}`);
 	req.body.attendees.forEach(attendee => {
 		web.im.open({
 			user: attendee.uid.split('_')[1]
