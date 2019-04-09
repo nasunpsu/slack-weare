@@ -15,6 +15,8 @@ if (meeting.creator_uid != me_id && meeting.attendees) { //the meeting is not cr
     let attendee_me = meeting.attendees.filter(x => x.uid == me_id)[0];
     if (attendee_me.attend == 'accept') $('#accept').removeClass('basic');
     else if (attendee_me.attend == 'reject') $('#reject').removeClass('basic');
+    var value = $('div.scroll')[0].innerHTML;
+    $('.scroll').html(value.replace(/\r?\n/g,'<br/>'))
 }
 $('.select-topic.ui.fluid.dropdown')
     .dropdown('set selected', meeting.topic);
