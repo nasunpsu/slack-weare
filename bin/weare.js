@@ -1076,6 +1076,51 @@ app.post('/slack/events', (req, res, next) => {
 						let channel = event.channel;
 						console.log(`the channel is just created : ${util.inspect(event.channel, { depth: null })}`);
 						console.log(`the large reg.body is : ${util.inspect(req.body, { depth: null })}`);
+						// let all_channels = await DB.collection('channels').find({}).toArray();
+						// let option_channels = all_channels.map(c => {
+						// 	return { text: c.cname, value: c.cid };
+						// });
+						const message = {
+							channel: channel.id,
+							user: channel.creator,
+							link_names: true,
+							as_user: false,
+							attachments: JSON.stringify([
+								// {
+								// 	title: 'Procedure',
+								// 	text: 'We invite you to participate in a research study that takes place this spring semester. Our research goal is to explore and assess ways to build a sense of community among World Campus students. Participants must be over the age of 18 to participate, and not stay or live in European Economic Area to participate. As a participant in the research project, you will be asked to use Slack and answer two questionnaires before and after usingt Slack (Each survey should 10 minutes to complete). As a compensation for your participation in the survey, we will draw 15 names in the first survey participants for a $30 Amazon Gift Card, and for those who answered both we will draw additional 15 names for a $50 Amazon Gift Card. During your use of Slack tool and visualization dashboard, we will collect your usage data (e.g. interactive moves in the dashboard, log-in time), but these data will always remain confidential and stored anonymously for data analysis. Only researchers of this project in the Human-Centered Lab of Penn State will have access to the data. No third party or university authorities will have access to the data.',
+								// 	color: '#3060f0',
+								// },
+								{
+									title: ':sparkler: Bravo! Would you like to invite folks from other channels to join your new channel? :fireworks:',
+									text: 'Choose a channel to post',
+									color: '#74c8ed',
+									callback_id: 'channel_selection',
+									actions: [{
+										"name": "channels_list",
+										"text": "Pick a channel...",
+										"type": "select",
+										// "options": option_channels,
+										"data_source": "channels"
+									},
+										// {
+										// 	name: 'post-channel',
+										// 	text: 'Post',
+										// 	type: 'button',
+										// 	value: 'postchannel',
+										// 	style: 'default'
+										// }
+									],
+								}]
+							),
+						};
+
+						web.chat.postEphemeral(message)
+							.catch(err => {
+								console.log(`error with posting ephmeral for channel_created`);
+								console.error(err);
+							});
+
 						let team_id = req.body.team_id;
 						await similarity.awaitDbConnection();
 						console.log(`channel name is : ${channel.name}`);
@@ -1144,6 +1189,7 @@ app.post('/slack/events', (req, res, next) => {
 					case 'message':
 						//channel_purpose setted
 						if (event.subtype == 'channel_purpose') {
+							await similarity.awaitDbConnection();
 							DB.collection('channels').updateOne(
 								{ cid: req.body.team_id + '_' + event.channel },
 								{
@@ -1158,6 +1204,7 @@ app.post('/slack/events', (req, res, next) => {
 								});
 						}
 						else if (event.subtype == 'channel_topic') {
+							await similarity.awaitDbConnection();
 							DB.collection('channels').updateOne(
 								{ cid: req.body.team_id + '_' + event.channel },
 								{
@@ -1175,7 +1222,7 @@ app.post('/slack/events', (req, res, next) => {
 							await similarity.awaitDbConnection();
 							console.log(`channel name is : ${event.name}`);
 							DB.collection('channels').updateOne(
-								{ cid: req.body.team_id + '_' + event.channel  },
+								{ cid: req.body.team_id + '_' + event.channel },
 								{
 									$set: {
 										cname: event.name,
@@ -1198,7 +1245,7 @@ app.post('/slack/events', (req, res, next) => {
 									});
 								});
 
-							
+
 						}
 						if (event.parent_user_id) {
 							(async () => {
@@ -1363,11 +1410,12 @@ app.post('/slack/events', (req, res, next) => {
 
 });
 
-app.post('/slack/commands/discuss', urlencodedParser, (req, res) => {
+app.post('/slack/commands/discuss', urlencodedParser, async (req, res) => {
 	console.log(`within discuss`);
 	res.status(200).end(); // best practice to respond with empty 200 status code
 	var reqBody = req.body
 	var responseURL = reqBody.response_url
+	await similarity.awaitDbConnection();
 	DB.collection('userlogs').updateOne({ log_id: makeid() }, {
 		$set: {
 			uid: reqBody.team_id + '_' + reqBody.user_id,
@@ -1418,9 +1466,10 @@ app.post('/slack/commands/discuss', urlencodedParser, (req, res) => {
 
 });
 
-app.post('/slack/commands/WhoIsOnline', urlencodedParser, (req, res) => {
+app.post('/slack/commands/WhoIsOnline', urlencodedParser, async (req, res) => {
 	res.status(200).end();
 	console.log(`the req body in WhoIsOnline Command includes + ${util.inspect(req.body, { depth: null })}`);
+	await similarity.awaitDbConnection();
 	DB.collection('userlogs').updateOne({ log_id: makeid() }, {
 		$set: {
 			uid: reqBody.team_id + '_' + reqBody.user_id,
@@ -1553,6 +1602,7 @@ app.post('/slack/commands/intro', urlencodedParser, async (req, res) => {
 				}
 			],
 		};
+		await similarity.awaitDbConnection();
 		DB.collection('userlogs').updateOne({ log_id: makeid() }, {
 			$set: {
 				uid: reqBody.team_id + '_' + reqBody.user_id,
@@ -2191,7 +2241,43 @@ app.post('/slack/actions', urlencodedParser, async (req, res) => {
 				}).then(res => console.log(`successfully opened custom followup dialog`))
 					.catch(err => { console.error(err); console.log(util.inspect(err, { depth: 3 })) });
 				break;
+
 			default: console.log('nothing cased'); break;
+		}
+		body.actions[0]
+		if (body.actions[0].type == 'select') {
+			let post_in_channel = body.actions[0].selected_options[0].value;
+			switch (body.actions[0].name) {
+				case 'channels_list':
+					console.log(`within channels_list the body contains: ${util.inspect(body, { depth: 3 })}`);
+					// await similarity.awaitDbConnection();
+					// let channel_list = await DB.collection('channels').find({ cid: body.team.id + '_' + body.channel.id }).toArray();
+					// let c_name = channel_list.map(c => c.cname)[0];
+					// console.log(`channel list is ${util.inspect(channel_list, { depth: null })}`);
+					web.chat.postMessage({
+						channel: post_in_channel,
+						text: `<!channel> :raised_hands: :hugging_face: I'd like to invite people who are interested to join the new channel *<#${body.channel.id}|${body.channel.name}>* :I_love_you_hand_sign:!`,
+						// attachments: JSON.stringify(attach)
+					})
+					.catch(err => console.error(err));
+					await similarity.awaitDbConnection();
+					DB.collection('userlogs').updateOne({ log_id: makeid() }, {
+						$set: {
+							uid: body.team.id + '_' + body.user.id,
+							action: `post the new channel ${body.channel.id} ${body.channel.name} to promote`,
+							details: `in ${post_in_channel}`,
+							channel: body.team.id + '_' + body.channel.id,
+							ts: new Date()
+						},
+					}, { upsert: true }, function (err, res) {
+						if (err) console.error(err);
+						else console.log(`the user ${body.user.id} submmited in ${body.channel.name} `);
+					});
+					break;
+				default:
+					console.log(`select in the slack actions route`);
+					break;
+			}
 		}
 
 	}
