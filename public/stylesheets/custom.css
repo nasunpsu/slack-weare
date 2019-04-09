@@ -426,7 +426,7 @@ nav{
 }
 
 h2, h3, h4, h5, p {
-  font-family: 'Proxima Nova'!important;
+  font-family: 'Proxima Nova','Lato', 'Helvetica Neue', Arial, Helvetica, sans-serif!important;
 }
 
 h1{
@@ -894,3 +894,12 @@ div.ui.dropdown.weekday.selection {
  .help-wrapper .ui.content{
   margin-bottom: 20px;
  }
+
+ li h4 {
+  margin-top: 1em!important;
+  margin-bottom: 1em!important;
+}
+
+ul div.image.ui {
+  margin-top: 1em;
+}
