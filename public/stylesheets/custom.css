@@ -903,3 +903,9 @@ div.ui.dropdown.weekday.selection {
 ul div.image.ui {
   margin-top: 1em;
 }
+
+div.scroll {
+  /* width: 800px; */
+  height: 150px;
+  overflow: auto; /* This will give you a scroll-bar only if the content overflows the containers width and/or height. To have scrollbars on regardless of the content amount, use 'scroll' instead. */
+}

@@ -15,8 +15,9 @@
     </div>
     {{/unless}}
     <form
-        class="ui form attached fluid {{#unless (eq meeting.creator_uid userInfo.uid)}}segment{{/unless}} meeting-form" data-mid="{{meeting.mid}}" data-cid="{{meeting.cid}}" data-cname="{{meeting.cname}}"
-        id="meeting-form" method="POST">
+        class="ui form attached fluid {{#unless (eq meeting.creator_uid userInfo.uid)}}segment{{/unless}} meeting-form"
+        data-mid="{{meeting.mid}}" data-cid="{{meeting.cid}}" data-cname="{{meeting.cname}}" id="meeting-form"
+        method="POST">
         {{#unless (eq meeting.creator_uid userInfo.uid)}}<fieldset disabled="disabled">{{/unless}}
             {{!-- action="/meeting/{{meeting.mid}}" --}}
             <div class="ui error message"></div>
@@ -50,8 +51,16 @@
             <div class="fields">
                 <div class="sixteen wide field">
                     <label>Description</label>
-                    <textarea id="description" name="description" cols="40" rows="5"
+                    {{#if (eq meeting.creator_uid userInfo.uid)}}<textarea id="description" name="description" cols="40"
+                        rows="5"
                         placeholder="e.g. We will set up a plan and timeline for individuals' share of work, available time to work together and also talk about one another's situation for possible unavailable meetings.">{{{unescape meeting.description}}}</textarea>
+                    {{else}}
+                    <div class="scroll">{{{unescape meeting.description}}}</div>
+
+                    
+                    {{/if}}
+
+
                 </div>
             </div>
             <h3>When</h3>
@@ -84,7 +93,10 @@
                 </div>
                 <div class="five wide field">
                     <label><i class="globe icon"></i>Timezone Offset</label>
-                    <div class="ui basic label" data-tooltip='Look at the Connect -> Timezones to check your temporal distance.' style="max-width: 5em; height: 34.63px; display:flex; flex-direction: row; justify-content: center; align-items: center">{{meeting.tz}}</div>
+                    <div class="ui basic label"
+                        data-tooltip='Look at the Connect -> Timezones to check your temporal distance.'
+                        style="max-width: 5em; height: 34.63px; display:flex; flex-direction: row; justify-content: center; align-items: center">
+                        {{meeting.tz}}</div>
                 </div>
             </div>
             <h3>Attendees</h3>
