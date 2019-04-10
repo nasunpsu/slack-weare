@@ -2403,7 +2403,7 @@ app.post('/slack/actions', urlencodedParser, async (req, res) => {
 					// console.log(`channel list is ${util.inspect(channel_list, { depth: null })}`);
 					web.chat.postMessage({
 						channel: post_in_channel,
-						text: `<!channel> :raised_hands: :hugging_face: I'd like to invite people who are interested to join the new channel *<#${body.channel.id}|${body.channel.name}>* :I_love_you_hand_sign:!`,
+						text: `<!channel> :wave: :hugging_face: <@${body.user.id}> would like to invite folks who are interested to join the new channel *<#${body.channel.id}|${body.channel.name}>* :I_love_you_hand_sign:!`,
 						// attachments: JSON.stringify(attach)
 					})
 						.catch(err => console.error(err));
