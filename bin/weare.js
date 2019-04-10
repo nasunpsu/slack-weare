@@ -1396,11 +1396,11 @@ app.post('/slack/events', (req, res, next) => {
 							break;
 						}
 						const user = req.body.event.user;
-						const {id, team_id, locale} = user;
-						const uid = team_id + '_' + id;
+						const {id, uteam_id, locale} = user;
+						const uid = uteam_id + '_' + id;
 						const profile = user.profile;
 						const { title, email, real_name, name, phone, status_text, status_emoji, first_name, last_name, image_48, image_512} = profile;
-						const insertObj = {title, id, team_id, locale, email, real_name, name, phone, status_text, status_emoji, first_name, last_name, image_48, image_512};
+						const insertObj = {title, id, uteam_id, locale, email, real_name, name, phone, status_text, status_emoji, first_name, last_name, image_48, image_512};
 						const query = {uid};
 						const options = {upsert: true}
 						const result = await DB.collection('users').updateOne(query, {$set: insertObj}, options);
