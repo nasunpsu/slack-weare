@@ -1,7 +1,5 @@
-let user = document.getElementById('data').getAttribute('data-attribute');
-user = JSON.parse(user);
-
-
+const user = window.user;
+delete window.user;
 
 $('.gender.ui.dropdown')
     .dropdown({
