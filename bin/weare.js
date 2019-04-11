@@ -490,7 +490,7 @@ app.get('/test', (req, res) => {
 });
 
 app.get('/initmembers', async (req, res) => {
-	await InitTeamMembers('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200);
+	await InitTeamMembers('T0A286J8K', process.env.SLACK_OAUTH_ACCESS_TOKEN, 500);
 	console.log('---------------initTeamMembers----------------');
 	res.send('updated member list');
 });
@@ -503,7 +503,7 @@ app.get('/initchannels', async (req, res) => {
 
 app.get('/initmsgs', async (req, res) => {
 
-	await UpdateChannelRecentMsgs(null, 'general', process.env.SLACK_OAUTH_ACCESS_TOKEN, 200); //cid example:"T0A286J8K_C0A28BAHG"		
+	await UpdateChannelRecentMsgs(null, 'general', process.env.SLACK_OAUTH_ACCESS_TOKEN, 500); //cid example:"T0A286J8K_C0A28BAHG"		
 	console.log('---------------initMsgs----------------');
 	res.send('updated msgs list');
 });
@@ -512,7 +512,7 @@ app.get('/refresh', async (req, res) => {
 	let sub_c = req.session.user.channels;
 	let promiseArray = [];
 	await sub_c.forEach((c) => {
-		let promise = UpdateChannelRecentMsgs(c.cid, c.cname, process.env.SLACK_OAUTH_ACCESS_TOKEN, 200)
+		let promise = UpdateChannelRecentMsgs(c.cid, c.cname, process.env.SLACK_OAUTH_ACCESS_TOKEN, 500)
 		promiseArray.push(promise);
 		return Promise.resolve(promise);
 		// return promise;
@@ -2061,15 +2061,16 @@ app.post('/slack/actions', urlencodedParser, async (req, res) => {
 				console.log('launch hangout and invite ppl');
 
 				(async () => {
-					const activeMembers = await ActiveWho(body.channel.id, body.user.id);
-					console.log(`who is online with ActiveWho func: ${util.inspect(activeMembers, { depth: 2 })}`);
-					const usersnames = activeMembers.map(x => x.username), emails = activeMembers.map(x => x.email);
+					const activeUIDs = await DB.collection('user_presence').find({ status: 'active' }).toArray();
+					const activeMembers = await ActiveWho(activeUIDs.map(a=>a.uid));
+					console.log(`who is online with ActiveWho func:`);
+					const usersnames = activeMembers.map(x => x.first_name), emails = activeMembers.map(x => x.email);
 					console.log('before empheral');
 					web.chat.postEphemeral({
 						as_user: false,
 						channel: body.channel.id,
 						user: body.user.id,
-						text: `Type \`/hangout\` and Enter; Copy the emails for ${usersnames} as follows: ${emails}`
+						text: `Type \`/hangout\` and Enter; Copy the emails for ${usersnames.join(', ')} as follows: ${emails.join(', ')}`
 					}).catch(err => console.error(err));
 					console.log('after empheral');
 				})();
@@ -3381,8 +3382,8 @@ app.get('/temporal', async function (req, res) {
 				// r.presence = presence_snapshot[r.uid] ? presence_snapshot[r.uid] : "away";
 				if (r.tz_offset in members_by_tz) members_by_tz[r.tz_offset].push(r);
 				else {
-					members_by_tz[r.tz_offset] = [];
 					r.tz_offset = parseInt(r.tz_offset);
+					members_by_tz[r.tz_offset] = [];
 					members_by_tz[r.tz_offset].push(r);
 				}
 
@@ -3545,7 +3546,7 @@ async function InitTeamMembers(team_id, token, limit = null) {
 			console.log(`first while iteration in InitTeamMembers: round ${counter}`)
 			await local_slack.users.list({
 				include_locale: true,
-				limit: limit | 200
+				limit: limit | 500
 			}).then(res => {
 				// console.log(`members in the team include ${util.inspect(res.members, { depth: null })}`);
 				cursor = res.response_metadata.next_cursor;
@@ -3834,7 +3835,7 @@ async function UpdateChannelRecentMsgs(c_id, cname, token, limit = 200) {
 				console.log(`First`);
 				check_cursor = await local_slack.conversations.history({ // pay attention the user token (for reading history from channel/groups) but the bot is used to write
 					channel: c_id.split('_')[1], //#test-bot (left) #learning-tech C0A34HJVA
-					limit: limit | 200,
+					limit: limit | 500,
 					// cursor: cursor
 				}).then(res => {
 					const msgs = res.messages;
@@ -3891,7 +3892,7 @@ async function UpdateChannelRecentMsgs(c_id, cname, token, limit = 200) {
 				console.log(`Non-First`);
 				await local_slack.conversations.history({ // pay attention the user token (for reading history from channel/groups) but the bot is used to write
 					channel: c_id.split('_')[1], //#test-bot (left) #learning-tech C0A34HJVA
-					limit: limit | 200,
+					limit: limit | 500,
 					cursor: check_cursor
 				}).then(res => {
 					const msgs = res.messages;
@@ -3953,46 +3954,51 @@ async function UpdateChannelRecentMsgs(c_id, cname, token, limit = 200) {
 	}
 }
 
-async function ActiveWho(channel_id, user_id) {
-	var members = [], activeMembers = [], activeProfiles = [];
-	var promiseArray = [];
-	await web.conversations.members({
-		channel: channel_id,
-		limit: 20 //TODO: change this number 
+async function ActiveWho(uids) {
+	const activeMembers = await DB.collection('users').find({
+		uid: {
+			"$in": uids
+		}
 	})
-		.then(async (res) => {
-			// console.log(`the web client result is ${util.inspect(res, { depth: 2, color: true })}`);
-			members = res.members;
-			// console.log(`members are ${members}`);
+	.toArray();
+	// var promiseArray = [];
+	// await web.conversations.members({
+	// 	channel: channel_id,
+	// 	limit: 20 //TODO: change this number 
+	// })
+	// 	.then(async (res) => {
+	// 		// console.log(`the web client result is ${util.inspect(res, { depth: 2, color: true })}`);
+	// 		members = res.members;
+	// 		// console.log(`members are ${members}`);
 
-			members.forEach(member => {
-				if (member === user_id) return;
-				var promise = web.users.getPresence({ user: member })
-					.then(async (resp) => {
-						// console.log(`${member} presence status is ${resp.presence}`);
-						await web.users.info({ user: member, include_locale: true })
-							.then(res => {
-								if (resp.presence == 'active' && !res.user.is_bot) {
-									console.log(`user name is ${res.user.profile.real_name}`);
-									activeMembers.push({
-										id: member,
-										username: res.user.name,
-										name: res.user.profile.real_name,
-										email: res.user.profile.email
-									});
-								}
+	// 		members.forEach(member => {
+	// 			if (member === user_id) return;
+	// 			var promise = web.users.getPresence({ user: member })
+	// 				.then(async (resp) => {
+	// 					// console.log(`${member} presence status is ${resp.presence}`);
+	// 					await web.users.info({ user: member, include_locale: true })
+	// 						.then(res => {
+	// 							if (resp.presence == 'active' && !res.user.is_bot) {
+	// 								console.log(`user name is ${res.user.profile.real_name}`);
+	// 								activeMembers.push({
+	// 									id: member,
+	// 									username: res.user.name,
+	// 									name: res.user.profile.real_name,
+	// 									email: res.user.profile.email
+	// 								});
+	// 							}
 
-							});
-						// promiseArray.push(inner_promise);
-					});
-			});
-			await Promise.all(promiseArray).then(res => {
-				console.log(promiseArray)
-				console.log(`now active members:${util.inspect(activeMembers, { depth: 2, color: true })}`);
+	// 						});
+	// 					// promiseArray.push(inner_promise);
+	// 				});
+	// 		});
+	// 		await Promise.all(promiseArray).then(res => {
+	// 			console.log(promiseArray)
+	// 			console.log(`now active members:${util.inspect(activeMembers, { depth: 2, color: true })}`);
 
-			})
+	// 		})
 
-		});
+	// 	});
 	return activeMembers;
 }
 
@@ -4028,7 +4034,8 @@ async function ChannelMembers(channel_id, channel_name) {
 function OnlineNow(channel_id, user_id, responseURL) {
 
 	(async () => {
-		const active = await ActiveWho(channel_id, user_id);
+		const active = await DB.collection('user_presence').find({ status: 'active' }).toArray();
+		//ActiveWho(channel_id, user_id);
 		console.log(`who is online with ActiveWho func: ${util.inspect(active, { depth: 2 })}`);
 		var message = active.length ? {
 			"text": `There are ${active.length} other students in this channel online :raising_hand: `,
