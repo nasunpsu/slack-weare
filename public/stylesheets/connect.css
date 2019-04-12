@@ -106,7 +106,6 @@ nav{
 
 #page-container{
     grid-column: 3/23;
-    width: 295px;
     margin: auto;
     margin-top: 40px;
 }
