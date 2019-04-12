@@ -26,4 +26,21 @@ window.addEventListener("DOMContentLoaded", function () {
 		}
 	}
 	$('table').tablesort();
+
+	document.getElementById("refresh-msgs").addEventListener("click", function (e) {
+        console.log('refresh clicked');
+        e.preventDefault();
+        const Origobj = {};
+
+        $.ajax({
+            type: 'GET', url: '/refresh',
+        }).done(function (res) {
+            if (res.success) {
+                console.log('the members, channels, and msg list updated');
+                window.location.reload();
+            } else {
+                console.log('error...ajax');
+            };
+        });
+    });
 });

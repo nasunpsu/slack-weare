@@ -1,6 +1,9 @@
-string_data = document.getElementById("chart").getAttribute('visdata');
+let string_data = document.getElementById("chart").getAttribute('visdata');
+// string_data = string_data.replace(/'/g, "\&quot;");
+// string_data = string_data.replace(/"/g, '\\"');
 graph = JSON.parse(string_data);
 console.log(graph);
+
 edges = [];
 
 graph.links.forEach(function (link) {
@@ -58,8 +61,9 @@ force.nodes(graph.nodes)
 
 //Create all the line svgs but without locations yet
 var link = svg.selectAll(".link")
-    .data(graph.links)
-    .enter().append("line")
+    .data(graph.links);
+    link.exit().remove();
+    link.enter().append("line")
     .attr("class", "link")
     .style("stroke-width", function (d) {
         return Math.sqrt(d.value);

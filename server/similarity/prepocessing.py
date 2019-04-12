@@ -66,7 +66,7 @@ def add_binarized_channels(users):
     """ Adds columns for each channel to the users dataframe, returning users """
     binarized_channels = users.channels.apply('|'.join).str.get_dummies()
     col_list = list(binarized_channels.columns)
-    column_mappings = {name: f'channel_{i}' for i, name in enumerate(col_list)}
+    column_mappings = {name: 'channel_' + str(i) for i, name in enumerate(col_list)}
     binarized_channels = binarized_channels.rename(index=str, columns=column_mappings)
     binarized_channels = binarized_channels.reset_index() 
     users = pd.merge(users, binarized_channels, left_index=True, right_index=True)
@@ -82,8 +82,9 @@ def drop_student_columns(users):
     #number of courses, credits are too dirty as many entered text instead of a number
     drop_columns = ["surveyCompletion", "Duration (in seconds)", "NumCourses", "transferCredits", "NumTranCredits",
                     "WhyProfile", "otherChannels", "otherEmploy", "NonUS", "otherIndusry", "KnownThroughProfile",
-                    "otherEth", "PPLinPerson", "otherEmail", "ActiveDuty", "OCEnabler", "similar_users", "similar_users_y", "_id", "_id_y", 
-                    "real_name", "email", "is_bot", "phone", "name", "last_name"]
+                    "otherEth", "PPLinPerson", "otherEmail", "ActiveDuty", "OCEnabler", "similar_users", "similar_users_y",
+                    "similar_users_dict", "_id", "_id_y", 
+                    "real_name", "email", "is_bot", "phone", "name", "last_name", "availability", "ipInfo"]
     #only drop these columns if they actually exist in the data
     drop_columns = [col for col in drop_columns if col in users.columns]
     users.drop(columns=drop_columns, inplace=True)
@@ -191,6 +192,9 @@ def fix_nan_columns(users):
         mode = users[col].mode().iloc[0]
         users[col].fillna(mode, inplace=True)
     # fill with mode, mean, or median
-    users_mode, users_mean, users_median = users.mode().iloc[0], users.mean(), users.median()
+    try:
+        users_mode, users_mean, users_median = users.mode().iloc[0], users.mean(), users.median()
+    except:
+        users_mode, users_mean, users_median = 0, 0, 0
     users.fillna(users_median, inplace=True)
     return users

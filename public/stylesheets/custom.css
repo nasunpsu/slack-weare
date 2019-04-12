@@ -17,6 +17,11 @@
   color:blue;
 }
 
+main.login-wrapper .sign-in.button.ui > a{
+  color: white;
+  font-size: xx-large;
+}
+
 /* Class for each shared channel for the table list view (only to show if the channel is shared between the user in the table and the signed in user) */
 .channel1 { color: #6435c9; }
 .channel2 { color: #6435c9; }
@@ -86,7 +91,7 @@
   .btn-wrapper a{
     display: flex;
     width: 100%;
-    padding: 50px;
+    /* padding: 50px; */
 
   }
 
@@ -121,6 +126,16 @@
     background: #00438c;
     z-index: 0;
   }
+
+  /* .connect.ui.dropdown.item.active.Table::before {
+    content: 'Connected by Table'
+  }
+  .connect.ui.dropdown.item.active.Timezones::before {
+    content: 'Connected by Timezones'
+  }
+  .connect.ui.dropdown.item.active.Similarity::before {
+    content: 'Connected by Similarity'
+  } */
 
   .we-are-message{
     position: absolute;
@@ -160,6 +175,16 @@
     height: fit-content;
   }
 
+  .message-card .ui.message {
+    font-size: 1.25em!important;
+    color: #767676!important;
+    /* font-family: sans-serif!important; */
+  }
+
+  .message-card .extra.content a{
+    color: #4183C4!important;
+  }
+
   #timezone-main {
     font-family: 'Open Sans', sans-serif;
     font-size: 12px;
@@ -195,6 +220,10 @@
   /* white-space: nowrap; */
 }
 
+#tz-wrapper .ui.card .meta {
+  font-size: 1.2em!important;
+}
+
 #nw-wrapper{
   display: grid;
   grid-template: auto / repeat(12,1fr);
@@ -217,6 +246,10 @@ svg:not(:root){
   width: 300px;
 }
 
+.filter-wrapper h3{
+  font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji"!important;
+  margin-bottom: 1em;
+}
 .filters{
   margin-top: 20px;
   border: 1px solid #e2efff;
@@ -399,11 +432,11 @@ nav{
 }
 
 h2, h3, h4, h5, p {
-  font-family: 'Proxima Nova', sans-serif!important;
+  font-family: 'Proxima Nova','Lato', 'Helvetica Neue', Arial, Helvetica, sans-serif!important;
 }
 
 h1{
-  font-family: 'Proxima Nova', sans-serif!important;
+  font-family: 'Proxima Nova','Lato', 'Helvetica Neue', Arial, Helvetica, sans-serif!important;
   color: #1c3a66;
   font-size: 40px;
 }
@@ -468,8 +501,31 @@ p{
   margin-bottom: 80px!important;
 }
 
+.slack-btn-web {
+  /* background: #18B87E!important; */
+  box-shadow: 0 1px 2px 0 rgba(0,0,0,0.50)!important;
+  border-radius: 4px!important;
+  border: none!important;
+  /* grid-column: 4/21; */
+  /* padding: 15px!important; */
+  font-family: 'Proxima Nova';
+  /* color: #FBBD08!important; */
+  font-weight: 500!important;
+  /* font-size: 16px!important; */
+  /* width: 200px; */
+  /* display: flex!important; */
+  /* justify-content: center; */
+  margin: auto!important;
+  /* margin-top: 20px!important;
+  margin-bottom: 80px!important; */
+}
+
 .slack-btn a{
   color: white;
+}
+.slack-btn-web a {
+  color: #FBBD08!important;
+
 }
 
 .post-title{
@@ -511,11 +567,12 @@ p{
   margin-top: 20px;
   border-radius: 4px;
   box-shadow: 2px 2px 2px rgba(0,0,0,.2);
+  font-size: 80%;
 }
 
 .channel-table thead{
   text-align: center;
-  font-size: 60%;  
+  /* font-size: 60%;   */
 }
 
 .channel-table th{
@@ -524,7 +581,7 @@ p{
 
 .channel-table td{
   font-weight: 100;
-  font-size: 80%;
+  
   text-align: center;
 }
 
@@ -555,18 +612,28 @@ p{
   line-height: .5!important;
 }
 
+.profile.ui.item > img {
+  margin-right: 1em;
+}
 .header-info .ui.list{
   margin-top: -20px!important;
   margin-right: 10px;
 }
 
 
-.profile-header .ui.green.button{
+.profile-header .edit-profile.ui.button{
+  position: absolute;
+  bottom: 15px;
+  margin-right: 50px;
+  right: 200px;
+}
+
+.profile-header .user-dm.ui.green.button{
   position: absolute;
   bottom: 15px;
   right: 15px;
 }
-
+    
 .profile-name h2{
   font-size: 35px;
   font-weight: 200;
@@ -721,18 +788,34 @@ p{
   clear: right;
 }
 
-.ui.button > a.accept {
+.meetings-wrapper .ui.button {
+  margin: 0.2em 0.02em 0.2em 0.05em;
+  padding: 0.78571429em .5em 0.78571429em;
+}
+
+.basic.ui.button > a.accept {
   color: #00B5AD;
 }
 
-.ui.button > a.reject {
+.basic.ui.button > a.reject {
   color: #DB2828;
+}
+
+.ui.button > a.accept, a.reject {
+  color: white;
 }
 
 .ui.button > a.remind{
   color: #FBBD08;
 }
 
+.ui.button > a.invite{
+  color: #FBBD08;
+}
+
+.ui.button > a.slackme{
+  color: white;
+}
 
 .edit.ui.button {
   color: #4183C4!important;
@@ -776,4 +859,59 @@ div.ui.dropdown.weekday.selection {
   color: #FBBD08;
   margin-top: 60px!important;
   margin-bottom: 40px!important;
+}
+
+.profile-edit-wrapper .other-self {
+  /* height: max-content;
+  position: absolute;
+  top: 5em;
+  right: 2em!important;
+  background-color: #FBBD08!important;
+  color: white; */
+  margin-bottom: 10px!important;
+}
+
+
+.profile-edit-wrapper .ui.message.info {
+  position: absolute;
+  top: 5em;
+  margin-right:2em;
+}
+
+.help-wrapper {
+  /* overflow-x: auto;
+  display: flex;
+  display: -webkit-flex; */
+  justify-content: end;
+  padding-left: 35px;
+  padding-right: 25px;
+  margin-top: 150px;
+  margin-bottom: 20px;
+ }
+
+ .help-wrapper .subheader {
+   color: #e01e5a;
+ }
+
+ .help-wrapper .ui.header{
+  margin-top: 20px;
+ }
+
+ .help-wrapper .ui.content{
+  margin-bottom: 20px;
+ }
+
+ li h4 {
+  margin-top: 1em!important;
+  margin-bottom: 1em!important;
+}
+
+ul div.image.ui {
+  margin-top: 1em;
+}
+
+div.scroll {
+  /* width: 800px; */
+  height: 150px;
+  overflow: auto; /* This will give you a scroll-bar only if the content overflows the containers width and/or height. To have scrollbars on regardless of the content amount, use 'scroll' instead. */
 }

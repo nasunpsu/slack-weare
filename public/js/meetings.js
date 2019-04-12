@@ -1,3 +1,11 @@
+$('.message .close')
+    .on('click', function () {
+        $(this)
+            .closest('.message')
+            .transition('fade')
+            ;
+    });
+
 window.addEventListener("DOMContentLoaded", function () {
     $('table').tablesort();
     document.getElementById("new").addEventListener("click", function (e) {
@@ -6,17 +14,29 @@ window.addEventListener("DOMContentLoaded", function () {
         location.href = "/meeting/new";
     });
 
+
+
     var remind_list = Array.prototype.slice.call(document.getElementsByClassName("button remind"));
     console.log(remind_list);
-    
+
     var updateRemind = function (e) {
         console.log('remind clicked');
         e.preventDefault();
+        $(e.target).removeClass('basic');
+        setTimeout(function () {
+            $(e.target).addClass('basic');
+        }, 3000);
+        $('.update-attendees').removeClass('hidden');
+        $('.update-attendees').removeClass('invisible');
         const attendees = JSON.parse(e.target.getAttribute("data-attendees"));
         $.ajax({
             type: 'POST', url: '/remindmeeting', data: {
                 mid: e.target.getAttribute("data-mid"),
-                attendees: attendees
+                purpose: e.target.getAttribute("data-purpose"),
+                attendees: attendees,
+                creator_name: e.target.getAttribute("data-creator"),
+                start_time: e.target.getAttribute("data-time"),
+                date: e.target.getAttribute("data-date")
             }, success: function (data) {
                 console.log(data);
                 console.log('successfully remind');
@@ -25,12 +45,56 @@ window.addEventListener("DOMContentLoaded", function () {
     };
     Array.from(remind_list).forEach(function (element) {
         element.addEventListener('click', updateRemind);
+        $(element).popup();
     });
+
+    var invite_list = Array.prototype.slice.call(document.getElementsByClassName("button invite"));
+    console.log(invite_list);
+
+    var updateInvite = function (e) {
+        console.log('invite clicked');
+        $('.update-attendees').removeClass('invisible');
+        // $('.update-attendees').removeClass('transition');
+        $('.update-attendees').removeClass('hidden');
+        e.preventDefault();
+        $(e.target).removeClass('basic');
+        setTimeout(function () {
+            $(e.target).addClass('basic');
+        }, 3000);
+        const attendees = JSON.parse(e.target.getAttribute("data-attendees"));
+        $.ajax({
+            type: 'POST', url: '/invitemeeting', data: {
+                mid: e.target.getAttribute("data-mid"),
+                purpose: e.target.getAttribute("data-purpose"),
+                attendees: attendees,
+                creator_name: e.target.getAttribute("data-creator"),
+                start_time: e.target.getAttribute("data-time"),
+                date: e.target.getAttribute("data-date")
+            }, success: function (data) {
+                console.log(data);
+                console.log('successfully invite');
+            }
+        });
+    };
+    Array.from(invite_list).forEach(function (element) {
+        element.addEventListener('click', updateInvite);
+        $(element).popup();
+
+    });
+
     var react_list = Array.prototype.slice.call(document.getElementsByClassName("reject")).concat(Array.prototype.slice.call(document.getElementsByClassName("accept")));//[...Array.from(document.getElementsByClassName("reject")), ...Array.from(document.getElementsByClassName("accept"))];
     console.log(react_list);
     var reactUpdate = function (e) {
         console.log('react reject/accept clicked');
         const attendees = JSON.parse(e.target.getAttribute("data-attendees")).map(x => x.uid);
+        if($(e.target).hasClass('basic')) {// element reject/accept clicked
+            $(e.target).removeClass('basic');
+            $($(e.target).siblings('.button')[0]).addClass('basic')
+        }
+        else {
+            $(e.target).addClass('basic');
+            $($(e.target).siblings('.button')[0]).removeClass('basic');
+        }
         e.preventDefault();
         $.ajax({
             type: 'POST', url: '/reactmeeting', data: {

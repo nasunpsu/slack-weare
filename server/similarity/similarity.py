@@ -1,4 +1,6 @@
 import traceback
+import json
+from flask import request
 import statistics
 from pymongo import MongoClient
 from random import randint
@@ -14,19 +16,19 @@ import category_encoders as ce
 from prepocessing import clean_email, prepocess
 from gower import gower_distances
 import sys
+from flask import Flask
 
-def compute_similarity(uid):
+
+def compute_similarity(uid, users, db):
     """ Updates database with similar users
     Arguments:
         uid {str} -- uid to find similar users to
     """
-    users = get_data()
-    users = prepocess(users)
-    try: 
+    try:
         # Get first index of row with correct email
         user = users.loc[users.uid == uid].iloc[[0]]
     except Exception as e:
-        print(f'Error: user not found in database {e}', flush=True)
+        print('Error: user not found in database ' + str(e), flush=True)
         traceback.print_exc()
         return
     distances = compute_distances(users, user)
@@ -34,10 +36,10 @@ def compute_similarity(uid):
     users = users.sort_values(by='distance')
     res = users[['distance', 'uid']]
     matrix = res.values
-    update_db(uid, matrix)
+    update_db(uid, matrix, db)
     print('finished', flush=True)
 
-def update_db(uid, matrix):
+def update_db(uid, matrix, db):
     """Puts matrix into database, updating the user document
 
     Arguments:
@@ -47,11 +49,10 @@ def update_db(uid, matrix):
     similar_users = create_similar_users(matrix)
     similar_users_dict = create_similar_users_dict(matrix)
     new_value = {'$set': {'similar_users': similar_users, 'similar_users_dict': similar_users_dict}}
-    db = get_db()
     query = {'uid': uid}
     result = db.users.update_many(query, new_value)
     if result.modified_count != 1:
-        print(f'Warning, {result.modified_count} users modified, {result.matched_count} users matched', flush=True)
+        print('Warning, ' + str(result.modified_count) + ' users modified, ' + str(result.matched_count) + ' users matched', flush=True)
 
 def create_similar_users(matrix):
     """ Given matrix formatted like [[distance, uid]], produce dict with keys 'distance' and 'user' """
@@ -76,16 +77,16 @@ def create_similar_users_dict(matrix):
 def get_db():
     """ Gets and returns pymongo database client """
     client = MongoClient(port=27017)
-    db = client.weare    
-    return db
+    db = client.weare
+    return db, client
 
-def get_data():
+def get_data(db):
     """ Gets relevant data from database for computing similarity
 
     Returns:
         df {Dataframe} -- Dataframe containing all users
     """
-    db = get_db()
+    # db = get_db()
     # Students is a collection of survey responses
     # Users is a collection of users data collected from slack and ldap
     student_queries, user_queries = db.students.find({}), db.users.find({})
@@ -114,8 +115,24 @@ def compute_distances(df, Y, weights=None):
     distances = gower_distances(df, Y, categorical_features=col_is_categorical, feature_weight=weights)
     return [d[0] for d in distances]
 
-if __name__ == '__main__':
-    assert len(sys.argv) == 2, 'uid should be only argument'
-    uid = sys.argv[1]
-    assert type(uid) == str, 'uid should be a string'
-    compute_similarity(uid)
+# if __name__ == '__main__':
+#     assert len(sys.argv) == 2, 'uid should be only argument'
+#     uid = sys.argv[1]
+#     assert type(uid) == str, 'uid should be a string'
+#     compute_similarity(uid)
+
+app = Flask(__name__)
+
+@app.route('/')
+def similarity():
+    db, client = get_db()
+    uids = json.loads(request.args.get('uids'))
+    users = get_data(db)
+    users = prepocess(users)
+    for uid in uids:
+        compute_similarity(uid, users, db)
+    client.close()
+    return 'complete'
+
+
+app.run(port=50000, debug=True)
