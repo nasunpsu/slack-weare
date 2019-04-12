@@ -253,7 +253,7 @@ const logEvent = async (body, req) => {
 	}
 	if ('uid' in body && body.type === 'Activity') {
 		(async () => {
-			const isActive = body.content.type === 'Active';
+			const isActive = body.content === 'User became active';
 			const updateDoc = { $set: { isActive } }
 			await similarity.awaitDbConnection();
 			const newUser = await DB.collection('users').findOneAndUpdate({ uid: body.uid }, updateDoc,

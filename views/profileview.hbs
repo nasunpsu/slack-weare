@@ -249,4 +249,13 @@
 
 </section>
 {{/with}}
-  <div class="data" id="data" style="display:None" data-attribute='{{{json user}}}'></div>   
+  <div class="data" id="data" style="display:None" data-attribute='{{json user}}'></div>   
+<script>
+    window.user = (() => {
+        const userString = `{{json user}}`;
+        const text = document.createElement('textarea');
+        text.innerHTML = userString;
+        const user = JSON.parse(text.value);
+        return user;
+    })();
+</script>
