@@ -64,7 +64,6 @@ nav{
 
 .filters{
     margin-top: 20px;
-    border: 1px solid #e2efff;
     padding: 20px;
 }
 
@@ -87,6 +86,8 @@ nav{
 
 .search-box{
     margin-right: 25px;
+    margin-bottom: 25px;
+    margin-top: 10px;
 }
 
 .filters .checkbox{
@@ -107,7 +108,7 @@ nav{
 #page-container{
     grid-column: 3/23;
     margin: auto;
-    margin-top: 40px;
+    margin-top: 0px;
 }
   
 
