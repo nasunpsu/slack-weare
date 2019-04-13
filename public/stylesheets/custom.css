@@ -1,3 +1,9 @@
+@font-face{
+  font-family: "Proxima Nova";
+  src: url(https://use.typekit.net/ufx2dge.css);
+}
+
+
 .ui.footer { /* Increased specificity for SO snippet priority */
       position: fixed;
       bottom: 0;
@@ -242,7 +248,6 @@ svg:not(:root){
 
 .filters{
   margin-top: 20px;
-  border: 1px solid #e2efff;
   padding: 20px;
 }
 
@@ -410,7 +415,7 @@ nav{
 
 .nav-links > a{
   color: black;
-  font-family: 'Proxima Nova'!important;
+  font-family: 'Proxima Nova', sans-serif!important;
   padding: 10px;
   margin: 10px;
   text-decoration: none;
@@ -462,7 +467,7 @@ p{
 }
 
 .stat-group h3{
-  font-family: 'Proxima Nova'!important;
+  font-family: 'Proxima Nova', sans-serif!important;
   font-size: 30px;
   font-weight: 100;
 }
@@ -479,7 +484,7 @@ p{
   border: none!important;
   grid-column: 4/21;
   padding: 15px!important;
-  font-family: 'Proxima Nova';
+  font-family: 'Proxima Nova', sans-serif;
   color: white!important;
   font-weight: 500!important;
   font-size: 16px!important;
@@ -520,7 +525,7 @@ p{
 
 .post-title{
   grid-column: 3/22;
-  font-family: 'Proxima Nova'!important;
+  font-family: 'Proxima Nova', sans-serif!important;
   color: rgb(49, 120, 196);
   font-size: 1.2em;
   margin-bottom: -20px;margin-top: 25px;
@@ -529,7 +534,7 @@ p{
 .channel-title{
   grid-column: 3/22;
   font-size: 1.2em;
-  font-family: 'Proxima Nova'!important;
+  font-family: 'Proxima Nova', sans-serif!important;
   color: rgb(49, 120, 196);
   margin-top: 85px;
 }
