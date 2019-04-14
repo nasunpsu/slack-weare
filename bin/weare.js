@@ -2618,12 +2618,12 @@ app.post('/slack/actions', urlencodedParser, async (req, res) => {
 				case 'channels_list':
 					console.log(`within channels_list the body contains: ${util.inspect(body, { depth: 3 })}`);
 					await similarity.awaitDbConnection();
-					let channel_info = await DB.collection('channels').findOne({ cid: body.team.id + '_' + post_in_channel});
+					let channel_info = await DB.collection('channels').findOne({ cid: body.team.id + '_' + body.channel.id});
 					// let c_name = channel_list.map(c => c.cname)[0];
 					// console.log(`channel list is ${util.inspect(channel_list, { depth: null })}`);
 					web.chat.postMessage({
 						channel: post_in_channel,
-						text: `<!channel> :wave: :hugging_face: <@${body.user.id}> would like to invite folks who are interested to join the new channel *<#${post_in_channel}|${channel_info.cname}>* :I_love_you_hand_sign:!`,
+						text: `<!channel> :wave: :hugging_face: <@${body.user.id}> would like to invite folks who are interested to join the new channel *<#${body.channel.id}|${channel_info.cname}>* :I_love_you_hand_sign:!`,
 						// attachments: JSON.stringify(attach)
 					})
 						.catch(err => console.error(err));
