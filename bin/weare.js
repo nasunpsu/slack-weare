@@ -23,6 +23,7 @@ const apiUrl = 'https://slack.com/api';
 const base_url = 'https://404827e3.ngrok.io';
 const presence_snapshot = {};
 const snapshot_db = {};
+const majors = {};
 // const methodUril = 'https://slack.com/api/';
 const qs = require('querystring');
 const hbs = require('express-handlebars');
@@ -625,7 +626,7 @@ app.get('/introprompts', async (req, res) => {
 					attachments: JSON.stringify([
 						{
 							title: 'Would you like to introduce yourself to your peer group?',
-							text: 'Connections are built when you get to know one another better.',
+							text: 'Connections are built when you get to know one another.',
 							callback_id: 'consent',
 							color: '#74c8ed',
 							actions: [{
@@ -696,38 +697,49 @@ app.get('/createchannelsprompts', async (req, res) => {
 		// 		member.uid
 		// 	));
 		const UsersArray = await users.toArray();
-		const majors = {};
-		UsersArray.forEach
+		
+		UsersArray.forEach(async u => {
+			if(u.major == undefined) {
+				if(!majors['undefined']) majors['undefined'] = [];
+				majors['undefined'].push(u.uid);
+			}
+			if(majors[u.major]) {
+				if(!majors[u.major].includes(u.uid)) majors[u.major].push(u.uid);
+			}
+			else {
+				majors[u.major] = [];
+				majors[u.major].push(u.uid);
+			}
+		})
 		console.log(`length of users array is ${UsersArray.length}`);
 		UsersArray.forEach(async user => {
 			web.im.open({
 				user: user.uid.split('_')[1]
 			}).then(dm => {
-				console.log(`DM the intro prompt in ${dm.channel.id}`);
+				console.log(`DM the create channel prompt for same major if they are ${majors[user.major].length} in ${dm.channel.id}`);
 
 				web.chat.postMessage({
 					as_user: false,
 					channel: dm.channel.id,
-					attachments: JSON.stringify([
+					attachments: majors[user.major].length-1? JSON.stringify([
 						{
-							title: 'Would you like to introduce yourself to your peer group?',
-							text: 'Connections are built when you get to know one another better.',
-							callback_id: 'consent',
+							title: user.major? `Would you like to create a channel for your major ${user.major}?`: `It looks like your Slack account is associated with your PSU alias email ${user.email}`,
+							text: user.major? `There are *${majors[user.major].length}* students who share your major of _${user.major}_, and you can connect with them by creating a channel!.`: `Please change your Slack email in your profile to be your original PSU email.`,
+							callback_id: 'channel_creation_prompt',
 							color: '#74c8ed',
-							actions: [{
-								name: 'introduce',
-								text: 'Introduce myself',
-								type: 'button',
-								value: 'intro',
-								style: 'primary'
-							}
-							],
 						},
 						{
-							title: 'Visit our dashboard <https://weconnect.ist.psu.edu:8443|WeConnect> to explore your community!',
-							text: 'To make full use of Slack and our tools, read our internal <https://weconnect.ist.psu.edu:8443/helppreview|wiki>. If you have any technique questions, check <https://get.slack.help/hc/en-us|official slack help page>, post them in <#CGNQYDKKJ|help-slack> or ask your peer groups for help.',
+							title: 'Please watch the GIFs in our internal <https://weconnect.ist.psu.edu:8443/helppreview|wiki> to learn how to create a new channel.',
+							text: 'Visit <https://weconnect.ist.psu.edu:8443/tablelist|WeConnect/tablelist> to explore your peers of the same major or location! If you have any technique questions, check <https://get.slack.help/hc/en-us|official slack help page>, post them in <#CGNQYDKKJ|help-slack> or ask your peer groups for help.',
 							callback_id: 'advertise_url',
 							color: '#FBBD08',
+						}
+					]): JSON.stringify([
+						{
+							title: user.major? `It looks like not many students from your major _${user.major}_ have found their way to our Slack WeAre! family. Feel free to invite students in your classes to join the WeAre! Slack using this signup link!`: `It looks like your Slack account is associated with your PSU alias email ${user.email}`,
+							text: user.major? `https://join.slack.com/t/weare-pennstate/signup.`: `Please change your Slack email in your profile to be your original PSU email.`,
+							callback_id: 'invite_team_join_prompt',
+							color: '#74c8ed',
 						}
 					])
 				}).catch(err => console.error(err));
@@ -744,12 +756,12 @@ app.get('/createchannelsprompts', async (req, res) => {
 				{ upsert: true },
 				function (err, doc) {
 					if (err) console.error(err);
-					else console.log(`WeAre! sent introduce yourself prompt to ${user.uid}`);
+					else console.log(`WeAre! sent create a channel prompt to ${user.uid}`);
 				});
 		})
 	});
-	console.log('---------------Intro prompt sent out ----------------');
-	res.send('happy intro invites sent out');
+	console.log('---------------create new channels for major prompt sent out ----------------');
+	res.send('happy major prompts sent out');
 });
 
 app.post('/slack/events', (req, res, next) => {
