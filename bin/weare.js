@@ -583,6 +583,175 @@ app.get('/sendconsentform', async (req, res) => {
 	res.send('happy consent form sent out');
 });
 
+app.get('/introprompts', async (req, res) => {
+	await similarity.awaitDbConnection();
+	// let userIDs = 
+	await DB.collection('userlogs').find(
+		{
+			action: `open the intro dialog`,
+		}
+	).toArray().then(async (userlogs) => {
+		const uids = userlogs.map(u => u.uid);
+		console.log(`length of uids array is ${uids.length}`);
+		await similarity.awaitDbConnection();
+		let users = await DB.collection('users').find({
+			uid: {
+				"$nin": uids
+			},
+			channels: {
+				"cid": "T0A286J8K_CERG8B7A9",
+				"cname": "test_bot"
+			},
+			intro: {
+				"$ne": 'sent'
+			}
+		});
+		// const UsersArray = await Allusers.toArray();
+		// const users = UsersArray.filter(
+		// 	member => !uids.includes(
+		// 		member.uid
+		// 	));
+		const UsersArray = await users.toArray()
+		console.log(`length of users array is ${UsersArray.length}`);
+		UsersArray.forEach(async user => {
+			web.im.open({
+				user: user.uid.split('_')[1]
+			}).then(dm => {
+				console.log(`DM the intro prompt in ${dm.channel.id}`);
+
+				web.chat.postMessage({
+					as_user: false,
+					channel: dm.channel.id,
+					attachments: JSON.stringify([
+						{
+							title: 'Would you like to introduce yourself to your peer group?',
+							text: 'Connections are built when you get to know one another better.',
+							callback_id: 'consent',
+							color: '#74c8ed',
+							actions: [{
+								name: 'introduce',
+								text: 'Introduce myself',
+								type: 'button',
+								value: 'intro-nochannel',
+								style: 'primary'
+							}
+							],
+						},
+						{
+							title: 'Visit our dashboard <https://weconnect.ist.psu.edu:8443|WeConnect> to explore your community!',
+							text: 'To make full use of Slack and our tools, read our internal <https://weconnect.ist.psu.edu:8443/helppreview|wiki>. If you have any technique questions, check <https://get.slack.help/hc/en-us|official slack help page>, post them in <#CGNQYDKKJ|help-slack> or ask your peer groups for help.',
+							callback_id: 'advertise_url',
+							color: '#FBBD08',
+						}
+					])
+				}).catch(err => console.error(err));
+
+			}).catch(err => console.error(err));
+			await similarity.awaitDbConnection();
+			DB.collection('users').updateOne(
+				{ uid: user.uid },
+				{
+					$set: {
+						intro: 'sent'
+					}
+				},
+				{ upsert: true },
+				function (err, doc) {
+					if (err) console.error(err);
+					else console.log(`WeAre! sent introduce yourself prompt to ${user.uid}`);
+				});
+		})
+	});
+	console.log('---------------Intro prompt sent out ----------------');
+	res.send('happy intro invites sent out');
+});
+
+app.get('/createchannelsprompts', async (req, res) => {
+	await similarity.awaitDbConnection();
+
+	await DB.collection('userlogs').find(
+		{
+			action: `create the channel`,
+		}
+	).toArray().then(async (userlogs) => {
+		const uids = userlogs.map(u => u.uid);
+		console.log(`length of uids array is ${uids.length}`);
+		await similarity.awaitDbConnection();
+		let users = await DB.collection('users').find({
+			uid: {
+				"$nin": uids //not in the list of users who have created channels
+			},
+			channels: {
+				"cid": "T0A286J8K_CERG8B7A9",
+				"cname": "test_bot"
+			},
+			createprompt: {
+				"$ne": 'sent'
+			}
+		});
+
+		// const UsersArray = await Allusers.toArray();
+		// const users = UsersArray.filter(
+		// 	member => !uids.includes(
+		// 		member.uid
+		// 	));
+		const UsersArray = await users.toArray();
+		const majors = {};
+		UsersArray.forEach
+		console.log(`length of users array is ${UsersArray.length}`);
+		UsersArray.forEach(async user => {
+			web.im.open({
+				user: user.uid.split('_')[1]
+			}).then(dm => {
+				console.log(`DM the intro prompt in ${dm.channel.id}`);
+
+				web.chat.postMessage({
+					as_user: false,
+					channel: dm.channel.id,
+					attachments: JSON.stringify([
+						{
+							title: 'Would you like to introduce yourself to your peer group?',
+							text: 'Connections are built when you get to know one another better.',
+							callback_id: 'consent',
+							color: '#74c8ed',
+							actions: [{
+								name: 'introduce',
+								text: 'Introduce myself',
+								type: 'button',
+								value: 'intro',
+								style: 'primary'
+							}
+							],
+						},
+						{
+							title: 'Visit our dashboard <https://weconnect.ist.psu.edu:8443|WeConnect> to explore your community!',
+							text: 'To make full use of Slack and our tools, read our internal <https://weconnect.ist.psu.edu:8443/helppreview|wiki>. If you have any technique questions, check <https://get.slack.help/hc/en-us|official slack help page>, post them in <#CGNQYDKKJ|help-slack> or ask your peer groups for help.',
+							callback_id: 'advertise_url',
+							color: '#FBBD08',
+						}
+					])
+				}).catch(err => console.error(err));
+
+			}).catch(err => console.error(err));
+			await similarity.awaitDbConnection();
+			DB.collection('users').updateOne(
+				{ uid: user.uid },
+				{
+					$set: {
+						createprompt: 'sent'
+					}
+				},
+				{ upsert: true },
+				function (err, doc) {
+					if (err) console.error(err);
+					else console.log(`WeAre! sent introduce yourself prompt to ${user.uid}`);
+				});
+		})
+	});
+	console.log('---------------Intro prompt sent out ----------------');
+	res.send('happy intro invites sent out');
+});
+
 app.post('/slack/events', (req, res, next) => {
 	console.log(`an example event is ${util.inspect(req.body)}`);
 	switch (req.body.type) {
@@ -1189,7 +1358,7 @@ app.post('/slack/events', (req, res, next) => {
 							),
 						};
 
-						web.chat.postEphemeral(message)
+						web.chat.postMessage(message)
 							.catch(err => {
 								console.log(`error with posting ephmeral for channel_created`);
 								console.error(err);
@@ -1637,53 +1806,6 @@ app.post('/slack/commands/intro', urlencodedParser, async (req, res) => {
 	res.status(200).end(); // best practice to respond with empty 200 status code
 	var reqBody = req.body;
 	console.log(`within intro: reqbody is ${util.inspect(reqBody, { depth: null })}`);
-	// var msg = {
-	// 	title: 'I am, We Are!',
-	// 	callback_id: 'self_intro',
-	// 	submit_label: 'Done',
-	// 	elements: [
-	// 		{
-	// 			label: 'Fun fact',
-	// 			type: 'text',
-	// 			name: 'fun',
-	// 			text: 'existing content blah blah',
-	// 			hint: 'Tell them something fun!'
-	// 		},
-	// 		{
-	// 			label: 'I live in',
-	// 			type: 'text',
-	// 			name: 'city',
-	// 			optional: true,
-	// 			hint: 'Separate places with ";"! (e.g. Pittsburgh, PA; Victoria, BC'
-	// 		},
-	// 		{
-	// 			label: 'Current profession',
-	// 			type: 'select',
-	// 			name: 'topic',
-	// 			options: [
-	// 				{ label: 'Veteran/military', value: 'military' },
-	// 				{ label: 'Industry sector', value: 'industry' },
-	// 				{ label: 'Education sector', value: 'education' },
-	// 				{ label: 'No job yet', value: 'unemployed' }
-	// 			],
-	// 		},
-	// 		{
-	// 			label: 'Things I want my peers here to know about me',
-	// 			type: 'text',
-	// 			name: 'unique',
-	// 			optional: true,
-	// 			hint: 'e.g. interests, language, value systems, hobbies, minority roles'
-	// 		}
-	// 	],
-	// };
-	// console.log('before dialog web method');
-	// console.log(util.inspect(msg, { depth: 3 }));
-	// web.dialog.open({
-	// 	trigger_id: reqBody.trigger_id,
-	// 	dialog: msg
-	// }).then(res => console.log(`successfully opened intro dialog`)).catch(err => { console.error(err); console.log(util.inspect(err, { depth: 3 })) });
-
-
 	await similarity.awaitDbConnection();
 	DB.collection('users').findOne({ uid: reqBody.team_id + '_' + reqBody.user_id }, async (err, user) => {
 		const msg2 = {
@@ -2062,7 +2184,7 @@ app.post('/slack/actions', urlencodedParser, async (req, res) => {
 
 				(async () => {
 					const activeUIDs = await DB.collection('user_presence').find({ status: 'active' }).toArray();
-					const activeMembers = await ActiveWho(activeUIDs.map(a=>a.uid));
+					const activeMembers = await ActiveWho(activeUIDs.map(a => a.uid));
 					console.log(`who is online with ActiveWho func:`);
 					const usersnames = activeMembers.map(x => x.first_name), emails = activeMembers.map(x => x.email);
 					console.log('before empheral');
@@ -2189,6 +2311,91 @@ app.post('/slack/actions', urlencodedParser, async (req, res) => {
 								type: 'text',
 								name: 'pastCities',
 								optional: true,
+								value: user.pastCities ? he.unescape(user.pastCities) : null,
+								hint: 'Separate places with ";"! (e.g. Pittsburgh, PA; Victoria, BC)'
+							},
+							{
+								label: 'Current profession',
+								type: 'select',
+								name: 'profession',
+								options: [
+									{ label: 'Architecture and Engineering', value: '17' },
+									{ label: 'Arts, Design, Entertainment, Sports, and Media', value: '27' },
+									{ label: 'Building and Grounds Cleaning and Maintenance', value: '37' },
+									{ label: 'Business and Financial Operations', value: '13' },
+									{ label: 'Community and Social Service', value: '21' },
+									{ label: 'Computer and Mathematical', value: '15' },
+									{ label: 'Construction and Extraction', value: '47' },
+									{ label: 'Education, Training, and Library', value: '25' },
+									{ label: 'Farming, Fishing, and Forestry', value: '45' },
+									{ label: 'Food Preparation and Serving Related', value: '35' },
+									{ label: 'Healthcare Practitioners and Technical', value: '29' },
+									{ label: 'Healthcare Support', value: '31' },
+									{ label: 'Installation, Maintenance, and Repair', value: '49' },
+									{ label: 'Legal', value: '23' },
+									{ label: 'Life, Physical, and Social Science', value: '19' },
+									{ label: 'Management', value: '11' },
+									{ label: 'Miltary Specific', value: '55' },
+									{ label: 'Office and Administrative Support', value: '43' },
+									{ label: 'Personal Care and Service', value: '39' },
+									{ label: 'Production', value: '51' },
+									{ label: 'Protective Service', value: '33' },
+									{ label: 'Sales and Related', value: '41' },
+									{ label: 'Transportation and Material Moving', value: '53' },
+									{ label: 'Other', value: '0' },
+								],
+								value: 0
+							},
+							{
+								label: 'Fun fact',
+								type: 'text',
+								name: 'fun',
+								optional: true,
+								value: user.fun ? he.unescape(user.fun) : null,
+								hint: 'Tell your peers something interesting about yourself!'
+							},
+						],
+					};
+					DB.collection('userlogs').updateOne({ log_id: makeid() }, {
+						$set: {
+							uid: body.team.id + '_' + body.user.id,
+							action: `open the intro dialog`,
+							details: `via button click after the consent form`,
+							channel: body.team.id + '_' + body.channel.id,
+							ts: new Date()
+						},
+					}, { upsert: true }, function (err, res) {
+						if (err) console.error(err);
+						else console.log(`the user ${user.first_name} introduced in ${body.channel.id} `);
+					});
+					console.log('before dialog web method');
+					console.log(util.inspect(msg2, { depth: 3 }));
+					web.dialog.open({
+						trigger_id: trigger_id,
+						dialog: msg2
+					}).then(res => console.log(`successfully opened intro dialog`)).catch(err => { console.error(err); console.log(util.inspect(err, { depth: 3 })) });
+				});
+				break;
+			case 'intro-nochannel':
+				await similarity.awaitDbConnection();
+				DB.collection('users').findOne({ uid: body.team.id + '_' + body.user.id }, async (err, user) => {
+					const msg2 = {
+						title: 'I am, We Are!',
+						callback_id: 'self_intro-nochannel',
+						submit_label: 'Done',
+						elements: [
+							{
+								label: 'Things I want my peers here to know about me',
+								type: 'text',
+								name: 'title',
+								value: user.title ? he.unescape(user.title) : null,
+								hint: 'e.g. language, value systems, hobbies, minority roles, ethnicity'
+							},
+
+							{
+								label: 'I have lived in',
+								type: 'text',
+								name: 'pastCities',
 								value: user.pastCities ? he.unescape(user.pastCities) : null,
 								hint: 'Separate places with ";"! (e.g. Pittsburgh, PA; Victoria, BC)'
 							},
@@ -2392,19 +2599,19 @@ app.post('/slack/actions', urlencodedParser, async (req, res) => {
 
 			default: console.log('nothing cased'); break;
 		}
-		body.actions[0]
+		// body.actions[0]
 		if (body.actions[0].type == 'select') {
 			let post_in_channel = body.actions[0].selected_options[0].value;
 			switch (body.actions[0].name) {
 				case 'channels_list':
 					console.log(`within channels_list the body contains: ${util.inspect(body, { depth: 3 })}`);
-					// await similarity.awaitDbConnection();
-					// let channel_list = await DB.collection('channels').find({ cid: body.team.id + '_' + body.channel.id }).toArray();
+					await similarity.awaitDbConnection();
+					let channel_info = await DB.collection('channels').findOne({ cid: body.team.id + '_' + post_in_channel});
 					// let c_name = channel_list.map(c => c.cname)[0];
 					// console.log(`channel list is ${util.inspect(channel_list, { depth: null })}`);
 					web.chat.postMessage({
 						channel: post_in_channel,
-						text: `<!channel> :wave: :hugging_face: <@${body.user.id}> would like to invite folks who are interested to join the new channel *<#${body.channel.id}|${body.channel.name}>* :I_love_you_hand_sign:!`,
+						text: `<!channel> :wave: :hugging_face: <@${body.user.id}> would like to invite folks who are interested to join the new channel *<#${post_in_channel}|${channel_info.cname}>* :I_love_you_hand_sign:!`,
 						// attachments: JSON.stringify(attach)
 					})
 						.catch(err => console.error(err));
@@ -2412,14 +2619,78 @@ app.post('/slack/actions', urlencodedParser, async (req, res) => {
 					DB.collection('userlogs').updateOne({ log_id: makeid() }, {
 						$set: {
 							uid: body.team.id + '_' + body.user.id,
-							action: `post the new channel ${body.channel.id} ${body.channel.name} to promote`,
-							details: `in ${post_in_channel}`,
-							channel: body.team.id + '_' + body.channel.id,
+							action: `select channel to introduce`,
+							details: `in ${post_in_channel} ${channel_info.cname}`,
+							channel: body.team.id + '_' + post_in_channel,
 							ts: new Date()
 						},
 					}, { upsert: true }, function (err, res) {
 						if (err) console.error(err);
-						else console.log(`the user ${body.user.id} submmited in ${body.channel.name} `);
+						else console.log(`the user ${body.user.id} submmited in ${channel_info.cname} `);
+					});
+					break;
+
+				case 'channels_list_intro':
+					console.log('now you are saying hello from DM intro prompt!');
+					await similarity.awaitDbConnection();
+					DB.collection('users').findOne({ uid: body.team.id + '_' + body.user.id }, async (err, user) => {
+						DB.collection('userlogs').updateOne({ log_id: makeid() }, {
+							$set: {
+								uid: body.team.id + '_' + body.user.id,
+								action: `being introduced publicly`,
+								details: `${user.real_name} introduced in ${body.team.id}_${post_in_channel}`,
+								channel: body.team.id + '_' + post_in_channel,
+								ts: new Date()
+							},
+						}, { upsert: true }, function (err, res) {
+							if (err) console.error(err);
+							else console.log(`the user ${user.first_name} agreed to be introduced publicly in ${post_in_channel} `);
+						});
+						const attach = [
+							{
+								"title": `Let's welcome <@${body.user.id}> who has been to ${user.pastCities}.`,
+								"text": `Meet ${user.first_name} at <${base_url}/profile/${body.team.id}_${body.user.id}|profile page>.`,
+								"color": '#FBBD08'
+							},
+							{
+								"text": `Send ${user.first_name} some We Are! or some positive vibes! :fireworks: :tada: :wave: :clap:`,
+								"fallback": "Shame... buttons aren't supported in this land",
+								"callback_id": `${body.team.id}_${body.user.id}`,
+								"color": "#3AA3E3",
+								"actions": [
+									{
+										"name": "weare-welcome",
+										"text": "We Are!",
+										"type": "button",
+										"style": "primary",//093162 this is the PSU team color
+										"value": "weare-welcome"
+									},
+									{
+										"name": "heart",
+										"text": ":blue_heart:",
+										"type": "button",
+										"value": "heart",
+										"style": "danger"
+									},
+									{
+										"name": "dismiss",
+										"text": "Dismiss",
+										"type": "button",
+										"value": "dismiss-welcome",
+										"style": "default"
+									}
+								]
+							}
+						];
+						console.log(`interactive message - You confirmed to hello to the group!`);
+						console.log(`The user has confirmed to say hello! ${post_in_channel}`)
+						web.chat.postMessage({
+							channel: post_in_channel,
+							text: `I'd like to introduce *${user.real_name}*!`,
+							attachments: JSON.stringify(attach)
+						})
+							.catch(err => console.error(err));
+						console.log('now you finished hello and send the public message out');
 					});
 					break;
 				default:
@@ -2528,6 +2799,80 @@ app.post('/slack/actions', urlencodedParser, async (req, res) => {
 				})();
 
 
+				break;
+			case 'self_intro-nochannel':
+				console.log(`Would you like to broadcast your join of the channel?! then choose one`);
+
+				(async () => {
+					await similarity.awaitDbConnection();
+					const newUser = await DB.collection('users').findOneAndUpdate(
+						{ uid: body.team.id + '_' + body.user.id },
+						{
+							$set: {
+								fun: submission.fun ? he.escape(submission.fun) : submission.fun,
+								profession: submission.profession,
+								title: submission.title ? he.escape(submission.title) : submission.title,
+								pastCities: submission.pastCities ? he.escape(submission.pastCities) : submission.pastCities
+							}
+						},
+						{ upsert: true, returnOriginal: false }).then((new_user) => {
+							DB.collection('userlogs').updateOne({ log_id: makeid() }, {
+								$set: {
+									uid: body.team.id + '_' + body.user.id,
+									action: `submit the intro dialog`,
+									details: `in ${body.channel.name}`,
+									channel: body.team.id + '_' + body.channel.id,
+									ts: new Date()
+								},
+							}, { upsert: true }, function (err, res) {
+								if (err) console.error(err);
+								else console.log(`the user ${new_user.value.first_name} submmited in ${body.channel.name} `);
+							});
+							// console.log(`after updating the user is ${util.inspect(new_user, { depth: 	null })}`);
+							return Promise.resolve({ newUser: new_user.value });
+
+						}).catch(err => {
+							console.log('the error caught is ...');
+							console.error(err);
+						});
+					// console.log(`new user is ${util.inspect(newUser, { depth: null })}`);
+					let edit_url = `/editProfile/`;
+					web.im.open({
+						user: body.user.id
+					}).then(dm => {
+						console.log(`DM the editprofile link in ${dm.channel.id}`);
+
+						web.chat.postMessage({
+							as_user: false,
+							channel: dm.channel.id,
+							// text: `Would you like to join the meeting?`,
+							attachments: JSON.stringify([
+								{
+									title: `Would you like me to introduce you in one of the channels?`,
+									text: 'Go and get some :blue_heart: and *We Are* from your peers by selecting one of the channels :point_down:!',
+									color: '#18B87E',
+									text: 'Choose a channel to post',
+									callback_id: 'channel_selection_intro',
+									actions: [{
+										"name": "channels_list_intro",
+										"text": "Pick a channel...",
+										"type": "select",
+										// "options": option_channels,
+										"data_source": "channels"
+									}],
+								},
+								{
+									title: 'An interesting profile can help your compatible peers find you!',
+									text: 'Go to ' + base_url + ' and click your name on the top right menu to edit your profile.',
+									color: '#74c8ed',
+									callback_id: 'edit_profile'
+								}]
+							)
+						}).catch(err => console.error(err));
+
+					}).catch(err => console.error(err));
+					console.log('self_intro-nochannel finished');
+				})();
 				break;
 			case 'schedule_later':
 				console.log(`action type is ${type} and body content is ${util.inspect(body, { depth: null })}`);
@@ -3960,7 +4305,7 @@ async function ActiveWho(uids) {
 			"$in": uids
 		}
 	})
-	.toArray();
+		.toArray();
 	// var promiseArray = [];
 	// await web.conversations.members({
 	// 	channel: channel_id,
