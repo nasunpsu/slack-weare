@@ -109,6 +109,8 @@ nav{
     grid-column: 3/23;
     margin: auto;
     margin-top: 0px;
+    overflow-x: scroll; 
+    max-width: 300px;
 }
   
 
