@@ -1,4 +1,6 @@
 import traceback
+import sys; print(sys.path)
+print(sys.executable)
 import json
 from flask import request
 import statistics
@@ -136,6 +138,5 @@ def similarity():
         compute_similarity(uid, users, db)
     client.close()
     return 'complete'
-
 
 app.run(port=50000, debug=True)
