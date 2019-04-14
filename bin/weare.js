@@ -612,7 +612,7 @@ app.get('/introprompts', async (req, res) => {
 		// 	member => !uids.includes(
 		// 		member.uid
 		// 	));
-		const UsersArray = await users.toArray()
+		const UsersArray = await users.toArray();
 		console.log(`length of users array is ${UsersArray.length}`);
 		UsersArray.forEach(async user => {
 			web.im.open({
@@ -626,7 +626,7 @@ app.get('/introprompts', async (req, res) => {
 					attachments: JSON.stringify([
 						{
 							title: 'Would you like to introduce yourself to your peer group?',
-							text: 'Connections are built when you get to know one another.',
+							text: 'Penn State World Campus is a place for learning and growth. Learn from your peers when you participate and share.',
 							callback_id: 'consent',
 							color: '#74c8ed',
 							actions: [{
@@ -640,7 +640,7 @@ app.get('/introprompts', async (req, res) => {
 						},
 						{
 							title: 'Visit our dashboard <https://weconnect.ist.psu.edu:8443|WeConnect> to explore your community!',
-							text: 'To make full use of Slack and our tools, read our internal <https://weconnect.ist.psu.edu:8443/helppreview|wiki>. If you have any technique questions, check <https://get.slack.help/hc/en-us|official slack help page>, post them in <#CGNQYDKKJ|help-slack> or ask your peer groups for help.',
+							text: 'To make full use of Slack and our tools, read our internal <https://weconnect.ist.psu.edu:8443/helppreview|wiki>. If you have any technical questions, check <https://get.slack.help/hc/en-us|official slack help page>, post them in <#CGNQYDKKJ|help-slack> or ask your peer groups for help.',
 							callback_id: 'advertise_url',
 							color: '#FBBD08',
 						}
