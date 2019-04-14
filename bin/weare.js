@@ -607,8 +607,8 @@ app.get('/introprompts', async (req, res) => {
 				"$nin": uids
 			},
 			channels: {
-				"cid": "T0A286J8K_CERG8B7A9",
-				"cname": "test_bot"
+				"cid" : "TG6RV469K_CG5TK5WTS",
+				"cname" : "worklifebalance"
 			},
 			intro: {
 				"$ne": 'sent'
@@ -690,8 +690,8 @@ app.get('/createchannelsprompts', async (req, res) => {
 				"$nin": uids //not in the list of users who have created channels
 			},
 			channels: {
-				"cid": "T0A286J8K_CERG8B7A9",
-				"cname": "test_bot"
+				"cid" : "TG6RV469K_CG5TK5WTS",
+				"cname" : "worklifebalance"
 			},
 			createprompt: {
 				"$ne": 'sent'
