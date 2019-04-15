@@ -22,6 +22,24 @@ window.addEventListener("DOMContentLoaded", function () {
     });
     // var ws = new WebSocket('ws://localhost:8080/temporal/presenceUpdate');
     var ws = new WebSocket('wss://420520b7.ngrok.io/temporal/presenceUpdate');
+    function sortMembersByPresence(){
+        const parentElements = $('.ui.horizontal.list');
+        const parentArray = Array.from(parentElements);
+        parentArray.forEach(parent => {
+            const users = $(parent).find('.item.user');
+            const userArray = Array.from(users);
+            userArray.sort((user1, user2) => {
+                const isAway1 = $(user1).find('.user-presence-away').length;
+                const isAway2 = $(user2).find('.user-presence-away').length;
+                return isAway1 - isAway2;
+            });
+            $(parent).empty();
+            userArray.forEach(user => {
+                $(parent).append($(user));
+            });
+        });
+
+    }
     ws.onmessage = function (message) {
         console.log('message is ' + JSON.stringify(message.data))
         var obj_data = JSON.parse(message.data);
@@ -30,6 +48,7 @@ window.addEventListener("DOMContentLoaded", function () {
             if (obj_data.presence == "away") $(update.getElementsByClassName("user-presence")[0]).addClass("user-presence-away");
             else $(update.getElementsByClassName("user-presence")[0]).removeClass("user-presence-away");
         }
+        sortMembersByPresence();
         // update.innerHTML = obj_data.user+ ' from '+ obj_data.team + 'is ' + obj_data.presence;
     }
     $.ajax({
