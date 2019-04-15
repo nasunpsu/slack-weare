@@ -12,14 +12,17 @@ window.addEventListener("DOMContentLoaded", function () {
     // Array.from(detail_list).forEach(function (element) {
     //     element.addEventListener('mouseover', UserOver);
     // });
+    function resetHover(){
+        $(".user").hover(function () {
+            $(this).find('.user-detail').css({ "opacity": "1", "z-index": "3" });
+            $(this).find('.user-img').css({ "z-index": "3" });
+        }, function () {
+            $(this).find('.user-detail').css({ "opacity": "0", "z-index": "1" });
+            $(this).find('.user-img').css({ "z-index": "2" });
+        });
+    }
+    resetHover();
 
-    $(".user").hover(function () {
-        $(this).find('.user-detail').css({ "opacity": "1", "z-index": "3" });
-        $(this).find('.user-img').css({ "z-index": "3" });
-    }, function () {
-        $(this).find('.user-detail').css({ "opacity": "0", "z-index": "1" });
-        $(this).find('.user-img').css({ "z-index": "2" });
-    });
     // var ws = new WebSocket('ws://localhost:8080/temporal/presenceUpdate');
     var ws = new WebSocket('wss://420520b7.ngrok.io/temporal/presenceUpdate');
     function sortMembersByPresence(){
@@ -35,11 +38,16 @@ window.addEventListener("DOMContentLoaded", function () {
             });
             $(parent).empty();
             userArray.forEach(user => {
+                $(user).find('.user-detail').css({ "opacity": "0", "z-index": "1" });
+                $(user).find('.user-img').css({ "z-index": "2" });
                 $(parent).append($(user));
             });
         });
-
+        resetHover();
     }
+    // time in milliseconds to ignore sorting if multiple requests were sent
+    const sortDebounceTime = 10;
+    let interval = -1;
     ws.onmessage = function (message) {
         console.log('message is ' + JSON.stringify(message.data))
         var obj_data = JSON.parse(message.data);
@@ -48,7 +56,8 @@ window.addEventListener("DOMContentLoaded", function () {
             if (obj_data.presence == "away") $(update.getElementsByClassName("user-presence")[0]).addClass("user-presence-away");
             else $(update.getElementsByClassName("user-presence")[0]).removeClass("user-presence-away");
         }
-        sortMembersByPresence();
+        clearInterval(interval);
+        interval = setTimeout(sortMembersByPresence, sortDebounceTime);
         // update.innerHTML = obj_data.user+ ' from '+ obj_data.team + 'is ' + obj_data.presence;
     }
     $.ajax({
