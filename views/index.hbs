@@ -1,6 +1,10 @@
 <main class="dashboard-wrapper">
     <h1 class="dashboard-title">We Are! Connecting you to your&nbsp;peers.</h1>
+    
     <div class="slack-stats">
+        <h2 class="ui blue header personal-title">
+            <div class="content">WeAre! Slack Stats</div>
+        </h2>
         <div class="ui statistics team-meta">
             <div class="statistic yellow">
                 <div class="value">
@@ -28,36 +32,48 @@
                 </div>
             </div>
         </div>
-        {{!-- <div class="ui statistics personal-meta">
-            <div class="statistic yellow">
-                <div class="value">
-                    <i class="slack hash small icon"></i>{{channels_info.channels_total}}
-                </div>
-                <div class="label">
-                    Channels
-                </div>
-            </div>
-            <div class="statistic teal">
-                <div class="value">
-                    <i class="users small icon"></i> {{members.members_total}}
-                </div>
-                <div class="label">
-                    Interacted with you
-                </div>
-            </div>
-            <div class="statistic blue">
-                <div class="value">
-                    <i class="comments small icon"></i>{{msgs_total}}
-                </div>
-                <div class="label">
-                    
-                </div>
-            </div>
-        </div> --}}
     </div>
-    {{!-- <button id="open-slack" class="ui button slack-btn"><a href="slack://open" target="_blank">Open Slack of {{team.team_name}}</a></button> --}}
-
-    {{!-- <div id="data" class="ui segment">{{{json msgs}}}</div> --}}
+    
+    <div class="slack-stats personal-stats">
+        <h2 class="ui blue header personal-title">
+            <div class="content">Personal Slack Stats</div>
+        </h2>
+        <div class="ui statistics team-meta">
+            <div class="statistic black personal-stat">
+                <div class="value">
+                    <i class="paw small icon"></i>&nbsp;{{channels_info.channels_total}} / {{total_channels_num}}
+                </div>
+                <div class="label">
+                    WeAre!'s Given
+                </div>
+            </div>
+            <div class="statistic black personal-stat">
+                <div class="value">
+                    <i class="paw small icon"></i>&nbsp;{{members.members_total}}
+                </div>
+                <div class="label">
+                    {{!-- Interacted / Total Members --}}
+                    WeAre!'s Received
+                </div>
+            </div>
+            <div class="statistic black personal-stat">
+                <div class="value">
+                    <i class="thumbs up outline small icon"></i>&nbsp;{{msgs_total}}
+                </div>
+                <div class="label">
+                    Reactions Given
+                </div>
+            </div>
+            <div class="statistic black personal-stat">
+                <div class="value">
+                    <i class="thumbs up small icon"></i>&nbsp;{{msgs_total}}
+                </div>
+                <div class="label">
+                    Reactions Received
+                </div>
+            </div>
+        </div>
+    </div>
     <h2 class="ui blue header post-title">
         <div class="content">Most Reacted Messages From Your Subscribed Channels</div>
         <div class="ui right floated blue button" id="refresh-msgs">Refresh messages</div>
