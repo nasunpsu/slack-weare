@@ -1909,6 +1909,7 @@ app.post('/slack/commands/intro', urlencodedParser, async (req, res) => {
 });
 
 app.post('/slack/actions', urlencodedParser, async (req, res) => {
+	res.status(200).end(); // best practice to respond with 200 status
 	var body = JSON.parse(req.body.payload); // parse URL-encoded payload JSON string
 	const { type, token, trigger_id } = body;
 	console.log(`the req body includes + ${util.inspect(req.body, { depth: null })}`);
@@ -2983,7 +2984,7 @@ app.post('/slack/actions', urlencodedParser, async (req, res) => {
 		}
 
 	}
-	res.status(200).end(); // best practice to respond with 200 status
+	// res.status(200).end(); // best practice to respond with 200 status
 
 });
 
