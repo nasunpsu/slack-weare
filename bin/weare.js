@@ -419,7 +419,7 @@ app.get('/api/oauth', function (req, res, next) {
 									res.redirect('/');
 								});
 							await similarity.awaitDbConnection();
-							snapshot_db['users'] = await DB.collection('users').find({}).toArray();
+							snapshot_db['users'] = await DB.collection('users').find({ is_bot: false }).toArray();
 						}
 					});
 			}
@@ -599,6 +599,7 @@ app.get('/introprompts', async (req, res) => {
 			uid: {
 				"$nin": uids
 			},
+			is_bot: false,
 			channels: {
 				"cid": "T0A286J8K_CERG8B7A9",
 				"cname": "test_bot"
@@ -682,6 +683,7 @@ app.get('/createchannelsprompts', async (req, res) => {
 			uid: {
 				"$nin": uids //not in the list of users who have created channels
 			},
+			is_bot: false,
 			channels: {
 				"cid": "T0A286J8K_CERG8B7A9",
 				"cname": "test_bot"
@@ -845,7 +847,7 @@ app.post('/slack/events', (req, res, next) => {
 
 											const obj_whatever = await similarity.storeSimilarUsers([uid]);
 											await similarity.awaitDbConnection();
-											const res = await DB.collection('users').find({}, { uid: 1 });
+											const res = await DB.collection('users').find({ is_bot: false }, { uid: 1 });
 											const array = await res.toArray();
 											const uids = array.map(user => user.uid).filter(uid => !!uid);
 											// uids.forEach(uid => similarity.storeSimilarUsers(uid));
@@ -1021,7 +1023,7 @@ app.post('/slack/events', (req, res, next) => {
 														if (err) console.error(err);
 														else console.log('pushed channel to the user after the joining event');
 														await similarity.awaitDbConnection();
-														const res = await DB.collection('users').find({}, { uid: 1 });
+														const res = await DB.collection('users').find({ is_bot: false }, { uid: 1 });
 														const array = await res.toArray();
 														const uids = array.map(user => user.uid).filter(uid => !!uid);
 														// uids.forEach(uid => similarity.storeSimilarUsers(uid));
@@ -3022,7 +3024,7 @@ app.get('/', async function (req, res) {
 	to_be_rendered.team = req.session.team;
 	to_be_rendered.userInfo = req.session.user;
 	await similarity.awaitDbConnection();
-	to_be_rendered.members = await DB.collection('users').find({ team_id: req.session.team ? req.session.team.team_id : 'T0A286J8K' }).toArray().then((results) => {
+	to_be_rendered.members = await DB.collection('users').find({ team_id: req.session.team ? req.session.team.team_id : 'T0A286J8K', is_bot: false }).toArray().then((results) => {
 		console.log('getting users of the channels');
 		if (results.length != 0) {
 			//categorize the users based on their tz_labels, sorted by tz_offset
@@ -3638,7 +3640,7 @@ app.get('/network', async function (req, res) {
 	to_be_rendered.template = 'network-template';
 	to_be_rendered.userInfo = req.session.user;
 	await similarity.awaitDbConnection();
-	to_be_rendered.data = await DB.collection('users').find({ team_id: req.session.team.team_id }).toArray().then(async (results, err) => {
+	to_be_rendered.data = await DB.collection('users').find({ team_id: req.session.team.team_id, is_bot: false }).toArray().then(async (results, err) => {
 		if (err) console.error(err);
 		else if (results.length != 0) {
 			let nodes = results, set_nodes = [], direct_nodes = [], distL = [], distL_temp = [], links = [], c_node = req.session.user, self_channels = req.session.user.channels;
@@ -3692,7 +3694,7 @@ app.get('/network', async function (req, res) {
 					await distL_temp.forEach(async (l) => {
 						// console.log(`the distance of other nodes is ${l.distIdx}`);
 						await similarity.awaitDbConnection();
-						if (typeof snapshot_db['users'] == 'undefined') snapshot_db['users'] = await DB.collection('users').find({}).toArray();
+						if (typeof snapshot_db['users'] == 'undefined') snapshot_db['users'] = await DB.collection('users').find({ is_bot: false }).toArray();
 						if (l.distIdx <= snapshot_db['users'].filter(u => u.uid == c_node.uid)[0].similar_users_dict.third_quartile) {
 							// console.log(`this met criteria and now is going to be put into link from ${l.uid} to ${c_node.uid}`);
 							await links.push({
@@ -3725,7 +3727,7 @@ app.get('/temporal', async function (req, res) {
 	to_be_rendered.template = 'tz-template';
 	to_be_rendered.userInfo = req.session.user;
 	await similarity.awaitDbConnection();
-	to_be_rendered.members = await DB.collection('users').find({ team_id: req.session.team.team_id }).toArray().then(async (results, err) => {
+	to_be_rendered.members = await DB.collection('users').find({ team_id: req.session.team.team_id, is_bot: false }).toArray().then(async (results, err) => {
 		if (err) console.error(err);
 		else if (results.length != 0) {
 			//categorize the users based on their tz_labels, sorted by tz_offset
@@ -3777,7 +3779,7 @@ app.post('/rtmconnect', (req, res) => {
 async function rtmConnectFn(team_id) {
 	if (typeof ws == 'undefined' || ws.readyState != WebSocket.OPEN) {
 		await similarity.awaitDbConnection();
-		snapshot_db['users'] = await DB.collection('users').find({}).toArray();
+		snapshot_db['users'] = await DB.collection('users').find({ is_bot: false}).toArray();
 		console.log('Connecting rtm.connect now:');
 		console.log(`snapshot users length is ${snapshot_db['users'].length}`);
 		// Promise.resolve(snapshot_db['users'])
@@ -4141,7 +4143,7 @@ async function UpdateChannelRecentMsgs(c_id, cname, token, limit = 200) {
 	if (c_id) console.log(`channel id passed in is ${c_id}`);
 	else console.log(`channel id passed in is EMPTY; I going to update messages in the subscribed channels only`);
 	await similarity.awaitDbConnection();
-	snapshot_db['users'] = await DB.collection('users').find({}).toArray();
+	snapshot_db['users'] = await DB.collection('users').find({is_bot: false}).toArray();
 	await similarity.awaitDbConnection();
 	snapshot_db['channels'] = await DB.collection('channels').find({}).toArray();
 	if (!c_id) { //c_id is not defined, pull all the channels msg
@@ -4315,7 +4317,8 @@ async function ActiveWho(uids) {
 	const activeMembers = await DB.collection('users').find({
 		uid: {
 			"$in": uids
-		}
+		},
+		is_bot: false
 	})
 		.toArray();
 	// var promiseArray = [];
