@@ -811,7 +811,7 @@ app.post('/slack/events', (req, res, next) => {
 								if (!userInfo.is_bot) {
 									console.log(`Updating Locale etc for ${userInfo.profile.real_name}`);
 									await similarity.awaitDbConnection();
-									DB.collection('users').updateOne(
+									await DB.collection('users').updateOne(
 										{ uid: teamID + '_' + userID },
 										{
 											$set: {
@@ -850,7 +850,7 @@ app.post('/slack/events', (req, res, next) => {
 											console.log('user updated with LDAP succesfully');
 											const join_channel = event.type == 'member_joined_channel' ? await fn_first_join() : true;
 
-											const obj_whatever = await similarity.storeSimilarUsers([uid]);
+											// const obj_whatever = await similarity.storeSimilarUsers([uid]);
 											await similarity.awaitDbConnection();
 											const res = await DB.collection('users').find({}, { uid: 1 });
 											const array = await res.toArray();
