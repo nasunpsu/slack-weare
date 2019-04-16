@@ -699,14 +699,14 @@ app.get('/createchannelsprompts', async (req, res) => {
 		// 		member.uid
 		// 	));
 		const UsersArray = await users.toArray();
-		
+
 		UsersArray.forEach(async u => {
-			if(u.major == undefined) {
-				if(!majors['undefined']) majors['undefined'] = [];
+			if (u.major == undefined) {
+				if (!majors['undefined']) majors['undefined'] = [];
 				majors['undefined'].push(u.uid);
 			}
-			if(majors[u.major]) {
-				if(!majors[u.major].includes(u.uid)) majors[u.major].push(u.uid);
+			if (majors[u.major]) {
+				if (!majors[u.major].includes(u.uid)) majors[u.major].push(u.uid);
 			}
 			else {
 				majors[u.major] = [];
@@ -723,10 +723,10 @@ app.get('/createchannelsprompts', async (req, res) => {
 				web.chat.postMessage({
 					as_user: false,
 					channel: dm.channel.id,
-					attachments: majors[user.major].length-1? JSON.stringify([
+					attachments: majors[user.major].length - 1 ? JSON.stringify([
 						{
-							title: user.major? `Would you like to create a channel for your major ${user.major}?`: `It looks like your Slack account is associated with your PSU alias email ${user.email}`,
-							text: user.major? `There are *${majors[user.major].length}* students who share your major of _${user.major}_, and you can connect with them by creating a channel!.`: `Please change your Slack email in your profile to be your original PSU email.`,
+							title: user.major ? `Would you like to create a channel for your major ${user.major}?` : `It looks like your Slack account is associated with your PSU alias email ${user.email}`,
+							text: user.major ? `There are *${majors[user.major].length}* students who share your major of _${user.major}_, and you can connect with them by creating a channel!.` : `Please change your Slack email in your profile to be your original PSU email.`,
 							callback_id: 'channel_creation_prompt',
 							color: '#74c8ed',
 						},
@@ -736,10 +736,10 @@ app.get('/createchannelsprompts', async (req, res) => {
 							callback_id: 'advertise_url',
 							color: '#FBBD08',
 						}
-					]): JSON.stringify([
+					]) : JSON.stringify([
 						{
-							title: user.major? `It looks like not many students from your major _${user.major}_ have found their way to our Slack WeAre! family. Feel free to invite students in your classes to join the WeAre! Slack using this signup link!`: `It looks like your Slack account is associated with your PSU alias email ${user.email}`,
-							text: user.major? `https://join.slack.com/t/weare-pennstate/signup.`: `Please change your Slack email in your profile to be your original PSU email.`,
+							title: user.major ? `It looks like not many students from your major _${user.major}_ have found their way to our Slack WeAre! family. Feel free to invite students in your classes to join the WeAre! Slack using this signup link!` : `It looks like your Slack account is associated with your PSU alias email ${user.email}`,
+							text: user.major ? `https://join.slack.com/t/weare-pennstate/signup.` : `Please change your Slack email in your profile to be your original PSU email.`,
 							callback_id: 'invite_team_join_prompt',
 							color: '#74c8ed',
 						}
@@ -778,6 +778,7 @@ app.post('/slack/events', (req, res, next) => {
 		case 'event_callback': {
 			// Verify the signing secret
 			// if (signature.isVerified(req)) {
+			res.sendStatus(200);
 			const event = req.body.event;
 			if (event.is_bot) break;
 			console.log(`within event callback: ${event}`);
@@ -972,7 +973,7 @@ app.post('/slack/events', (req, res, next) => {
 										});
 								}
 							});
-						res.sendStatus(200);
+						// res.sendStatus(200);
 					}
 					else if (event.type == 'member_joined_channel') {
 						if (!event.is_bot) {
@@ -1053,7 +1054,7 @@ app.post('/slack/events', (req, res, next) => {
 								}
 							});
 						}
-						res.sendStatus(200);
+						// res.sendStatus(200);
 					}
 				}
 				else switch (event.type) {
@@ -1273,7 +1274,7 @@ app.post('/slack/events', (req, res, next) => {
 								});
 
 						}
-						res.sendStatus(200);
+						// res.sendStatus(200);
 						break;
 					case 'team_join':
 						console.log('team_join event happening');
@@ -1335,7 +1336,7 @@ app.post('/slack/events', (req, res, next) => {
 						// 			}
 						// 		});
 						// }
-						res.sendStatus(200);
+						// res.sendStatus(200);
 						break;
 					case 'channel_created':
 						let channel = event.channel;
@@ -1439,7 +1440,7 @@ app.post('/slack/events', (req, res, next) => {
 								});
 							});
 
-						res.sendStatus(200);
+						// res.sendStatus(200);
 						break;
 					case 'channel_deleted':
 						console.log(`deleting the channel------- ${util.inspect(event.channel, { depth: null })}; event is ${util.inspect(event, { depth: null })}`);
@@ -1493,7 +1494,7 @@ app.post('/slack/events', (req, res, next) => {
 							});
 						});
 
-						res.sendStatus(200);
+						// res.sendStatus(200);
 						break;
 					// case 'channel_rename':
 
@@ -1658,7 +1659,7 @@ app.post('/slack/events', (req, res, next) => {
 								.catch(err => console.error(err));
 						}
 
-						res.sendStatus(200);
+						// res.sendStatus(200);
 						break;
 
 					case 'message_changed':
@@ -1682,7 +1683,7 @@ app.post('/slack/events', (req, res, next) => {
 								if (err) console.error(err);
 								else console.log('reaction added!');
 							});
-						res.sendStatus(200);
+						// res.sendStatus(200);
 						break;
 					case 'reaction_removed':
 						await similarity.awaitDbConnection();
@@ -1703,7 +1704,7 @@ app.post('/slack/events', (req, res, next) => {
 								if (err) console.error(err);
 								else console.log('reaction removed!');
 							});
-						res.sendStatus(200);
+						// res.sendStatus(200);
 						break;
 					case 'user_change':
 						//event - event.user
@@ -1722,7 +1723,7 @@ app.post('/slack/events', (req, res, next) => {
 						if (!result.result.ok) {
 							console.warn('User change event had an error in its query' + res);
 						}
-						res.sendStatus(200);
+						// res.sendStatus(200);
 						break;
 					default:
 						console.log(`unknown event type`);
@@ -2621,7 +2622,7 @@ app.post('/slack/actions', urlencodedParser, async (req, res) => {
 				case 'channels_list':
 					console.log(`within channels_list the body contains: ${util.inspect(body, { depth: 3 })}`);
 					await similarity.awaitDbConnection();
-					let channel_info = await DB.collection('channels').findOne({ cid: body.team.id + '_' + body.channel.id});
+					let channel_info = await DB.collection('channels').findOne({ cid: body.team.id + '_' + body.channel.id });
 					// let c_name = channel_list.map(c => c.cname)[0];
 					// console.log(`channel list is ${util.inspect(channel_list, { depth: null })}`);
 					web.chat.postMessage({
@@ -3780,7 +3781,7 @@ app.post('/rtmconnect', (req, res) => {
 async function rtmConnectFn(team_id) {
 	if (typeof ws == 'undefined' || ws.readyState != WebSocket.OPEN) {
 		await similarity.awaitDbConnection();
-		snapshot_db['users'] = await DB.collection('users').find({ is_bot: false}).toArray();
+		snapshot_db['users'] = await DB.collection('users').find({ is_bot: false }).toArray();
 		console.log('Connecting rtm.connect now:');
 		console.log(`snapshot users length is ${snapshot_db['users'].length}`);
 		// Promise.resolve(snapshot_db['users'])
@@ -4144,7 +4145,7 @@ async function UpdateChannelRecentMsgs(c_id, cname, token, limit = 200) {
 	if (c_id) console.log(`channel id passed in is ${c_id}`);
 	else console.log(`channel id passed in is EMPTY; I going to update messages in the subscribed channels only`);
 	await similarity.awaitDbConnection();
-	snapshot_db['users'] = await DB.collection('users').find({is_bot: false}).toArray();
+	snapshot_db['users'] = await DB.collection('users').find({ is_bot: false }).toArray();
 	await similarity.awaitDbConnection();
 	snapshot_db['channels'] = await DB.collection('channels').find({}).toArray();
 	if (!c_id) { //c_id is not defined, pull all the channels msg
