@@ -1628,7 +1628,8 @@ app.post('/slack/events', (req, res, next) => {
 							})();
 						}
 						else {
-							web_slack.conversations.history({ // pay attention the user token (for reading history from channel/groups) but the bot is used to write
+							console.log(`the event content is ${util.inspect(event, {depth: null})}`);
+								web_slack.conversations.history({ // pay attention the user token (for reading history from channel/groups) but the bot is used to write
 								channel: event.channel, //#test-bot (left) #learning-tech C0A34HJVA
 								limit: 1,
 								// cursor: cursor
