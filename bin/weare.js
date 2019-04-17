@@ -1590,7 +1590,7 @@ app.post('/slack/events', (req, res, next) => {
 
 
 						}
-						if (event.parent_user_id) {
+						if (event.parent_user_id) { //reply
 							(async () => {
 								await similarity.awaitDbConnection();
 								let msg_creator = await DB.collection('users').find({ uid: req.body.team_id + '_' + event.user },
@@ -3155,6 +3155,21 @@ app.get('/', async function (req, res) {
 	to_be_rendered.msgs_total = await DB.collection('msgs').find({}).toArray().then(res => {
 		return Promise.resolve(res.length);
 	});
+	const maxMessageLength = 170;
+	to_be_rendered.msgs = to_be_rendered.msgs.map(msg => {
+		if(msg.text.length > maxMessageLength){
+			let nextSpace = msg.text.slice(maxMessageLength).indexOf(' ');
+			nextSpace = nextSpace === -1 ? maxMessageLength: nextSpace;
+			const sliceIndex = nextSpace + maxMessageLength;
+			msg.extraText = msg.text.slice(sliceIndex);
+			if(msg.extraText.length < 20){
+				return msg;
+			}
+			msg.text = msg.text.slice(0, sliceIndex);
+			msg.hasExtra = true;
+		}
+		return msg;
+	});
 	res.render('index', to_be_rendered);
 });
 app.get('/cardview', async function (req, res) {
@@ -3171,16 +3186,22 @@ app.get('/tablelist', async function (req, res) {
 	to_be_rendered.template = 'table-template';
 	to_be_rendered.userInfo = req.session.user;
 	const numUsers = 1000;
-	const fields = ['uid', 'real_name', 'city', 'channels', 'major', 'local_area', 'affiliation', 'campus'];
+	const fields = ['uid', 'real_name', 'city', 'channels', 'major', 'local_area', 'affiliation', 'campus', 'pastCities'];
 	let users = await similarity.getSimilarUsers(req.session.user.uid, DB, numUsers, fields);
 	// to_be_rendered.users = similarity.createSimilarityField(req.session.user, users, fields);
 	console.log(`users length is ${users.length}`);
 	to_be_rendered.users = users.map(user => {
+		if (!!user.region) {
+			user.city = user.region;
+			return user;
+		}
 		if (!!user.city) {
 			return user;
 		}
-		if (!!user.region) {
-			user.city = user.region;
+		if (!!user.pastCities){
+			const cities = user.pastCities.split(';')
+			const selectedCity = cities[0];
+			user.city = selectedCity;
 			return user;
 		}
 		if (!!user.local_area) {
@@ -3920,7 +3941,10 @@ async function rtmConnectFn(team_id) {
 				});
 				ws.on('close', function close() {
 					console.log('----------------disconnected---------------------');
-
+					
+					setTimeout(function () {
+						RestartRTM(team_id);
+					}, 5000);
 				});
 			}
 		});
@@ -3928,6 +3952,10 @@ async function rtmConnectFn(team_id) {
 	else console.log('Already connected');
 	// next();
 
+}
+
+function RestartRTM(team_id) {
+	rtmConnectFn(team_id);
 }
 //calculate similar users here
 async function InitTeamMembers(team_id, token, limit = null) {

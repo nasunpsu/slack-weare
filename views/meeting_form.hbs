@@ -154,4 +154,13 @@
 
     {{/if}}
 </div>
-<div id="data_string" placeholder="Topic" data='{{{unescape (json meeting)}}}' style="display: None"></div>
+<div id="data_string" placeholder="Topic" data='{{json meeting}}' style="display: None"></div>
+<script>
+    window.meeting = (() => {
+        const meetingString = `{{json meeting}}`;
+        const text = document.createElement('textarea');
+        text.innerHTML = meetingString;
+        const meeting = JSON.parse(text.value);
+        return meeting;
+    })();
+</script>
