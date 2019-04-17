@@ -1744,8 +1744,8 @@ app.post('/slack/events', (req, res, next) => {
 app.post('/slack/commands/discuss', urlencodedParser, async (req, res) => {
 	console.log(`within discuss`);
 	res.status(200).end(); // best practice to respond with empty 200 status code
-	var reqBody = req.body
-	var responseURL = reqBody.response_url
+	var reqBody = req.body;
+	var responseURL = reqBody.response_url;
 	await similarity.awaitDbConnection();
 	DB.collection('userlogs').updateOne({ log_id: makeid() }, {
 		$set: {
@@ -1799,6 +1799,7 @@ app.post('/slack/commands/discuss', urlencodedParser, async (req, res) => {
 
 app.post('/slack/commands/WhoIsOnline', urlencodedParser, async (req, res) => {
 	res.status(200).end();
+	var reqBody = req.body;
 	console.log(`the req body in WhoIsOnline Command includes + ${util.inspect(req.body, { depth: null })}`);
 	await similarity.awaitDbConnection();
 	DB.collection('userlogs').updateOne({ log_id: makeid() }, {
@@ -3166,13 +3167,16 @@ app.get('/tablelist', async function (req, res) {
 	});
 
 	to_be_rendered.users = similarity.createIsSharedField(req.session.user, users, fields);
-	console.log(`number of channels for ${req.session.user.real_name} is ${req.session.user.channels}`);
+	console.log(`number of channels for ${req.session.user.real_name} is ${req.session.user.channels[0]}`);
 	const channelNames = req.session.user.channels.map(channel => channel.cname)
 		.filter(channel => channel !== 'general');
 	to_be_rendered.channelNames = channelNames;
 	to_be_rendered.users = to_be_rendered.users.map(user => {
 		if (!user.channels) {
 			user.channelNames = [];
+			console.error(`${user.uid} and ${user.first_name} has no channels :: ERROR:: `);
+			// await UpdateMembers([user.uid]);
+			// user.channels = await DB.collection('users').findOne({ uid: user.uid}).then( user => Promise.resolve(user.channels));
 		}
 		else {
 			user.channelNames = user.channels.map(channel => channel.cname)
@@ -4052,6 +4056,49 @@ async function InitTeamMembers(team_id, token, limit = null) {
 			if (!cursor) break;
 		}
 	}
+}
+
+async function UpdateMembers(uids) {
+	var first = true, cursor = "fake", counter = 0;
+	uids.forEach(async (uid) => {
+		console.log(`updating the member: ${uid}`);
+		var user_channels = [];
+		await web_slack.users.conversations({
+			user: uid.split('_')[1],
+			limit: 200, //this should be c_limit for channel limit per member instead of the limit as the users list
+			// cursor: c_cursor this should also be initialized
+		}).then(res_channels => {
+			res_channels.channels.forEach(c => {
+				user_channels.push({
+					cid: m.team_id + '_' + c.id,
+					cname: c.name
+				});
+			});
+		});
+		const onComplete = async () => {
+			console.log(`user ${m.real_name} updated succesfully: next retrieving ldap and similarity`);
+			const email = m.profile.email;
+			const fullName = m.profile.real_name;
+			try {
+				await ldap.updateUserWithLdapData(email, fullName, uid, DB);
+			} catch (e) {
+				console.log('error', e.toString());
+			}
+			await similarity.storeSimilarUsers([uid]);
+		}
+		await similarity.awaitDbConnection();
+		DB.collection('users').updateOne(
+			{ uid: uid },
+			{
+				$set: {
+					channels: user_channels
+				}
+			},
+			{ upsert: false },
+			onComplete);
+
+	});
+
 }
 
 async function InitTeamChannels(team_id, token, limit = null) {
