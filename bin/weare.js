@@ -1563,7 +1563,7 @@ app.post('/slack/events', (req, res, next) => {
 
 
 						}
-						if (event.parent_user_id) {
+						if (event.parent_user_id) { //reply
 							(async () => {
 								await similarity.awaitDbConnection();
 								let msg_creator = await DB.collection('users').find({ uid: req.body.team_id + '_' + event.user },
@@ -3893,7 +3893,10 @@ async function rtmConnectFn(team_id) {
 				});
 				ws.on('close', function close() {
 					console.log('----------------disconnected---------------------');
-
+					
+					setTimeout(function () {
+						RestartRTM(team_id);
+					}, 5000);
 				});
 			}
 		});
@@ -3901,6 +3904,10 @@ async function rtmConnectFn(team_id) {
 	else console.log('Already connected');
 	// next();
 
+}
+
+function RestartRTM(team_id) {
+	rtmConnectFn(team_id);
 }
 //calculate similar users here
 async function InitTeamMembers(team_id, token, limit = null) {
