@@ -3131,6 +3131,21 @@ app.get('/', async function (req, res) {
 	to_be_rendered.msgs_total = await DB.collection('msgs').find({}).toArray().then(res => {
 		return Promise.resolve(res.length);
 	});
+	const maxMessageLength = 170;
+	to_be_rendered.msgs = to_be_rendered.msgs.map(msg => {
+		if(msg.text.length > maxMessageLength){
+			let nextSpace = msg.text.slice(maxMessageLength).indexOf(' ');
+			nextSpace = nextSpace === -1 ? maxMessageLength: nextSpace;
+			const sliceIndex = nextSpace + maxMessageLength;
+			msg.extraText = msg.text.slice(sliceIndex);
+			if(msg.extraText.length < 20){
+				return msg;
+			}
+			msg.text = msg.text.slice(0, sliceIndex);
+			msg.hasExtra = true;
+		}
+		return msg;
+	});
 	res.render('index', to_be_rendered);
 });
 app.get('/cardview', async function (req, res) {
