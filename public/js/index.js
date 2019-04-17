@@ -1,3 +1,20 @@
+function showHide(element){
+    if($(element).text() === 'show more'){
+	$(element).text('show less');
+    }
+    else{
+	$(element).text('show more');
+    }
+    const parent = $(element).closest('.message');
+    const hideableElement = parent.find('.hideable')[0];
+    if(hideableElement.style.display === 'none'){
+	hideableElement.style.display = '';
+    }
+    else{
+	hideableElement.style.display = 'none';
+    }
+}
+
 window.addEventListener("DOMContentLoaded", function () {
 	var emoji = new EmojiConvertor();
 

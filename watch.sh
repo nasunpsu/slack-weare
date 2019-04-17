@@ -3,7 +3,10 @@ if [ $EUID != 0 ]; then
     sudo "$0" "$@"
     exit $?
 fi
+<<<<<<< HEAD
 echo "starting watch script"
+=======
+>>>>>>> origin/master
 while inotifywait -q -q -e modify /root/.pm2/logs/weare-error.log; do
    last_line=$(tail -n 1 /root/.pm2/logs/weare-error.log)
    if [[ "$last_line" =~ .*loop.*watchers.* ]]; then
