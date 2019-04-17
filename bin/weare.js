@@ -3147,16 +3147,22 @@ app.get('/tablelist', async function (req, res) {
 	to_be_rendered.template = 'table-template';
 	to_be_rendered.userInfo = req.session.user;
 	const numUsers = 1000;
-	const fields = ['uid', 'real_name', 'city', 'channels', 'major', 'local_area', 'affiliation', 'campus'];
+	const fields = ['uid', 'real_name', 'city', 'channels', 'major', 'local_area', 'affiliation', 'campus', 'pastCities'];
 	let users = await similarity.getSimilarUsers(req.session.user.uid, DB, numUsers, fields);
 	// to_be_rendered.users = similarity.createSimilarityField(req.session.user, users, fields);
 	console.log(`users length is ${users.length}`);
 	to_be_rendered.users = users.map(user => {
+		if (!!user.region) {
+			user.city = user.region;
+			return user;
+		}
 		if (!!user.city) {
 			return user;
 		}
-		if (!!user.region) {
-			user.city = user.region;
+		if (!!user.pastCities){
+			const cities = user.pastCities.split(';')
+			const selectedCity = cities[0];
+			user.city = selectedCity;
 			return user;
 		}
 		if (!!user.local_area) {
