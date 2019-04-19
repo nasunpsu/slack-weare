@@ -72,6 +72,14 @@
         <div class="ui card message-card">
             <div class="message medium ui basic label">
                 {{msg.text}}
+                {{#if msg.hasExtra}}
+                <span class="hideable" style="display: none">
+                    {{msg.extraText}}
+                </span>
+                <div>
+                    <a href="#/" onclick="showHide(this)">show more</a>
+                </div>
+                {{/if}}
             </div>
             <div class="ui basic label react-emoji-count">
                 {{#each msg.reactions as |react|}} 

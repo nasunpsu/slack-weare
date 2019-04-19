@@ -1,7 +1,24 @@
-let string_data = document.getElementById("data_string").getAttribute('data');
-let meeting = JSON.parse(string_data);
-console.log(meeting);
+let meeting = window.meeting;
+meeting = unescapeAll(meeting);
+function unescapeAll(obj){
+    if(typeof obj === 'object'){
+        for(const key in obj){
+            obj[key] = unescapeAll(obj[key]);
+        }
+        return obj;
+    }
+    if(typeof obj === 'string'){
+        return unescapeHTML(obj);
+    }
+    return obj;
+}
 
+function unescapeHTML(string){
+    const text = document.createElement('textarea');
+    text.innerHTML = string;
+    const newString = text.value;
+    return newString;
+}
 if (meeting.attendees) $('.select-attendee.ui.fluid.dropdown')
     .dropdown('set selected', meeting.attendees.map(m => m.uid));
 

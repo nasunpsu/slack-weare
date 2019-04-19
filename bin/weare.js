@@ -23,6 +23,7 @@ const apiUrl = 'https://slack.com/api';
 const base_url = 'https://404827e3.ngrok.io';
 const presence_snapshot = {};
 const snapshot_db = {};
+const majors = {};
 // const methodUril = 'https://slack.com/api/';
 const qs = require('querystring');
 const hbs = require('express-handlebars');
@@ -253,7 +254,7 @@ const logEvent = async (body, req) => {
 	}
 	if ('uid' in body && body.type === 'Activity') {
 		(async () => {
-			const isActive = body.content.type === 'Active';
+			const isActive = body.content === 'User became active';
 			const updateDoc = { $set: { isActive } }
 			await similarity.awaitDbConnection();
 			const newUser = await DB.collection('users').findOneAndUpdate({ uid: body.uid }, updateDoc,
@@ -418,7 +419,7 @@ app.get('/api/oauth', function (req, res, next) {
 									res.redirect('/');
 								});
 							await similarity.awaitDbConnection();
-							snapshot_db['users'] = await DB.collection('users').find({}).toArray();
+							snapshot_db['users'] = await DB.collection('users').find({ is_bot: false }).toArray();
 						}
 					});
 			}
@@ -583,6 +584,188 @@ app.get('/sendconsentform', async (req, res) => {
 	res.send('happy consent form sent out');
 });
 
+app.get('/introprompts', async (req, res) => {
+	await similarity.awaitDbConnection();
+	// let userIDs = 
+	await DB.collection('userlogs').find(
+		{
+			action: `open the intro dialog`,
+		}
+	).toArray().then(async (userlogs) => {
+		const uids = userlogs.map(u => u.uid);
+		console.log(`length of uids array is ${uids.length}`);
+		await similarity.awaitDbConnection();
+		let users = await DB.collection('users').find({
+			uid: {
+				"$nin": uids
+			},
+			is_bot: false,
+			channels: {
+				"cid": "T0A286J8K_CERG8B7A9",
+				"cname": "test_bot"
+			},
+			intro: {
+				"$ne": 'sent'
+			}
+		});
+		// const UsersArray = await Allusers.toArray();
+		// const users = UsersArray.filter(
+		// 	member => !uids.includes(
+		// 		member.uid
+		// 	));
+		const UsersArray = await users.toArray();
+		console.log(`length of users array is ${UsersArray.length}`);
+		UsersArray.forEach(async user => {
+			web.im.open({
+				user: user.uid.split('_')[1]
+			}).then(dm => {
+				console.log(`DM the intro prompt in ${dm.channel.id}`);
+
+				web.chat.postMessage({
+					as_user: false,
+					channel: dm.channel.id,
+					attachments: JSON.stringify([
+						{
+							title: 'Would you like to introduce yourself to your peer group?',
+							text: 'Penn State World Campus is a place for learning and growth. Learn from your peers when you participate and share.',
+							callback_id: 'consent',
+							color: '#74c8ed',
+							actions: [{
+								name: 'introduce',
+								text: 'Introduce myself',
+								type: 'button',
+								value: 'intro-nochannel',
+								style: 'primary'
+							}
+							],
+						},
+						{
+							title: 'Visit our dashboard <https://weconnect.ist.psu.edu:8443|WeConnect> to explore your community!',
+							text: 'To make full use of Slack and our tools, read our internal <https://weconnect.ist.psu.edu:8443/helppreview|wiki>. If you have any technical questions, check <https://get.slack.help/hc/en-us|official slack help page>, post them in <#CGNQYDKKJ|help-slack> or ask your peer groups for help.',
+							callback_id: 'advertise_url',
+							color: '#FBBD08',
+						}
+					])
+				}).catch(err => console.error(err));
+
+			}).catch(err => console.error(err));
+			await similarity.awaitDbConnection();
+			DB.collection('users').updateOne(
+				{ uid: user.uid },
+				{
+					$set: {
+						intro: 'sent'
+					}
+				},
+				{ upsert: true },
+				function (err, doc) {
+					if (err) console.error(err);
+					else console.log(`WeAre! sent introduce yourself prompt to ${user.uid}`);
+				});
+		})
+	});
+	console.log('---------------Intro prompt sent out ----------------');
+	res.send('happy intro invites sent out');
+});
+
+app.get('/createchannelsprompts', async (req, res) => {
+	await similarity.awaitDbConnection();
+
+	await DB.collection('userlogs').find(
+		{
+			action: `create the channel`,
+		}
+	).toArray().then(async (userlogs) => {
+		const uids = userlogs.map(u => u.uid);
+		console.log(`length of uids array is ${uids.length}`);
+		await similarity.awaitDbConnection();
+		let users = await DB.collection('users').find({
+			uid: {
+				"$nin": uids //not in the list of users who have created channels
+			},
+			is_bot: false,
+			channels: {
+				"cid": "T0A286J8K_CERG8B7A9",
+				"cname": "test_bot"
+			},
+			createprompt: {
+				"$ne": 'sent'
+			}
+		});
+
+		// const UsersArray = await Allusers.toArray();
+		// const users = UsersArray.filter(
+		// 	member => !uids.includes(
+		// 		member.uid
+		// 	));
+		const UsersArray = await users.toArray();
+
+		UsersArray.forEach(async u => {
+			if (u.major == undefined) {
+				if (!majors['undefined']) majors['undefined'] = [];
+				majors['undefined'].push(u.uid);
+			}
+			if (majors[u.major]) {
+				if (!majors[u.major].includes(u.uid)) majors[u.major].push(u.uid);
+			}
+			else {
+				majors[u.major] = [];
+				majors[u.major].push(u.uid);
+			}
+		})
+		console.log(`length of users array is ${UsersArray.length}`);
+		UsersArray.forEach(async user => {
+			web.im.open({
+				user: user.uid.split('_')[1]
+			}).then(dm => {
+				console.log(`DM the create channel prompt for same major if they are ${majors[user.major].length} in ${dm.channel.id}`);
+
+				web.chat.postMessage({
+					as_user: false,
+					channel: dm.channel.id,
+					attachments: majors[user.major].length - 1 ? JSON.stringify([
+						{
+							title: user.major ? `Would you like to create a channel for your major ${user.major}?` : `It looks like your Slack account is associated with your PSU alias email ${user.email}`,
+							text: user.major ? `There are *${majors[user.major].length}* students who share your major of _${user.major}_, and you can connect with them by creating a channel!.` : `Please change your Slack email in your profile to be your original PSU email.`,
+							callback_id: 'channel_creation_prompt',
+							color: '#74c8ed',
+						},
+						{
+							title: 'Please watch the GIFs in our internal <https://weconnect.ist.psu.edu:8443/helppreview|wiki> to learn how to create a new channel.',
+							text: 'Visit <https://weconnect.ist.psu.edu:8443/tablelist|WeConnect/tablelist> to explore your peers of the same major or location! If you have any technique questions, check <https://get.slack.help/hc/en-us|official slack help page>, post them in <#CGNQYDKKJ|help-slack> or ask your peer groups for help.',
+							callback_id: 'advertise_url',
+							color: '#FBBD08',
+						}
+					]) : JSON.stringify([
+						{
+							title: user.major ? `It looks like not many students from your major _${user.major}_ have found their way to our Slack WeAre! family. Feel free to invite students in your classes to join the WeAre! Slack using this signup link!` : `It looks like your Slack account is associated with your PSU alias email ${user.email}`,
+							text: user.major ? `https://join.slack.com/t/weare-pennstate/signup.` : `Please change your Slack email in your profile to be your original PSU email.`,
+							callback_id: 'invite_team_join_prompt',
+							color: '#74c8ed',
+						}
+					])
+				}).catch(err => console.error(err));
+
+			}).catch(err => console.error(err));
+			await similarity.awaitDbConnection();
+			DB.collection('users').updateOne(
+				{ uid: user.uid },
+				{
+					$set: {
+						createprompt: 'sent'
+					}
+				},
+				{ upsert: true },
+				function (err, doc) {
+					if (err) console.error(err);
+					else console.log(`WeAre! sent create a channel prompt to ${user.uid}`);
+				});
+		})
+	});
+	console.log('---------------create new channels for major prompt sent out ----------------');
+	res.send('happy major prompts sent out');
+});
+
 app.post('/slack/events', (req, res, next) => {
 	console.log(`an example event is ${util.inspect(req.body)}`);
 	switch (req.body.type) {
@@ -595,6 +778,7 @@ app.post('/slack/events', (req, res, next) => {
 		case 'event_callback': {
 			// Verify the signing secret
 			// if (signature.isVerified(req)) {
+			res.sendStatus(200);
 			const event = req.body.event;
 			if (event.is_bot) break;
 			console.log(`within event callback: ${event}`);
@@ -664,7 +848,7 @@ app.post('/slack/events', (req, res, next) => {
 
 											const obj_whatever = await similarity.storeSimilarUsers([uid]);
 											await similarity.awaitDbConnection();
-											const res = await DB.collection('users').find({}, { uid: 1 });
+											const res = await DB.collection('users').find({ is_bot: false }, { uid: 1 });
 											const array = await res.toArray();
 											const uids = array.map(user => user.uid).filter(uid => !!uid);
 											// uids.forEach(uid => similarity.storeSimilarUsers(uid));
@@ -789,7 +973,7 @@ app.post('/slack/events', (req, res, next) => {
 										});
 								}
 							});
-						res.sendStatus(200);
+						// res.sendStatus(200);
 					}
 					else if (event.type == 'member_joined_channel') {
 						if (!event.is_bot) {
@@ -840,7 +1024,7 @@ app.post('/slack/events', (req, res, next) => {
 														if (err) console.error(err);
 														else console.log('pushed channel to the user after the joining event');
 														await similarity.awaitDbConnection();
-														const res = await DB.collection('users').find({}, { uid: 1 });
+														const res = await DB.collection('users').find({ is_bot: false }, { uid: 1 });
 														const array = await res.toArray();
 														const uids = array.map(user => user.uid).filter(uid => !!uid);
 														// uids.forEach(uid => similarity.storeSimilarUsers(uid));
@@ -870,7 +1054,7 @@ app.post('/slack/events', (req, res, next) => {
 								}
 							});
 						}
-						res.sendStatus(200);
+						// res.sendStatus(200);
 					}
 				}
 				else switch (event.type) {
@@ -1090,7 +1274,7 @@ app.post('/slack/events', (req, res, next) => {
 								});
 
 						}
-						res.sendStatus(200);
+						// res.sendStatus(200);
 						break;
 					case 'team_join':
 						console.log('team_join event happening');
@@ -1152,7 +1336,7 @@ app.post('/slack/events', (req, res, next) => {
 						// 			}
 						// 		});
 						// }
-						res.sendStatus(200);
+						// res.sendStatus(200);
 						break;
 					case 'channel_created':
 						let channel = event.channel;
@@ -1189,7 +1373,7 @@ app.post('/slack/events', (req, res, next) => {
 							),
 						};
 
-						web.chat.postEphemeral(message)
+						web.chat.postMessage(message)
 							.catch(err => {
 								console.log(`error with posting ephmeral for channel_created`);
 								console.error(err);
@@ -1256,7 +1440,7 @@ app.post('/slack/events', (req, res, next) => {
 								});
 							});
 
-						res.sendStatus(200);
+						// res.sendStatus(200);
 						break;
 					case 'channel_deleted':
 						console.log(`deleting the channel------- ${util.inspect(event.channel, { depth: null })}; event is ${util.inspect(event, { depth: null })}`);
@@ -1310,7 +1494,7 @@ app.post('/slack/events', (req, res, next) => {
 							});
 						});
 
-						res.sendStatus(200);
+						// res.sendStatus(200);
 						break;
 					// case 'channel_rename':
 
@@ -1379,7 +1563,7 @@ app.post('/slack/events', (req, res, next) => {
 
 
 						}
-						if (event.parent_user_id) {
+						if (event.parent_user_id) { //reply
 							(async () => {
 								await similarity.awaitDbConnection();
 								let msg_creator = await DB.collection('users').find({ uid: req.body.team_id + '_' + event.user },
@@ -1475,7 +1659,7 @@ app.post('/slack/events', (req, res, next) => {
 								.catch(err => console.error(err));
 						}
 
-						res.sendStatus(200);
+						// res.sendStatus(200);
 						break;
 
 					case 'message_changed':
@@ -1499,7 +1683,7 @@ app.post('/slack/events', (req, res, next) => {
 								if (err) console.error(err);
 								else console.log('reaction added!');
 							});
-						res.sendStatus(200);
+						// res.sendStatus(200);
 						break;
 					case 'reaction_removed':
 						await similarity.awaitDbConnection();
@@ -1520,7 +1704,7 @@ app.post('/slack/events', (req, res, next) => {
 								if (err) console.error(err);
 								else console.log('reaction removed!');
 							});
-						res.sendStatus(200);
+						// res.sendStatus(200);
 						break;
 					case 'user_change':
 						//event - event.user
@@ -1539,7 +1723,7 @@ app.post('/slack/events', (req, res, next) => {
 						if (!result.result.ok) {
 							console.warn('User change event had an error in its query' + res);
 						}
-						res.sendStatus(200);
+						// res.sendStatus(200);
 						break;
 					default:
 						console.log(`unknown event type`);
@@ -1560,8 +1744,8 @@ app.post('/slack/events', (req, res, next) => {
 app.post('/slack/commands/discuss', urlencodedParser, async (req, res) => {
 	console.log(`within discuss`);
 	res.status(200).end(); // best practice to respond with empty 200 status code
-	var reqBody = req.body
-	var responseURL = reqBody.response_url
+	var reqBody = req.body;
+	var responseURL = reqBody.response_url;
 	await similarity.awaitDbConnection();
 	DB.collection('userlogs').updateOne({ log_id: makeid() }, {
 		$set: {
@@ -1615,6 +1799,7 @@ app.post('/slack/commands/discuss', urlencodedParser, async (req, res) => {
 
 app.post('/slack/commands/WhoIsOnline', urlencodedParser, async (req, res) => {
 	res.status(200).end();
+	var reqBody = req.body;
 	console.log(`the req body in WhoIsOnline Command includes + ${util.inspect(req.body, { depth: null })}`);
 	await similarity.awaitDbConnection();
 	DB.collection('userlogs').updateOne({ log_id: makeid() }, {
@@ -1637,53 +1822,6 @@ app.post('/slack/commands/intro', urlencodedParser, async (req, res) => {
 	res.status(200).end(); // best practice to respond with empty 200 status code
 	var reqBody = req.body;
 	console.log(`within intro: reqbody is ${util.inspect(reqBody, { depth: null })}`);
-	// var msg = {
-	// 	title: 'I am, We Are!',
-	// 	callback_id: 'self_intro',
-	// 	submit_label: 'Done',
-	// 	elements: [
-	// 		{
-	// 			label: 'Fun fact',
-	// 			type: 'text',
-	// 			name: 'fun',
-	// 			text: 'existing content blah blah',
-	// 			hint: 'Tell them something fun!'
-	// 		},
-	// 		{
-	// 			label: 'I live in',
-	// 			type: 'text',
-	// 			name: 'city',
-	// 			optional: true,
-	// 			hint: 'Separate places with ";"! (e.g. Pittsburgh, PA; Victoria, BC'
-	// 		},
-	// 		{
-	// 			label: 'Current profession',
-	// 			type: 'select',
-	// 			name: 'topic',
-	// 			options: [
-	// 				{ label: 'Veteran/military', value: 'military' },
-	// 				{ label: 'Industry sector', value: 'industry' },
-	// 				{ label: 'Education sector', value: 'education' },
-	// 				{ label: 'No job yet', value: 'unemployed' }
-	// 			],
-	// 		},
-	// 		{
-	// 			label: 'Things I want my peers here to know about me',
-	// 			type: 'text',
-	// 			name: 'unique',
-	// 			optional: true,
-	// 			hint: 'e.g. interests, language, value systems, hobbies, minority roles'
-	// 		}
-	// 	],
-	// };
-	// console.log('before dialog web method');
-	// console.log(util.inspect(msg, { depth: 3 }));
-	// web.dialog.open({
-	// 	trigger_id: reqBody.trigger_id,
-	// 	dialog: msg
-	// }).then(res => console.log(`successfully opened intro dialog`)).catch(err => { console.error(err); console.log(util.inspect(err, { depth: 3 })) });
-
-
 	await similarity.awaitDbConnection();
 	DB.collection('users').findOne({ uid: reqBody.team_id + '_' + reqBody.user_id }, async (err, user) => {
 		const msg2 = {
@@ -1773,6 +1911,7 @@ app.post('/slack/commands/intro', urlencodedParser, async (req, res) => {
 });
 
 app.post('/slack/actions', urlencodedParser, async (req, res) => {
+	res.status(200).end(); // best practice to respond with 200 status
 	var body = JSON.parse(req.body.payload); // parse URL-encoded payload JSON string
 	const { type, token, trigger_id } = body;
 	console.log(`the req body includes + ${util.inspect(req.body, { depth: null })}`);
@@ -2062,7 +2201,7 @@ app.post('/slack/actions', urlencodedParser, async (req, res) => {
 
 				(async () => {
 					const activeUIDs = await DB.collection('user_presence').find({ status: 'active' }).toArray();
-					const activeMembers = await ActiveWho(activeUIDs.map(a=>a.uid));
+					const activeMembers = await ActiveWho(activeUIDs.map(a => a.uid));
 					console.log(`who is online with ActiveWho func:`);
 					const usersnames = activeMembers.map(x => x.first_name), emails = activeMembers.map(x => x.email);
 					console.log('before empheral');
@@ -2189,6 +2328,91 @@ app.post('/slack/actions', urlencodedParser, async (req, res) => {
 								type: 'text',
 								name: 'pastCities',
 								optional: true,
+								value: user.pastCities ? he.unescape(user.pastCities) : null,
+								hint: 'Separate places with ";"! (e.g. Pittsburgh, PA; Victoria, BC)'
+							},
+							{
+								label: 'Current profession',
+								type: 'select',
+								name: 'profession',
+								options: [
+									{ label: 'Architecture and Engineering', value: '17' },
+									{ label: 'Arts, Design, Entertainment, Sports, and Media', value: '27' },
+									{ label: 'Building and Grounds Cleaning and Maintenance', value: '37' },
+									{ label: 'Business and Financial Operations', value: '13' },
+									{ label: 'Community and Social Service', value: '21' },
+									{ label: 'Computer and Mathematical', value: '15' },
+									{ label: 'Construction and Extraction', value: '47' },
+									{ label: 'Education, Training, and Library', value: '25' },
+									{ label: 'Farming, Fishing, and Forestry', value: '45' },
+									{ label: 'Food Preparation and Serving Related', value: '35' },
+									{ label: 'Healthcare Practitioners and Technical', value: '29' },
+									{ label: 'Healthcare Support', value: '31' },
+									{ label: 'Installation, Maintenance, and Repair', value: '49' },
+									{ label: 'Legal', value: '23' },
+									{ label: 'Life, Physical, and Social Science', value: '19' },
+									{ label: 'Management', value: '11' },
+									{ label: 'Miltary Specific', value: '55' },
+									{ label: 'Office and Administrative Support', value: '43' },
+									{ label: 'Personal Care and Service', value: '39' },
+									{ label: 'Production', value: '51' },
+									{ label: 'Protective Service', value: '33' },
+									{ label: 'Sales and Related', value: '41' },
+									{ label: 'Transportation and Material Moving', value: '53' },
+									{ label: 'Other', value: '0' },
+								],
+								value: 0
+							},
+							{
+								label: 'Fun fact',
+								type: 'text',
+								name: 'fun',
+								optional: true,
+								value: user.fun ? he.unescape(user.fun) : null,
+								hint: 'Tell your peers something interesting about yourself!'
+							},
+						],
+					};
+					DB.collection('userlogs').updateOne({ log_id: makeid() }, {
+						$set: {
+							uid: body.team.id + '_' + body.user.id,
+							action: `open the intro dialog`,
+							details: `via button click after the consent form`,
+							channel: body.team.id + '_' + body.channel.id,
+							ts: new Date()
+						},
+					}, { upsert: true }, function (err, res) {
+						if (err) console.error(err);
+						else console.log(`the user ${user.first_name} introduced in ${body.channel.id} `);
+					});
+					console.log('before dialog web method');
+					console.log(util.inspect(msg2, { depth: 3 }));
+					web.dialog.open({
+						trigger_id: trigger_id,
+						dialog: msg2
+					}).then(res => console.log(`successfully opened intro dialog`)).catch(err => { console.error(err); console.log(util.inspect(err, { depth: 3 })) });
+				});
+				break;
+			case 'intro-nochannel':
+				await similarity.awaitDbConnection();
+				DB.collection('users').findOne({ uid: body.team.id + '_' + body.user.id }, async (err, user) => {
+					const msg2 = {
+						title: 'I am, We Are!',
+						callback_id: 'self_intro-nochannel',
+						submit_label: 'Done',
+						elements: [
+							{
+								label: 'Things I want my peers here to know about me',
+								type: 'text',
+								name: 'title',
+								value: user.title ? he.unescape(user.title) : null,
+								hint: 'e.g. language, value systems, hobbies, minority roles, ethnicity'
+							},
+
+							{
+								label: 'I have lived in',
+								type: 'text',
+								name: 'pastCities',
 								value: user.pastCities ? he.unescape(user.pastCities) : null,
 								hint: 'Separate places with ";"! (e.g. Pittsburgh, PA; Victoria, BC)'
 							},
@@ -2392,19 +2616,19 @@ app.post('/slack/actions', urlencodedParser, async (req, res) => {
 
 			default: console.log('nothing cased'); break;
 		}
-		body.actions[0]
+		// body.actions[0]
 		if (body.actions[0].type == 'select') {
 			let post_in_channel = body.actions[0].selected_options[0].value;
 			switch (body.actions[0].name) {
 				case 'channels_list':
 					console.log(`within channels_list the body contains: ${util.inspect(body, { depth: 3 })}`);
-					// await similarity.awaitDbConnection();
-					// let channel_list = await DB.collection('channels').find({ cid: body.team.id + '_' + body.channel.id }).toArray();
+					await similarity.awaitDbConnection();
+					let channel_info = await DB.collection('channels').findOne({ cid: body.team.id + '_' + body.channel.id });
 					// let c_name = channel_list.map(c => c.cname)[0];
 					// console.log(`channel list is ${util.inspect(channel_list, { depth: null })}`);
 					web.chat.postMessage({
 						channel: post_in_channel,
-						text: `<!channel> :wave: :hugging_face: <@${body.user.id}> would like to invite folks who are interested to join the new channel *<#${body.channel.id}|${body.channel.name}>* :I_love_you_hand_sign:!`,
+						text: `<!channel> :wave: :hugging_face: <@${body.user.id}> would like to invite folks who are interested to join the new channel *<#${body.channel.id}|${channel_info.cname}>* :I_love_you_hand_sign:!`,
 						// attachments: JSON.stringify(attach)
 					})
 						.catch(err => console.error(err));
@@ -2412,14 +2636,78 @@ app.post('/slack/actions', urlencodedParser, async (req, res) => {
 					DB.collection('userlogs').updateOne({ log_id: makeid() }, {
 						$set: {
 							uid: body.team.id + '_' + body.user.id,
-							action: `post the new channel ${body.channel.id} ${body.channel.name} to promote`,
-							details: `in ${post_in_channel}`,
-							channel: body.team.id + '_' + body.channel.id,
+							action: `select channel to introduce`,
+							details: `in ${post_in_channel} ${channel_info.cname}`,
+							channel: body.team.id + '_' + post_in_channel,
 							ts: new Date()
 						},
 					}, { upsert: true }, function (err, res) {
 						if (err) console.error(err);
-						else console.log(`the user ${body.user.id} submmited in ${body.channel.name} `);
+						else console.log(`the user ${body.user.id} submmited in ${channel_info.cname} `);
+					});
+					break;
+
+				case 'channels_list_intro':
+					console.log('now you are saying hello from DM intro prompt!');
+					await similarity.awaitDbConnection();
+					DB.collection('users').findOne({ uid: body.team.id + '_' + body.user.id }, async (err, user) => {
+						DB.collection('userlogs').updateOne({ log_id: makeid() }, {
+							$set: {
+								uid: body.team.id + '_' + body.user.id,
+								action: `being introduced publicly`,
+								details: `${user.real_name} introduced in ${body.team.id}_${post_in_channel}`,
+								channel: body.team.id + '_' + post_in_channel,
+								ts: new Date()
+							},
+						}, { upsert: true }, function (err, res) {
+							if (err) console.error(err);
+							else console.log(`the user ${user.first_name} agreed to be introduced publicly in ${post_in_channel} `);
+						});
+						const attach = [
+							{
+								"title": `Let's welcome <@${body.user.id}> who has been to ${user.pastCities}.`,
+								"text": `Meet ${user.first_name} at <${base_url}/profile/${body.team.id}_${body.user.id}|profile page>.`,
+								"color": '#FBBD08'
+							},
+							{
+								"text": `Send ${user.first_name} some We Are! or some positive vibes! :fireworks: :tada: :wave: :clap:`,
+								"fallback": "Shame... buttons aren't supported in this land",
+								"callback_id": `${body.team.id}_${body.user.id}`,
+								"color": "#3AA3E3",
+								"actions": [
+									{
+										"name": "weare-welcome",
+										"text": "We Are!",
+										"type": "button",
+										"style": "primary",//093162 this is the PSU team color
+										"value": "weare-welcome"
+									},
+									{
+										"name": "heart",
+										"text": ":blue_heart:",
+										"type": "button",
+										"value": "heart",
+										"style": "danger"
+									},
+									{
+										"name": "dismiss",
+										"text": "Dismiss",
+										"type": "button",
+										"value": "dismiss-welcome",
+										"style": "default"
+									}
+								]
+							}
+						];
+						console.log(`interactive message - You confirmed to hello to the group!`);
+						console.log(`The user has confirmed to say hello! ${post_in_channel}`)
+						web.chat.postMessage({
+							channel: post_in_channel,
+							text: `I'd like to introduce *${user.real_name}*!`,
+							attachments: JSON.stringify(attach)
+						})
+							.catch(err => console.error(err));
+						console.log('now you finished hello and send the public message out');
 					});
 					break;
 				default:
@@ -2529,6 +2817,80 @@ app.post('/slack/actions', urlencodedParser, async (req, res) => {
 
 
 				break;
+			case 'self_intro-nochannel':
+				console.log(`Would you like to broadcast your join of the channel?! then choose one`);
+
+				(async () => {
+					await similarity.awaitDbConnection();
+					const newUser = await DB.collection('users').findOneAndUpdate(
+						{ uid: body.team.id + '_' + body.user.id },
+						{
+							$set: {
+								fun: submission.fun ? he.escape(submission.fun) : submission.fun,
+								profession: submission.profession,
+								title: submission.title ? he.escape(submission.title) : submission.title,
+								pastCities: submission.pastCities ? he.escape(submission.pastCities) : submission.pastCities
+							}
+						},
+						{ upsert: true, returnOriginal: false }).then((new_user) => {
+							DB.collection('userlogs').updateOne({ log_id: makeid() }, {
+								$set: {
+									uid: body.team.id + '_' + body.user.id,
+									action: `submit the intro dialog`,
+									details: `in ${body.channel.name}`,
+									channel: body.team.id + '_' + body.channel.id,
+									ts: new Date()
+								},
+							}, { upsert: true }, function (err, res) {
+								if (err) console.error(err);
+								else console.log(`the user ${new_user.value.first_name} submmited in ${body.channel.name} `);
+							});
+							// console.log(`after updating the user is ${util.inspect(new_user, { depth: 	null })}`);
+							return Promise.resolve({ newUser: new_user.value });
+
+						}).catch(err => {
+							console.log('the error caught is ...');
+							console.error(err);
+						});
+					// console.log(`new user is ${util.inspect(newUser, { depth: null })}`);
+					let edit_url = `/editProfile/`;
+					web.im.open({
+						user: body.user.id
+					}).then(dm => {
+						console.log(`DM the editprofile link in ${dm.channel.id}`);
+
+						web.chat.postMessage({
+							as_user: false,
+							channel: dm.channel.id,
+							// text: `Would you like to join the meeting?`,
+							attachments: JSON.stringify([
+								{
+									title: `Would you like me to introduce you in one of the channels?`,
+									text: 'Go and get some :blue_heart: and *We Are* from your peers by selecting one of the channels :point_down:!',
+									color: '#18B87E',
+									text: 'Choose a channel to post',
+									callback_id: 'channel_selection_intro',
+									actions: [{
+										"name": "channels_list_intro",
+										"text": "Pick a channel...",
+										"type": "select",
+										// "options": option_channels,
+										"data_source": "channels"
+									}],
+								},
+								{
+									title: 'An interesting profile can help your compatible peers find you!',
+									text: 'Go to ' + base_url + ' and click your name on the top right menu to edit your profile.',
+									color: '#74c8ed',
+									callback_id: 'edit_profile'
+								}]
+							)
+						}).catch(err => console.error(err));
+
+					}).catch(err => console.error(err));
+					console.log('self_intro-nochannel finished');
+				})();
+				break;
 			case 'schedule_later':
 				console.log(`action type is ${type} and body content is ${util.inspect(body, { depth: null })}`);
 				(async () => {
@@ -2624,7 +2986,7 @@ app.post('/slack/actions', urlencodedParser, async (req, res) => {
 		}
 
 	}
-	res.status(200).end(); // best practice to respond with 200 status
+	// res.status(200).end(); // best practice to respond with 200 status
 
 });
 
@@ -2665,7 +3027,7 @@ app.get('/', async function (req, res) {
 	to_be_rendered.team = req.session.team;
 	to_be_rendered.userInfo = req.session.user;
 	await similarity.awaitDbConnection();
-	to_be_rendered.members = await DB.collection('users').find({ team_id: req.session.team ? req.session.team.team_id : 'T0A286J8K' }).toArray().then((results) => {
+	to_be_rendered.members = await DB.collection('users').find({ team_id: req.session.team ? req.session.team.team_id : 'T0A286J8K', is_bot: false }).toArray().then((results) => {
 		console.log('getting users of the channels');
 		if (results.length != 0) {
 			//categorize the users based on their tz_labels, sorted by tz_offset
@@ -2769,6 +3131,21 @@ app.get('/', async function (req, res) {
 	to_be_rendered.msgs_total = await DB.collection('msgs').find({}).toArray().then(res => {
 		return Promise.resolve(res.length);
 	});
+	const maxMessageLength = 170;
+	to_be_rendered.msgs = to_be_rendered.msgs.map(msg => {
+		if(msg.text.length > maxMessageLength){
+			let nextSpace = msg.text.slice(maxMessageLength).indexOf(' ');
+			nextSpace = nextSpace === -1 ? maxMessageLength: nextSpace;
+			const sliceIndex = nextSpace + maxMessageLength;
+			msg.extraText = msg.text.slice(sliceIndex);
+			if(msg.extraText.length < 20){
+				return msg;
+			}
+			msg.text = msg.text.slice(0, sliceIndex);
+			msg.hasExtra = true;
+		}
+		return msg;
+	});
 	res.render('index', to_be_rendered);
 });
 app.get('/cardview', async function (req, res) {
@@ -2785,16 +3162,22 @@ app.get('/tablelist', async function (req, res) {
 	to_be_rendered.template = 'table-template';
 	to_be_rendered.userInfo = req.session.user;
 	const numUsers = 1000;
-	const fields = ['uid', 'real_name', 'city', 'channels', 'major', 'local_area', 'affiliation', 'campus'];
+	const fields = ['uid', 'real_name', 'city', 'channels', 'major', 'local_area', 'affiliation', 'campus', 'pastCities'];
 	let users = await similarity.getSimilarUsers(req.session.user.uid, DB, numUsers, fields);
 	// to_be_rendered.users = similarity.createSimilarityField(req.session.user, users, fields);
 	console.log(`users length is ${users.length}`);
 	to_be_rendered.users = users.map(user => {
+		if (!!user.region) {
+			user.city = user.region;
+			return user;
+		}
 		if (!!user.city) {
 			return user;
 		}
-		if (!!user.region) {
-			user.city = user.region;
+		if (!!user.pastCities){
+			const cities = user.pastCities.split(';')
+			const selectedCity = cities[0];
+			user.city = selectedCity;
 			return user;
 		}
 		if (!!user.local_area) {
@@ -2805,13 +3188,16 @@ app.get('/tablelist', async function (req, res) {
 	});
 
 	to_be_rendered.users = similarity.createIsSharedField(req.session.user, users, fields);
-	console.log(`number of channels for ${req.session.user.real_name} is ${req.session.user.channels}`);
+	console.log(`number of channels for ${req.session.user.real_name} is ${req.session.user.channels[0]}`);
 	const channelNames = req.session.user.channels.map(channel => channel.cname)
 		.filter(channel => channel !== 'general');
 	to_be_rendered.channelNames = channelNames;
 	to_be_rendered.users = to_be_rendered.users.map(user => {
 		if (!user.channels) {
 			user.channelNames = [];
+			console.error(`${user.uid} and ${user.first_name} has no channels :: ERROR:: `);
+			// await UpdateMembers([user.uid]);
+			// user.channels = await DB.collection('users').findOne({ uid: user.uid}).then( user => Promise.resolve(user.channels));
 		}
 		else {
 			user.channelNames = user.channels.map(channel => channel.cname)
@@ -3281,7 +3667,7 @@ app.get('/network', async function (req, res) {
 	to_be_rendered.template = 'network-template';
 	to_be_rendered.userInfo = req.session.user;
 	await similarity.awaitDbConnection();
-	to_be_rendered.data = await DB.collection('users').find({ team_id: req.session.team.team_id }).toArray().then(async (results, err) => {
+	to_be_rendered.data = await DB.collection('users').find({ team_id: req.session.team.team_id, is_bot: false }).toArray().then(async (results, err) => {
 		if (err) console.error(err);
 		else if (results.length != 0) {
 			let nodes = results, set_nodes = [], direct_nodes = [], distL = [], distL_temp = [], links = [], c_node = req.session.user, self_channels = req.session.user.channels;
@@ -3335,7 +3721,7 @@ app.get('/network', async function (req, res) {
 					await distL_temp.forEach(async (l) => {
 						// console.log(`the distance of other nodes is ${l.distIdx}`);
 						await similarity.awaitDbConnection();
-						if (typeof snapshot_db['users'] == 'undefined') snapshot_db['users'] = await DB.collection('users').find({}).toArray();
+						if (typeof snapshot_db['users'] == 'undefined') snapshot_db['users'] = await DB.collection('users').find({ is_bot: false }).toArray();
 						if (l.distIdx <= snapshot_db['users'].filter(u => u.uid == c_node.uid)[0].similar_users_dict.third_quartile) {
 							// console.log(`this met criteria and now is going to be put into link from ${l.uid} to ${c_node.uid}`);
 							await links.push({
@@ -3368,7 +3754,7 @@ app.get('/temporal', async function (req, res) {
 	to_be_rendered.template = 'tz-template';
 	to_be_rendered.userInfo = req.session.user;
 	await similarity.awaitDbConnection();
-	to_be_rendered.members = await DB.collection('users').find({ team_id: req.session.team.team_id }).toArray().then(async (results, err) => {
+	to_be_rendered.members = await DB.collection('users').find({ team_id: req.session.team.team_id, is_bot: false }).toArray().then(async (results, err) => {
 		if (err) console.error(err);
 		else if (results.length != 0) {
 			//categorize the users based on their tz_labels, sorted by tz_offset
@@ -3420,7 +3806,7 @@ app.post('/rtmconnect', (req, res) => {
 async function rtmConnectFn(team_id) {
 	if (typeof ws == 'undefined' || ws.readyState != WebSocket.OPEN) {
 		await similarity.awaitDbConnection();
-		snapshot_db['users'] = await DB.collection('users').find({}).toArray();
+		snapshot_db['users'] = await DB.collection('users').find({ is_bot: false }).toArray();
 		console.log('Connecting rtm.connect now:');
 		console.log(`snapshot users length is ${snapshot_db['users'].length}`);
 		// Promise.resolve(snapshot_db['users'])
@@ -3528,7 +3914,10 @@ async function rtmConnectFn(team_id) {
 				});
 				ws.on('close', function close() {
 					console.log('----------------disconnected---------------------');
-
+					
+					setTimeout(function () {
+						RestartRTM(team_id);
+					}, 5000);
 				});
 			}
 		});
@@ -3536,6 +3925,10 @@ async function rtmConnectFn(team_id) {
 	else console.log('Already connected');
 	// next();
 
+}
+
+function RestartRTM(team_id) {
+	rtmConnectFn(team_id);
 }
 //calculate similar users here
 async function InitTeamMembers(team_id, token, limit = null) {
@@ -3693,6 +4086,49 @@ async function InitTeamMembers(team_id, token, limit = null) {
 	}
 }
 
+async function UpdateMembers(uids) {
+	var first = true, cursor = "fake", counter = 0;
+	uids.forEach(async (uid) => {
+		console.log(`updating the member: ${uid}`);
+		var user_channels = [];
+		await web_slack.users.conversations({
+			user: uid.split('_')[1],
+			limit: 200, //this should be c_limit for channel limit per member instead of the limit as the users list
+			// cursor: c_cursor this should also be initialized
+		}).then(res_channels => {
+			res_channels.channels.forEach(c => {
+				user_channels.push({
+					cid: m.team_id + '_' + c.id,
+					cname: c.name
+				});
+			});
+		});
+		const onComplete = async () => {
+			console.log(`user ${m.real_name} updated succesfully: next retrieving ldap and similarity`);
+			const email = m.profile.email;
+			const fullName = m.profile.real_name;
+			try {
+				await ldap.updateUserWithLdapData(email, fullName, uid, DB);
+			} catch (e) {
+				console.log('error', e.toString());
+			}
+			await similarity.storeSimilarUsers([uid]);
+		}
+		await similarity.awaitDbConnection();
+		DB.collection('users').updateOne(
+			{ uid: uid },
+			{
+				$set: {
+					channels: user_channels
+				}
+			},
+			{ upsert: false },
+			onComplete);
+
+	});
+
+}
+
 async function InitTeamChannels(team_id, token, limit = null) {
 	var first = true, cursor = "fake", counter = 0;
 	var local_slack = new SlackWebClient(token);
@@ -3784,7 +4220,7 @@ async function UpdateChannelRecentMsgs(c_id, cname, token, limit = 200) {
 	if (c_id) console.log(`channel id passed in is ${c_id}`);
 	else console.log(`channel id passed in is EMPTY; I going to update messages in the subscribed channels only`);
 	await similarity.awaitDbConnection();
-	snapshot_db['users'] = await DB.collection('users').find({}).toArray();
+	snapshot_db['users'] = await DB.collection('users').find({ is_bot: false }).toArray();
 	await similarity.awaitDbConnection();
 	snapshot_db['channels'] = await DB.collection('channels').find({}).toArray();
 	if (!c_id) { //c_id is not defined, pull all the channels msg
@@ -3958,9 +4394,10 @@ async function ActiveWho(uids) {
 	const activeMembers = await DB.collection('users').find({
 		uid: {
 			"$in": uids
-		}
+		},
+		is_bot: false
 	})
-	.toArray();
+		.toArray();
 	// var promiseArray = [];
 	// await web.conversations.members({
 	// 	channel: channel_id,
