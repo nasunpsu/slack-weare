@@ -766,6 +766,79 @@ app.get('/createchannelsprompts', async (req, res) => {
 	res.send('happy major prompts sent out');
 });
 
+app.get('/joinchannelsprompts/:cname/:major', async (req, res) => {
+	await similarity.awaitDbConnection();
+	const channel = await DB.collection('channels').findOne({cname: req.params.cname});
+	console.log(`length of cmembers before the invite is ${channel.cmembers.length}`);
+	await similarity.awaitDbConnection();
+	let users = await DB.collection('users').find({
+		channels: { //users who do not subscribe the channel
+			"$ne": {
+				"cid": channel.cid,
+				"cname": req.params.cname 
+			} 
+		},
+		is_bot: false,
+		major: req.params.major,
+		joinprompt: {
+			"$ne": 'sent'
+		}
+	});
+
+	const UsersArray = await users.toArray();
+	console.log(`length of users array is ${UsersArray.length}`);
+	UsersArray.forEach(async user => {
+		web.im.open({
+			user: user.uid.split('_')[1]
+		}).then(dm => {
+			console.log(`DM the join channel prompt for same major if they are ${req.params.major} in ${dm.channel.id}`);
+			console.log(`the channel id for the ${channel.cname} is ${channel.cid.split('_')[1]}`);
+			web.chat.postMessage({
+				as_user: false,
+				channel: dm.channel.id,
+				attachments: user.major ? JSON.stringify([
+					{
+						title: `Would you like to join the channel <#${channel.cid.split('_')[1]}|${channel.cname}> for your major ${user.major}?`,
+						text: `Connect with students :male-student: :female-student: in your program _${user.major}_ by joining the channel <#${channel.cid.split('_')[1]}|${channel.cname}> :mortar_board:! Share confusions, resources and experiences with your peers, as you can grow together as a professional group.`,
+						callback_id: 'channel_join_prompt',
+						color: '#74c8ed',
+					},
+					{
+						title: 'Please watch the GIFs in our internal <https://weconnect.ist.psu.edu:8443/helppreview|wiki> to learn how to create a new channel.',
+						text: 'Visit <https://weconnect.ist.psu.edu:8443/tablelist|WeConnect/tablelist> to explore your peers of the same major or location! If you have any technique questions, check <https://get.slack.help/hc/en-us|official slack help page>, post them in <#CGNQYDKKJ|help-slack> or ask your peer groups for help.',
+						callback_id: 'advertise_url',
+						color: '#FBBD08',
+					}
+				]) : JSON.stringify([
+					{
+						title: `It looks like your Slack account is associated with your PSU alias email ${user.email}`,
+						text: `Please change your Slack email in your profile to be your original PSU email.`,
+						callback_id: 'change_PSUemail',
+						color: '#74c8ed',
+					}
+				])
+			}).catch(err => console.error(err));
+
+		}).catch(err => console.error(err));
+		await similarity.awaitDbConnection();
+		DB.collection('users').updateOne(
+			{ uid: user.uid },
+			{
+				$set: {
+					joinprompt: 'sent'
+				}
+			},
+			{ upsert: true },
+			function (err, doc) {
+				if (err) console.error(err);
+				else console.log(`WeAre! sent create a channel prompt to ${user.uid}`);
+			});
+	})
+
+	console.log('---------------joining specific channels for some folks sent out ----------------');
+	res.send('happy joining existing channels sent out');
+});
+
 app.post('/slack/events', (req, res, next) => {
 	console.log(`an example event is ${util.inspect(req.body)}`);
 	switch (req.body.type) {
@@ -1358,7 +1431,7 @@ app.post('/slack/events', (req, res, next) => {
 								// 	color: '#3060f0',
 								// },
 								{
-									title: ':sparkler: Bravo! Would you like to invite folks from other channels to join your new channel? :fireworks:',
+									title: `:sparkler: Bravo! <@${channel.creator}> just opened the friendly door of <#${channel.id}|${channel.name}>. Would you like to invite folks from other channels to join your new channel? :fireworks:`,
 									text: 'Choose a channel to post',
 									color: '#74c8ed',
 									callback_id: 'channel_selection',
@@ -3133,12 +3206,12 @@ app.get('/', async function (req, res) {
 	});
 	const maxMessageLength = 170;
 	to_be_rendered.msgs = to_be_rendered.msgs.map(msg => {
-		if(msg.text.length > maxMessageLength){
+		if (msg.text.length > maxMessageLength) {
 			let nextSpace = msg.text.slice(maxMessageLength).indexOf(' ');
-			nextSpace = nextSpace === -1 ? maxMessageLength: nextSpace;
+			nextSpace = nextSpace === -1 ? maxMessageLength : nextSpace;
 			const sliceIndex = nextSpace + maxMessageLength;
 			msg.extraText = msg.text.slice(sliceIndex);
-			if(msg.extraText.length < 20){
+			if (msg.extraText.length < 20) {
 				return msg;
 			}
 			msg.text = msg.text.slice(0, sliceIndex);
@@ -3174,7 +3247,7 @@ app.get('/tablelist', async function (req, res) {
 		if (!!user.city) {
 			return user;
 		}
-		if (!!user.pastCities){
+		if (!!user.pastCities) {
 			const cities = user.pastCities.split(';')
 			const selectedCity = cities[0];
 			user.city = selectedCity;
@@ -3914,7 +3987,7 @@ async function rtmConnectFn(team_id) {
 				});
 				ws.on('close', function close() {
 					console.log('----------------disconnected---------------------');
-					
+
 					setTimeout(function () {
 						RestartRTM(team_id);
 					}, 5000);
