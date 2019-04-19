@@ -1,10 +1,9 @@
 <main class="dashboard-wrapper">
     <h1 class="dashboard-title">We Are! Connecting you to your&nbsp;peers.</h1>
-    
+    <h2 class="ui black header personal-title">
+        <div class="content">WeAre! Slack Stats</div>
+    </h2>
     <div class="slack-stats">
-        <h2 class="ui blue header personal-title">
-            <div class="content">WeAre! Slack Stats</div>
-        </h2>
         <div class="ui statistics team-meta">
             <div class="statistic yellow">
                 <div class="value">
@@ -14,7 +13,7 @@
                     Subscribed / Total Channels
                 </div>
             </div>
-            <div class="statistic teal">
+            <div class="statistic olive">
                 <div class="value">
                     <i class="users small icon"></i> {{members.members_total}}
                 </div>
@@ -23,7 +22,7 @@
                     Total Members
                 </div>
             </div>
-            <div class="statistic blue">
+            <div class="statistic green">
                 <div class="value">
                     <i class="comments small icon"></i>{{msgs_total}}
                 </div>
@@ -33,43 +32,33 @@
             </div>
         </div>
     </div>
-    
+    <h2 class="ui black header personal-title">
+        <div class="content">Personal Slack Stats</div>
+    </h2>
     <div class="slack-stats personal-stats">
-        <h2 class="ui blue header personal-title">
-            <div class="content">Personal Slack Stats</div>
-        </h2>
         <div class="ui statistics team-meta">
-            <div class="statistic black personal-stat">
+            <div class="statistic teal personal-stat">
                 <div class="value">
                     <i class="paw small icon"></i>&nbsp;{{channels_info.channels_total}} / {{total_channels_num}}
                 </div>
                 <div class="label">
-                    WeAre!'s Given
+                    WeAre!'s Given / Received
                 </div>
             </div>
-            <div class="statistic black personal-stat">
-                <div class="value">
-                    <i class="paw small icon"></i>&nbsp;{{members.members_total}}
-                </div>
-                <div class="label">
-                    {{!-- Interacted / Total Members --}}
-                    WeAre!'s Received
-                </div>
-            </div>
-            <div class="statistic black personal-stat">
+            <div class="statistic blue personal-stat">
                 <div class="value">
                     <i class="thumbs up outline small icon"></i>&nbsp;{{msgs_total}}
                 </div>
                 <div class="label">
-                    Reactions Given
+                    Reactions Given / Received
                 </div>
             </div>
-            <div class="statistic black personal-stat">
+            <div class="statistic violet personal-stat">
                 <div class="value">
-                    <i class="thumbs up small icon"></i>&nbsp;{{msgs_total}}
+                    <i class="thumbs up outline small icon"></i>&nbsp;{{msgs_total}}
                 </div>
                 <div class="label">
-                    Reactions Received
+                    Messages Sent / Received
                 </div>
             </div>
         </div>

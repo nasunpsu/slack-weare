@@ -8,7 +8,7 @@ body{
 }
 
 .ui.footer { /* Increased specificity for SO snippet priority */
-      position: absolute;
+      position: fixed;
       bottom: 0;
       width: 100%;
       text-align: center;
@@ -102,6 +102,7 @@ main.login-wrapper .sign-in.button.ui > a{
     align-self: center;
     margin: auto;
     z-index: 100;
+    margin-top: 25px;
   }
 
   .login-wrapper {
@@ -148,6 +149,10 @@ main.login-wrapper .sign-in.button.ui > a{
     margin: auto;
     color: white;
     text-align: center;
+  }
+
+  .disclosure{
+    margin-top: 30px!important;
   }
 
   .disclosure, .disclosure h5{
@@ -472,14 +477,14 @@ p{
 }
 
 .slack-stats{
-  grid-column: 6/11;
+  grid-column: 3/22;
   display: inline-flex;
   justify-content: center;
   flex-wrap: wrap;
 }
 
 .personal-stats{
-  grid-column: 13/21;
+  grid-column: 1/24;
   display: inline-flex;
   justify-content: center;
   flex-wrap: wrap;
@@ -508,12 +513,16 @@ p{
   display: flex;
 }
 
-.ui.statistics .personal-stat > .value{
-  font-size: 2.5rem!important;
+.ui.statistics .personal-stat > .value, .ui.statistics .statistic > .value{
+  font-size: 3rem!important;
 }
 
-.ui.statistics .personal-stat > .label{
+.ui.statistics .personal-stat > .label, .ui.statistics .statistic > .label{
   font-size: .9rem!important;
+  color: #707070!important;
+  font-weight: 100!important;
+  margin-top: 5px!important;
+  text-transform: capitalize;
 }
 
 .slack-btn{
@@ -558,7 +567,7 @@ p{
   font-family: 'Proxima Nova', sans-serif!important;
   color: rgb(49, 120, 196);
   font-size: 1.4em!important;
-  margin-top: 25px!important;
+  margin-top: 45px!important;
 }
 
 .post-title{
