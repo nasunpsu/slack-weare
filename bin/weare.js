@@ -268,11 +268,26 @@ const logEvent = async (body, req) => {
 	if ('session' in req && 'user' in req.session && 'uid' in req.session.user && !!ipInfo) {
 		(async () => {
 
-			const updateDoc = {
-				$addToSet: { ipInfo },
-				$set: ipInfo
-			}
+			const ipInfoWithTime = {...ipInfo, timeStamp: new Date()};
 			await similarity.awaitDbConnection();
+			const updateUser = await DB.collection('users').findOne({ uid: req.session.user.uid });
+			const newIpInfo = updateUser.ipInfo.map(info => {
+				const isSameObj = Object.keys(info).every(key => {
+					if(key === 'timeStamp'){
+						return true;
+					}
+					return info[key] === ipInfo[key]
+				});
+				if (isSameObj) {
+					return ipInfoWithTime;
+				}
+				return info;
+			});
+			const updateDoc = {
+				$set: {
+					ipInfo: newIpInfo
+				}
+			};
 			const newUser = await DB.collection('users').findOneAndUpdate({ uid: req.session.user.uid }, updateDoc,
 				{ returnOriginal: false }).then((user) => {
 					return Promise.resolve(user.value);
