@@ -242,7 +242,8 @@ const logEvent = async (body, req) => {
 		}
 	}
 
-	if (body.path === '/slack/events') {
+	const slackEvents = ['/slack/events', '/slack/actions', '/slack/commands'];
+	if (slackEvents.includes(body.path)) {
 		if (!!req.body && !!req.body.event && req.body.event.user) {
 			if (!!req.body.event.user.email) {
 				body.email = req.body.event.user.email;
@@ -265,12 +266,16 @@ const logEvent = async (body, req) => {
 		})();
 
 	}
-	if ('session' in req && 'user' in req.session && 'uid' in req.session.user && !!ipInfo) {
+	if (!slackEvents.includes(body.path) && 'session' in req && 'user' in req.session && 'uid' in req.session.user && !!ipInfo) {
 		(async () => {
 
 			const ipInfoWithTime = {...ipInfo, timeStamp: new Date()};
 			await similarity.awaitDbConnection();
-			const updateUser = await DB.collection('users').findOne({ uid: req.session.user.uid });
+            const updateUser = await DB.collection('users').findOne({ uid: req.session.user.uid });
+            if(!updateUser.ipInfo){
+                updateUser.ipInfo = [];
+            }
+            let ipInfoIsUnique = true;
 			const newIpInfo = updateUser.ipInfo.map(info => {
 				const isSameObj = Object.keys(info).every(key => {
 					if(key === 'timeStamp'){
@@ -279,10 +284,14 @@ const logEvent = async (body, req) => {
 					return info[key] === ipInfo[key]
 				});
 				if (isSameObj) {
+                    ipInfoIsUnique = false;
 					return ipInfoWithTime;
 				}
 				return info;
 			});
+			if(ipInfoIsUnique){
+				newIpInfo.push(ipInfoWithTime);
+			}
 			const updateDoc = {
 				$set: {
 					ipInfo: newIpInfo
@@ -1733,10 +1742,13 @@ app.post('/slack/events', (req, res, next) => {
 						const { title, email, real_name, name, phone, status_text, status_emoji, first_name, last_name, image_48, image_512 } = profile;
 						const insertObj = { title, id, team_id, locale, email, real_name, name, phone, status_text, status_emoji, first_name, last_name, image_48, image_512 };
 						const query = { uid };
-						const options = { upsert: true }
-						const result = await DB.collection('users').updateOne(query, { $set: insertObj }, options);
-						if (!result.result.ok) {
+						const options = { upsert: true, returnOriginal: false }
+						const result = await DB.collection('users').findOneAndUpdate(query, { $set: insertObj }, options);
+						if (!result.ok) {
 							console.warn('User change event had an error in its query' + res);
+						}
+						else{
+							req.session.user = result.value;
 						}
 						// res.sendStatus(200);
 						break;
