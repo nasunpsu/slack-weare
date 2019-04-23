@@ -139,4 +139,5 @@ def similarity():
     client.close()
     return 'complete'
 
-app.run(port=50000, debug=True)
+
+app.run(port=5000, debug=True)

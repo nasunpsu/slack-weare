@@ -16,7 +16,7 @@ const storeSimilarUsers = async (uids) => {
     const stringUids = JSON.stringify(uids);
     await awaitDbConnection();
     isDbInUse = true;
-    const res = await fetch(`http://localhost:50000?uids=${stringUids}`);
+    const res = await fetch(`http://localhost:5000?uids=${stringUids}`);
     isDbInUse = false;
     return res;
     // const command = createCommand(uid);
