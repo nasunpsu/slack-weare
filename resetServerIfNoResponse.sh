@@ -3,7 +3,7 @@
 restart_server () {
    current_time=$(date)
    echo "$current_time restarting server"
-   sudo pm2 restart "/usr/local/bin/npm" --log-date-format 'DD-MM HH:mm:ss.SSS' --name "weare" -- start
+   pm2 restart "/usr/local/bin/npm" --log-date-format 'DD-MM HH:mm:ss.SSS' --name "weare" -- start
 }
 
 run_as_sudo () {
@@ -41,7 +41,7 @@ parse_args () {
   done
 }
 
-run_as_sudo "$@"
+# run_as_sudo "$@"
 parse_args "$@"
 port=${port_option:-8080}
 sleep_time=${sleep_option:-60}
