@@ -3292,7 +3292,7 @@ app.get('/tablelist', async function (req, res) {
 	console.log(`renderedUsers are ${to_be_rendered.users.length}; the first is ${util.inspect(to_be_rendered.users[0])}`);
 	to_be_rendered.users = to_be_rendered.users.map(user => {
 		if (!user.channels) {
-			if (user.channels.length == 0) console.log(`user channels are abnormal for ${user.real_name}`);
+			//if (user.channels.length == 0) console.log(`user channels are abnormal for ${user.real_name}`);
 			user.channelNames = [];
 			console.error(`${user.uid} and ${user.first_name} has no channels :: ERROR:: `);
 			// await UpdateMembers([user.uid]);
