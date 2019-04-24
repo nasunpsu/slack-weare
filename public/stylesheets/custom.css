@@ -39,6 +39,13 @@ main.login-wrapper .sign-in.button.ui > a{
   text-decoration: underline;
 }
 
+.sort-ascending::after{
+  content: " \2191"
+}
+.sort-descending::after{
+  content: " \2193"
+}
+
   .container.main{
     margin-top: 7.0em;
 }

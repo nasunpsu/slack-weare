@@ -14,7 +14,7 @@ run_as_sudo () {
 }
 
 query_server () {
-  server_name="http://localhost:$1"
+  server_name="https://weconnect.ist.psu.edu:8443/"
   response=$(wget -q -O - "$server_name")
   response_lines=$(echo "$response" | wc -l )
   if [ "$response_lines" -le "1" ]; then
@@ -25,9 +25,6 @@ query_server () {
 parse_args () {
   while getopts ":p:t:" opt; do
     case ${opt} in
-      p )
-        port_option=$OPTARG
-        ;;
       t )
         sleep_option=$OPTARG
         ;;
@@ -41,13 +38,10 @@ parse_args () {
   done
 }
 
-# run_as_sudo "$@"
 parse_args "$@"
-port=${port_option:-8080}
 sleep_time=${sleep_option:-60}
-echo "Querying for response on port $port"
 echo "Checking for response every $sleep_time seconds"
 while true; do
-  query_server "$port"
+  query_server
   sleep "$sleep_time"
 done

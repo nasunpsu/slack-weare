@@ -30,6 +30,7 @@ class UserTable {
         this.resultsPerPage = 10;
         this.userElementName = 'element';
         this.checkBoxValues = ['city', 'major'];
+        this.sortReverse = false;
         // Current signed in user must be passed from front end
         if(!window.sessionUser){
             throw Error('Session user not defined');
@@ -57,14 +58,22 @@ class UserTable {
         this.headingElements = $(this.tableHeading).find('th');
         this.headingElements.click(event => {
             if(!!this.search.value){
+					 this.sortReverse = false;
                 return;
             }
             const target = event.target;
             const index = [...target.parentElement.children].indexOf(target);
             if(this.sortBy === index){
-                updateResults();
+                if(this.sortReverse){
+                  updateResults();
+                  this.sortReverse = false;
+                  return;
+                }
+                this.sortReverse = true;
+                updateResults(index);
                 return;
             }
+				this.sortReverse = false;
             updateResults(index);
         });
 
@@ -73,8 +82,9 @@ class UserTable {
         const updateResults = (sortIndex=-1) => {
             this.sortBy = sortIndex;
             const query = this.search.value;
-            this.headingElements.removeClass('sort-heading');
-            const sortReverse = false;
+            this.headingElements.find('span').removeClass('sort-ascending');
+            this.headingElements.find('span').removeClass('sort-descending');
+            const sortReverse = this.sortReverse;
             let sortField;
             if(sortIndex === -1){
                 sortField = '';
@@ -82,13 +92,15 @@ class UserTable {
             else{
                 sortField = this.headings[sortIndex];
                 if(!query){
-                    $(this.tableHeading.children[sortIndex]).addClass('sort-heading');
+						  const className = sortReverse ? 'sort-descending' : 'sort-ascending';
+                    $(this.tableHeading.children[sortIndex]).find('span').addClass(className);
                 }
             }
             const {checkboxes, sessionUser, users, tableBody, searchDropdown, userElementName, resultsPerPage} = this;
             this.updateUsers(checkboxes, sessionUser, query, users, searchDropdown, tableBody, userElementName, sortField, sortReverse, resultsPerPage);
             this.numPages = Math.ceil(this.userResults.length / this.resultsPerPage);
-            this.createPagination(this.numPages, this.previousPage, this.nextPage, this.pageContainer, this.userResults, this.resultsPerPage, this.tableBody, this.userElementName);
+				this.dotdot = $('#dotdot')[0];
+            this.createPagination(this.numPages, this.previousPage, this.dotdot, this.pageContainer, this.userResults, this.resultsPerPage, this.tableBody, this.userElementName);
             this.changePage(this.userResults, 1, this.resultsPerPage, this.tableBody, this.userElementName, this.numPages);
         }
 
@@ -106,6 +118,9 @@ class UserTable {
             const page = previousPage.cloneNode();
             const num = index + 1
             page.innerText = num;
+				if(index > 4){
+				  page.style.display = 'none';
+				}
             page.className += ' page-number';
             page.addEventListener('click', () => {
                 this.changePage(userResults, num, resultsPerPage, tableBody, userElementName, numPages);
@@ -230,6 +245,20 @@ class UserTable {
         const start = (page - 1) * resultsPerPage;
         const end = page * resultsPerPage;
         const renderUsers = userResults.slice(start, end);
+		  const lowestPage = Math.floor((page - 1)/ 5) * 5;
+		  const highestPage = lowestPage + 4;
+		  Array.from($('.page-number')).forEach((pageObj, index) => {
+				if(index < lowestPage || index > highestPage){
+					pageObj.style.display = 'none';
+					return;
+				}
+				 pageObj.style.display = null;
+		  });
+		  if(page > Math.floor((numPages-1)/5)*5){
+          this.dotdot.style.display = 'none';
+        }else{
+          this.dotdot.style.display = null;
+        }
         this.renderUsers(renderUsers, tableBody, userElementName);
         this.currentPage = page;
     }
