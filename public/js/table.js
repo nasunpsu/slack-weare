@@ -58,6 +58,7 @@ class UserTable {
         this.headingElements = $(this.tableHeading).find('th');
         this.headingElements.click(event => {
             if(!!this.search.value){
+					 this.sortReverse = false;
                 return;
             }
             const target = event.target;
@@ -72,6 +73,7 @@ class UserTable {
                 updateResults(index);
                 return;
             }
+				this.sortReverse = false;
             updateResults(index);
         });
 
@@ -80,7 +82,8 @@ class UserTable {
         const updateResults = (sortIndex=-1) => {
             this.sortBy = sortIndex;
             const query = this.search.value;
-            this.headingElements.removeClass('sort-heading');
+            this.headingElements.find('span').removeClass('sort-ascending');
+            this.headingElements.find('span').removeClass('sort-descending');
             const sortReverse = this.sortReverse;
             let sortField;
             if(sortIndex === -1){
@@ -89,7 +92,8 @@ class UserTable {
             else{
                 sortField = this.headings[sortIndex];
                 if(!query){
-                    $(this.tableHeading.children[sortIndex]).addClass('sort-heading');
+						  const className = sortReverse ? 'sort-descending' : 'sort-ascending';
+                    $(this.tableHeading.children[sortIndex]).find('span').addClass(className);
                 }
             }
             const {checkboxes, sessionUser, users, tableBody, searchDropdown, userElementName, resultsPerPage} = this;
