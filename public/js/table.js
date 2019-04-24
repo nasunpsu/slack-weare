@@ -117,6 +117,9 @@ class UserTable {
             const page = previousPage.cloneNode();
             const num = index + 1
             page.innerText = num;
+				if(index > 4){
+				  page.style.display = 'none';
+				}
             page.className += ' page-number';
             page.addEventListener('click', () => {
                 this.changePage(userResults, num, resultsPerPage, tableBody, userElementName, numPages);
@@ -241,6 +244,15 @@ class UserTable {
         const start = (page - 1) * resultsPerPage;
         const end = page * resultsPerPage;
         const renderUsers = userResults.slice(start, end);
+		  const lowestPage = Math.floor((page - 1)/ 5) * 5;
+		  const highestPage = lowestPage + 4;
+		  Array.from($('.page-number')).forEach((pageObj, index) => {
+				if(index < lowestPage || index > highestPage){
+					pageObj.style.display = 'none';
+					return;
+				}
+				 pageObj.style.display = null;
+		  });
         this.renderUsers(renderUsers, tableBody, userElementName);
         this.currentPage = page;
     }
