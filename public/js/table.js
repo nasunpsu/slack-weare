@@ -30,6 +30,7 @@ class UserTable {
         this.resultsPerPage = 10;
         this.userElementName = 'element';
         this.checkBoxValues = ['city', 'major'];
+        this.sortReverse = false;
         // Current signed in user must be passed from front end
         if(!window.sessionUser){
             throw Error('Session user not defined');
@@ -62,7 +63,13 @@ class UserTable {
             const target = event.target;
             const index = [...target.parentElement.children].indexOf(target);
             if(this.sortBy === index){
-                updateResults();
+                if(this.sortReverse){
+                  updateResults();
+                  this.sortReverse = false;
+                  return;
+                }
+                this.sortReverse = true;
+                updateResults(index);
                 return;
             }
             updateResults(index);
@@ -74,7 +81,7 @@ class UserTable {
             this.sortBy = sortIndex;
             const query = this.search.value;
             this.headingElements.removeClass('sort-heading');
-            const sortReverse = false;
+            const sortReverse = this.sortReverse;
             let sortField;
             if(sortIndex === -1){
                 sortField = '';
