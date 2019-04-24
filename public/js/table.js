@@ -99,7 +99,8 @@ class UserTable {
             const {checkboxes, sessionUser, users, tableBody, searchDropdown, userElementName, resultsPerPage} = this;
             this.updateUsers(checkboxes, sessionUser, query, users, searchDropdown, tableBody, userElementName, sortField, sortReverse, resultsPerPage);
             this.numPages = Math.ceil(this.userResults.length / this.resultsPerPage);
-            this.createPagination(this.numPages, this.previousPage, this.nextPage, this.pageContainer, this.userResults, this.resultsPerPage, this.tableBody, this.userElementName);
+				this.dotdot = $('#dotdot')[0];
+            this.createPagination(this.numPages, this.previousPage, this.dotdot, this.pageContainer, this.userResults, this.resultsPerPage, this.tableBody, this.userElementName);
             this.changePage(this.userResults, 1, this.resultsPerPage, this.tableBody, this.userElementName, this.numPages);
         }
 
@@ -253,6 +254,11 @@ class UserTable {
 				}
 				 pageObj.style.display = null;
 		  });
+		  if(page > Math.floor((numPages-1)/5)*5){
+          this.dotdot.style.display = 'none';
+        }else{
+          this.dotdot.style.display = null;
+        }
         this.renderUsers(renderUsers, tableBody, userElementName);
         this.currentPage = page;
     }
