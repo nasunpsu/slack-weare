@@ -215,6 +215,12 @@ class UserTable {
             isReverse = true;
         }
         return users.sort((user1, user2) => {
+            if(typeof(user1[key]) == 'string' && !user1[key].trim() && !!user2[key].trim()){
+                return 1;
+            }
+            if(typeof(user1[key]) == 'string' && !user2[key].trim() && !!user1[key].trim()){
+                return -1;
+            }
             const multiplier = (isReverse | 0) * 2 - 1
             if(typeof user1[key] === 'string'){
                 return user2[key].localeCompare(user1[key]) * multiplier; 
